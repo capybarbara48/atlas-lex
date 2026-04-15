@@ -1,0 +1,33 @@
+.btnNovo { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--accent); color: #fff; border-radius: var(--radius-sm); padding: 0.6rem 1.25rem; font-size: 0.875rem; font-weight: 600; transition: all 0.2s; }
+.btnNovo:hover { background: var(--accent-dark); transform: translateY(-1px); }
+.btnNovo svg { width: 14px; height: 14px; }
+.searchWrap { position: relative; flex: 1; max-width: 360px; }
+.searchIcon { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--text-3); pointer-events: none; }
+.searchInput { width: 100%; padding: 0.5rem 0.875rem 0.5rem 2.25rem; background: var(--card); border: var(--border); border-radius: var(--radius-sm); font-size: 0.85rem; font-family: inherit; color: var(--text); outline: none; }
+.searchInput:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(4,59,97,0.1); }
+.searchInput::placeholder { color: var(--text-3); }
+.filterGroup { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+.filterBtn { padding: 0.35rem 0.8rem; background: var(--card); border: var(--border); border-radius: 999px; font-size: 0.75rem; font-weight: 500; color: var(--text-2); transition: all 0.15s; font-family: inherit; }
+.filterBtn:hover { border-color: var(--accent); color: var(--accent); }
+.filterActive { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; }
+.summaryRow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 0.5rem; }
+@media (max-width: 900px) { .summaryRow { grid-template-columns: repeat(2, 1fr); } }
+.summaryCard { background: var(--card); border: var(--border); border-radius: var(--radius-sm); border-top: 4px solid transparent; padding: 1rem 1.25rem; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 0.2rem; transition: transform 0.15s, box-shadow 0.15s; }
+.summaryCard:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.summaryLabel { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); }
+.summaryValue { font-size: 1.35rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; margin-top: 0.15rem; }
+.summarySub { font-size: 0.68rem; color: var(--text-3); }
+.tableCard { background: var(--card); border: var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.table { width: 100%; border-collapse: collapse; }
+.table th { text-align: left; font-size: 0.67rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--text-3); padding: 0.75rem 1rem; border-bottom: var(--border); background: var(--bg); }
+.table td { padding: 0.75rem 1rem; font-size: 0.82rem; border-bottom: 1px solid rgba(4,59,97,0.05); vertical-align: middle; }
+.tableRow:last-child td { border-bottom: none; }
+.tableRow:hover td { background: rgba(4,59,97,0.02); }
+.descCell { font-weight: 500; }
+.caseCell { font-size: 0.78rem; color: var(--text-2); }
+.entryStatus { font-size: 0.8rem; font-weight: 600; }
+.valorCell { font-weight: 700; font-variant-numeric: tabular-nums; }
+.positive { color: var(--green); }
+.negative { color: var(--red); }
+.dateCell { font-size: 0.78rem; color: var(--text-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.emptyRow { text-align: center; padding: 2.5rem; color: var(--text-2); font-size: 0.85rem; }

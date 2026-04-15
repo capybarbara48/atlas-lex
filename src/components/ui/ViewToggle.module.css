@@ -1,0 +1,28 @@
+.wrap {
+  display: flex;
+  background: var(--bg);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  gap: 2px;
+}
+
+.btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-2);
+  transition: all 0.15s;
+  background: transparent;
+}
+.btn svg { width: 15px; height: 15px; }
+.btn:hover { color: var(--text); background: var(--card); }
+
+.active {
+  background: var(--card) !important;
+  color: var(--accent) !important;
+  box-shadow: 0 1px 4px rgba(4,59,97,0.12);
+}

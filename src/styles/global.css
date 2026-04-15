@@ -1,0 +1,147 @@
+/* ── Google Fonts ────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap');
+
+/* ── CSS Design Tokens (idênticos ao arquivo de referência) ──────── */
+:root {
+  --bg:          #f5f5f7;
+  --bg-2:        #e8e8ec;
+  --card:        #ffffff;
+  --card-hover:  #f8f8fa;
+  --border:      1px solid rgba(4,59,97,0.12);
+
+  /* Accent — sobrescrito em runtime pelo ThemeContext */
+  --accent:      #043b61;
+  --accent-dim:  rgba(4,59,97,0.08);
+  --accent-dark: #022a47;
+  --color-accent: #043b61;
+  --color-accent-dark: #022a47;
+
+  --green:       #22a84a;
+  --green-dim:   rgba(34,168,74,0.10);
+  --red:         #e03c3c;
+  --blue:        #3b82f6;
+  --blue-dim:    rgba(59,130,246,0.10);
+  --purple:      #043b61;
+  --purple-dim:  rgba(4,59,97,0.08);
+
+  --text:        #000000;
+  --text-2:      #545454;
+  --text-3:      #a0a0a6;
+
+  --shadow:      0 2px 16px rgba(4,59,97,0.08);
+  --shadow-lg:   0 8px 40px rgba(4,59,97,0.16);
+  --radius:      16px;
+  --radius-sm:   10px;
+
+  /* alias compat */
+  --color-bg:           var(--bg);
+  --color-surface:      var(--card);
+  --color-border:       rgba(4,59,97,0.12);
+  --color-text:         var(--text);
+  --color-text-muted:   var(--text-2);
+  --color-text-light:   var(--text-3);
+  --font-size-xs:       0.75rem;
+  --font-size-sm:       0.875rem;
+  --font-size-base:     1rem;
+  --header-height:      68px;
+}
+
+/* ── Reset ───────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; scroll-behavior: smooth; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ambient glow — exatamente como no HTML de referência */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 10% 40%, rgba(4,59,97,0.08) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 40% at 90% 10%, rgba(4,59,97,0.06) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+a { color: var(--accent); text-decoration: none; }
+button { cursor: pointer; font-family: inherit; border: none; background: none; }
+img { display: block; max-width: 100%; }
+
+/* ── Badges (status) ─────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge::before {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.badge-ativo     { background: var(--green-dim); color: var(--green); }
+.badge-encerrado { background: rgba(59,130,246,0.10); color: var(--blue); }
+.badge-suspenso  { background: rgba(217,119,6,0.10); color: #b45309; }
+.badge-arquivado { background: rgba(160,160,166,0.12); color: var(--text-2); }
+.badge-pendente  { background: var(--accent-dim); color: var(--accent); }
+.badge-aprovado  { background: var(--green-dim); color: var(--green); }
+.badge-recusado  { background: rgba(224,60,60,0.10); color: var(--red); }
+.badge-receita   { background: var(--green-dim); color: var(--green); }
+.badge-despesa   { background: rgba(224,60,60,0.10); color: var(--red); }
+.badge-alta      { background: rgba(224,60,60,0.10); color: var(--red); }
+.badge-media     { background: rgba(217,119,6,0.10); color: #b45309; }
+.badge-baixa     { background: var(--blue-dim); color: var(--blue); }
+.badge-concluida { background: var(--green-dim); color: var(--green); }
+
+/* ── Status colors (tribunais / tipo) ────────────────────────────── */
+.st-blue   { background: rgba(59,130,246,0.13);  color: #2563eb; }
+.st-purple { background: rgba(139,92,246,0.13);  color: #7c3aed; }
+.st-teal   { background: rgba(20,184,166,0.13);  color: #0d9488; }
+.st-gold   { background: rgba(217,119,6,0.13);   color: #b45309; }
+.st-dark   { background: rgba(55,65,81,0.13);    color: #374151; }
+.st-green  { background: rgba(34,168,74,0.13);   color: #15803d; }
+.st-orange { background: rgba(234,88,12,0.13);   color: #c2410c; }
+.st-red    { background: rgba(220,38,38,0.13);   color: #dc2626; }
+
+/* ── Skeleton shimmer ────────────────────────────────────────────── */
+.skel {
+  height: 52px;
+  background: linear-gradient(90deg,
+    rgba(4,59,97,0.06) 0%, rgba(4,59,97,0.13) 50%, rgba(4,59,97,0.06) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 9px;
+  margin-bottom: 0.6rem;
+}
+.skel.sm { height: 36px; }
+
+@keyframes shimmer {
+  0%   { background-position:  200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
