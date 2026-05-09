@@ -1,27 +1,34 @@
 import { useState, useMemo } from 'react'
+import { useProposals } from '@/hooks/useProposals'
 import PageShell from '@/components/ui/PageShell'
 import styles from './Proposals.module.css'
 
-/* ─── MOCK DATA — substituir por useProposals() do Supabase ──────── */
-const MOCK_PROPOSALS = [
-  { id: 1,  titulo: 'Consultoria Previdenciária — Ricardo Costa', cliente: 'Ricardo Costa',   status: 'pendente',  tipo_honorario: 'fixo',        valor: 5000,  criado: '2026-04-01', validade: '2026-04-30' },
-  { id: 2,  titulo: 'Defesa Trabalhista — Pereira & Filhos',      cliente: 'Carlos Pereira',  status: 'aprovado',  tipo_honorario: 'exito',       valor: 28000, criado: '2026-03-15', validade: '2026-04-15' },
-  { id: 3,  titulo: 'Inventário — Família Matos',                 cliente: 'Maria Matos',     status: 'aprovado',  tipo_honorario: 'percentual',  valor: 120000,criado: '2025-12-10', validade: null },
-  { id: 4,  titulo: 'Revisão de Contrato — Ana Silva',            cliente: 'Ana Silva',       status: 'pendente',  tipo_honorario: 'fixo',        valor: 3500,  criado: '2026-04-08', validade: '2026-05-08' },
-  { id: 5,  titulo: 'Recurso STJ — Paulo Lima',                   cliente: 'Paulo Lima',      status: 'pendente',  tipo_honorario: 'exito',       valor: 80000, criado: '2026-04-10', validade: '2026-04-25' },
-  { id: 6,  titulo: 'Reparação Civil — João Rodrigues',           cliente: 'João Rodrigues',  status: 'recusado',  tipo_honorario: 'fixo',        valor: 8000,  criado: '2026-02-20', validade: '2026-03-20' },
-  { id: 7,  titulo: 'Divórcio Litigioso — Fernanda Souza',        cliente: 'Fernanda Souza',  status: 'aprovado',  tipo_honorario: 'fixo',        valor: 12000, criado: '2025-11-05', validade: null },
-  { id: 8,  titulo: 'Assessoria Trabalhista — Grupo XYZ',         cliente: 'Grupo XYZ S.A.',  status: 'pendente',  tipo_honorario: 'mensal',      valor: 4500,  criado: '2026-04-12', validade: '2026-05-12' },
-]
+/* ── data mapper ────────────────────────────────────────────────────── */
+const STATUS_MAP  = { aceita: 'aprovado', recusada: 'recusado', expirada: 'recusado', rascunho: 'pendente', enviada: 'pendente' }
 
+function mapProposal(p) {
+  return {
+    id:             p.id,
+    titulo:         p.title,
+    cliente:        p.clients?.full_name ?? '—',
+    status:         STATUS_MAP[p.status] ?? 'pendente',
+    tipo_honorario: p.fee_type ?? 'fixo',
+    valor:          Number(p.fee_amount) || Number(p.fee_percentage) || 0,
+    criado:         p.created_at?.split('T')[0],
+    validade:       p.valid_until ?? null,
+  }
+}
+
+/* ── constants ─────────────────────────────────────────────────────── */
 const STATUS_LABELS = { pendente: 'Pendente', aprovado: 'Aprovado', recusado: 'Recusado' }
 const STATUS_CSS    = { pendente: 'badge-pendente', aprovado: 'badge-aprovado', recusado: 'badge-recusado' }
-const TIPO_LABELS   = { fixo: 'Fixo', exito: 'Êxito', percentual: 'Percentual', mensal: 'Mensal' }
+const TIPO_LABELS   = { fixo: 'Fixo', por_hora: 'Por Hora', percentual_exito: 'Êxito', misto: 'Misto' }
 
 function brl(v) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v ?? 0)
 }
 
+/* ── sub-components ─────────────────────────────────────────────────── */
 function PipelineView({ proposals }) {
   const cols = [
     { key: 'pendente',  label: 'Em Avaliação', color: 'st-gold' },
@@ -49,7 +56,7 @@ function PipelineView({ proposals }) {
                         <div className={styles.pipelineCardTitle}>{p.titulo}</div>
                         <div className={styles.pipelineCardClient}>{p.cliente}</div>
                         <div className={styles.pipelineCardMeta}>
-                          <span className={`badge st-teal`}>{TIPO_LABELS[p.tipo_honorario]}</span>
+                          <span className="badge st-teal">{TIPO_LABELS[p.tipo_honorario] ?? p.tipo_honorario}</span>
                           <span className={styles.pipelineCardVal}>{brl(p.valor)}</span>
                         </div>
                         {p.validade && (
@@ -87,10 +94,10 @@ function ListView({ proposals }) {
             <tr key={p.id} className={styles.tableRow}>
               <td className={styles.propTitle}>{p.titulo}</td>
               <td>{p.cliente}</td>
-              <td><span className="badge st-teal">{TIPO_LABELS[p.tipo_honorario]}</span></td>
+              <td><span className="badge st-teal">{TIPO_LABELS[p.tipo_honorario] ?? p.tipo_honorario}</span></td>
               <td className={styles.valorCell}>{brl(p.valor)}</td>
               <td><span className={`badge ${STATUS_CSS[p.status]}`}>{STATUS_LABELS[p.status]}</span></td>
-              <td className={styles.dateCell}>{new Date(p.criado).toLocaleDateString('pt-BR')}</td>
+              <td className={styles.dateCell}>{p.criado ? new Date(p.criado).toLocaleDateString('pt-BR') : '—'}</td>
               <td className={styles.dateCell}>{p.validade ? new Date(p.validade + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}</td>
             </tr>
           ))}
@@ -100,13 +107,17 @@ function ListView({ proposals }) {
   )
 }
 
+/* ── page ───────────────────────────────────────────────────────────── */
 export default function Proposals() {
-  const [view, setView] = useState('pipeline')
-  const [search, setSearch] = useState('')
+  const [view, setView]               = useState('pipeline')
+  const [search, setSearch]           = useState('')
   const [filterStatus, setFilterStatus] = useState('todos')
 
+  const { data: rawProposals, loading, error } = useProposals()
+  const proposals = useMemo(() => (rawProposals ?? []).map(mapProposal), [rawProposals])
+
   const filtered = useMemo(() => {
-    let list = MOCK_PROPOSALS
+    let list = proposals
     if (filterStatus !== 'todos') list = list.filter(p => p.status === filterStatus)
     if (search.trim()) {
       const q = search.toLowerCase()
@@ -115,19 +126,19 @@ export default function Proposals() {
       )
     }
     return list
-  }, [search, filterStatus])
+  }, [proposals, search, filterStatus])
 
-  const aprovado = MOCK_PROPOSALS.filter(p => p.status === 'aprovado').reduce((s, p) => s + p.valor, 0)
-  const pendente = MOCK_PROPOSALS.filter(p => p.status === 'pendente').reduce((s, p) => s + p.valor, 0)
+  const aprovado = proposals.filter(p => p.status === 'aprovado').reduce((s, p) => s + p.valor, 0)
+  const pendente = proposals.filter(p => p.status === 'pendente').reduce((s, p) => s + p.valor, 0)
 
   return (
     <PageShell
       title="Propostas"
-      subtitle={`${MOCK_PROPOSALS.length} propostas · ${brl(aprovado)} aprovado · ${brl(pendente)} em avaliação`}
+      subtitle={loading ? 'Carregando…' : `${proposals.length} propostas · ${brl(aprovado)} aprovado · ${brl(pendente)} em avaliação`}
       viewToggle={
         <div className={styles.viewSwitch}>
           <button className={`${styles.viewBtn} ${view === 'pipeline' ? styles.viewActive : ''}`} onClick={() => setView('pipeline')}>Pipeline</button>
-          <button className={`${styles.viewBtn} ${view === 'lista' ? styles.viewActive : ''}`} onClick={() => setView('lista')}>Lista</button>
+          <button className={`${styles.viewBtn} ${view === 'lista'    ? styles.viewActive : ''}`} onClick={() => setView('lista')}>Lista</button>
         </div>
       }
       action={
@@ -162,7 +173,10 @@ export default function Proposals() {
         </>
       }
     >
-      {view === 'pipeline' ? <PipelineView proposals={filtered} /> : <ListView proposals={filtered} />}
+      {error
+        ? <div className={styles.emptyState}><p>Erro ao carregar propostas.</p></div>
+        : view === 'pipeline' ? <PipelineView proposals={filtered} /> : <ListView proposals={filtered} />
+      }
     </PageShell>
   )
 }

@@ -1,25 +1,39 @@
 import { useState, useMemo } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
+import { useCases } from '@/hooks/useCases'
 import PageShell from '@/components/ui/PageShell'
 import ViewToggle from '@/components/ui/ViewToggle'
 import styles from './Cases.module.css'
 
-/* ─── MOCK DATA — substituir por useCases() do Supabase ──────────── */
-const MOCK_CASES = [
-  { id: 1,  numero: '0012345-78.2024.8.26.0100', titulo: 'Costa vs. Seguradora Alfa',       cliente: 'Ricardo Costa',   status: 'ativo',     tipo: 'Cível',      tribunal: 'TJSP',  valor: 45000,  aberto: '2024-03-10', atualizado: '2026-04-10', trib_color: 'st-blue' },
-  { id: 2,  numero: '0098765-12.2024.5.02.0001', titulo: 'Pereira & Filhos — Trabalhista',   cliente: 'Carlos Pereira',  status: 'ativo',     tipo: 'Trabalhista',tribunal: 'TRT-2', valor: 28000,  aberto: '2024-06-01', atualizado: '2026-04-08', trib_color: 'st-purple' },
-  { id: 3,  numero: '0055432-99.2025.8.26.0000', titulo: 'Família Matos — Inventário',       cliente: 'Maria Matos',     status: 'ativo',     tipo: 'Família',    tribunal: 'TJSP',  valor: 120000, aberto: '2025-01-20', atualizado: '2026-04-12', trib_color: 'st-blue' },
-  { id: 4,  numero: '0071122-44.2023.8.26.0100', titulo: 'Silva — Revisão Contratual',       cliente: 'Ana Silva',       status: 'ativo',     tipo: 'Contratos',  tribunal: 'TJSP',  valor: 15000,  aberto: '2023-11-05', atualizado: '2026-03-30', trib_color: 'st-teal' },
-  { id: 5,  numero: '1234567-89.2025.1.00.0000', titulo: 'Lima vs. Banco Nacional',          cliente: 'Paulo Lima',      status: 'ativo',     tipo: 'Bancário',   tribunal: 'STJ',   valor: 200000, aberto: '2025-05-14', atualizado: '2026-04-11', trib_color: 'st-dark' },
-  { id: 6,  numero: '0087654-32.2024.8.26.0100', titulo: 'Rodrigues — Acidente de Trânsito', cliente: 'João Rodrigues',  status: 'ativo',     tipo: 'Cível',      tribunal: 'TJSP',  valor: 35000,  aberto: '2024-08-22', atualizado: '2026-04-09', trib_color: 'st-blue' },
-  { id: 7,  numero: '0033221-55.2025.8.26.0100', titulo: 'Souza — Divórcio Consensual',      cliente: 'Fernanda Souza',  status: 'suspenso',  tipo: 'Família',    tribunal: 'TJSP',  valor: 0,      aberto: '2025-02-10', atualizado: '2026-03-01', trib_color: 'st-blue' },
-  { id: 8,  numero: '0044100-77.2023.8.26.0100', titulo: 'MEI Santos — Rescisão',            cliente: 'Bruno Santos',    status: 'suspenso',  tipo: 'Trabalhista',tribunal: 'TRT-15',valor: 18000,  aberto: '2023-07-18', atualizado: '2026-02-14', trib_color: 'st-purple' },
-  { id: 9,  numero: '0067890-11.2022.8.26.0100', titulo: 'Alves — Execução Fiscal',          cliente: 'Roberto Alves',   status: 'encerrado', tipo: 'Tributário', tribunal: 'TRF-3', valor: 52000,  aberto: '2022-04-05', atualizado: '2026-01-30', trib_color: 'st-green' },
-  { id: 10, numero: '0011223-44.2023.8.26.0100', titulo: 'Neto vs. Locadora',                cliente: 'Marcio Neto',     status: 'encerrado', tipo: 'Cível',      tribunal: 'TJSP',  valor: 8000,   aberto: '2023-03-22', atualizado: '2025-12-10', trib_color: 'st-blue' },
-  { id: 11, numero: '0022334-56.2021.8.26.0100', titulo: 'Ferreira — Pensão Alimentícia',    cliente: 'Lucia Ferreira',  status: 'arquivado', tipo: 'Família',    tribunal: 'TJSP',  valor: 0,      aberto: '2021-09-14', atualizado: '2025-06-20', trib_color: 'st-blue' },
-]
+/* ── data mapper ────────────────────────────────────────────────────── */
+function tribColor(court) {
+  if (!court) return 'st-teal'
+  const c = court.toUpperCase()
+  if (c.startsWith('TJ'))           return 'st-blue'
+  if (c.startsWith('TRT'))          return 'st-purple'
+  if (c.startsWith('TRF'))          return 'st-green'
+  if (c === 'STJ' || c === 'STF')   return 'st-dark'
+  return 'st-teal'
+}
 
+function mapCase(c) {
+  return {
+    id:         c.id,
+    numero:     c.case_number ?? '—',
+    titulo:     c.title,
+    cliente:    c.clients?.full_name ?? '—',
+    status:     c.status,
+    tipo:       c.area ?? '—',
+    tribunal:   c.court ?? '—',
+    valor:      Number(c.valor) || 0,
+    aberto:     c.opened_at?.split('T')[0] ?? c.created_at?.split('T')[0],
+    atualizado: c.updated_at?.split('T')[0] ?? c.created_at?.split('T')[0],
+    trib_color: tribColor(c.court),
+  }
+}
+
+/* ── constants ─────────────────────────────────────────────────────── */
 const STATUS_COLS = [
   { key: 'ativo',     label: 'Ativo',     color: 'st-green' },
   { key: 'suspenso',  label: 'Suspenso',  color: 'st-gold' },
@@ -34,6 +48,7 @@ function brl(v) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 }
 
+/* ── sub-components ─────────────────────────────────────────────────── */
 function KanbanView({ cases }) {
   return (
     <div className={styles.kanbanWrapper}>
@@ -98,12 +113,12 @@ function ListView({ cases }) {
                 <div className={styles.caseNumber}>{c.numero}</div>
               </td>
               <td className={styles.clientCell}>{c.cliente}</td>
-              <td><span className={`badge st-teal`}>{c.tipo}</span></td>
+              <td><span className="badge st-teal">{c.tipo}</span></td>
               <td><span className={`badge ${c.trib_color}`}>{c.tribunal}</span></td>
               <td className={styles.valorCell}>{brl(c.valor)}</td>
               <td><span className={`badge ${STATUS_CSS[c.status]}`}>{c.status}</span></td>
               <td className={styles.dateCell}>
-                {new Date(c.atualizado).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                {c.atualizado ? new Date(c.atualizado + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—'}
               </td>
             </tr>
           ))}
@@ -113,13 +128,17 @@ function ListView({ cases }) {
   )
 }
 
+/* ── page ───────────────────────────────────────────────────────────── */
 export default function Cases() {
   const { lawyer } = useAuth()
   const prefs = loadPreferences(lawyer?.id)
 
-  const [view, setView] = useState(prefs.casos_view ?? 'kanban')
-  const [search, setSearch] = useState('')
+  const [view, setView]               = useState(prefs.casos_view ?? 'kanban')
+  const [search, setSearch]           = useState('')
   const [filterStatus, setFilterStatus] = useState('todos')
+
+  const { data: rawCases, loading, error } = useCases()
+  const cases = useMemo(() => (rawCases ?? []).map(mapCase), [rawCases])
 
   function handleViewChange(v) {
     setView(v)
@@ -127,7 +146,7 @@ export default function Cases() {
   }
 
   const filtered = useMemo(() => {
-    let list = MOCK_CASES
+    let list = cases
     if (filterStatus !== 'todos') list = list.filter(c => c.status === filterStatus)
     if (search.trim()) {
       const q = search.toLowerCase()
@@ -138,16 +157,16 @@ export default function Cases() {
       )
     }
     return list
-  }, [search, filterStatus])
+  }, [cases, search, filterStatus])
 
   const counts = useMemo(() =>
-    Object.fromEntries(STATUS_COLS.map(col => [col.key, MOCK_CASES.filter(c => c.status === col.key).length]))
-  , [])
+    Object.fromEntries(STATUS_COLS.map(col => [col.key, cases.filter(c => c.status === col.key).length]))
+  , [cases])
 
   return (
     <PageShell
       title="Casos"
-      subtitle={`${MOCK_CASES.length} processos · ${counts.ativo} ativos`}
+      subtitle={loading ? 'Carregando…' : `${cases.length} processos · ${counts.ativo ?? 0} ativos`}
       viewToggle={<ViewToggle value={view} onChange={handleViewChange} />}
       action={
         <button className={styles.btnNovo}>
@@ -176,14 +195,17 @@ export default function Cases() {
                 className={`${styles.filterBtn} ${filterStatus === v ? styles.filterActive : ''}`}
                 onClick={() => setFilterStatus(v)}
               >
-                {l}{v !== 'todos' && <span className={styles.filterCount}>{counts[v]}</span>}
+                {l}{v !== 'todos' && counts[v] != null && <span className={styles.filterCount}>{counts[v]}</span>}
               </button>
             ))}
           </div>
         </>
       }
     >
-      {view === 'kanban' ? <KanbanView cases={filtered} /> : <ListView cases={filtered} />}
+      {error
+        ? <div className={styles.emptyState}><p>Erro ao carregar casos.</p></div>
+        : view === 'kanban' ? <KanbanView cases={filtered} /> : <ListView cases={filtered} />
+      }
     </PageShell>
   )
 }

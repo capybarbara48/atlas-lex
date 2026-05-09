@@ -1,28 +1,33 @@
 import { useState, useMemo } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
+import { useClients } from '@/hooks/useClients'
 import PageShell from '@/components/ui/PageShell'
 import ViewToggle from '@/components/ui/ViewToggle'
 import styles from './Clients.module.css'
 
-/* ─── MOCK DATA — substituir por useClients() do Supabase ─────────── */
-const MOCK_CLIENTS = [
-  { id: 1,  nome: 'Ricardo Costa',        email: 'r.costa@email.com',        telefone: '(11) 98765-4321', cpf: '123.456.789-00', casos: 2, cidade: 'São Paulo',    estado: 'SP', tipo: 'PF' },
-  { id: 2,  nome: 'Carlos Pereira',        email: 'carlos@pereira.com',       telefone: '(11) 97654-3210', cpf: '234.567.890-11', casos: 1, cidade: 'São Paulo',    estado: 'SP', tipo: 'PF' },
-  { id: 3,  nome: 'Pereira & Filhos Ltda', email: 'juridico@pereira.com.br',  telefone: '(11) 3344-5566',  cnpj: '12.345.678/0001-90', casos: 3, cidade: 'Campinas', estado: 'SP', tipo: 'PJ' },
-  { id: 4,  nome: 'Maria Matos',           email: 'm.matos@gmail.com',        telefone: '(21) 98888-7777', cpf: '345.678.901-22', casos: 1, cidade: 'Rio de Janeiro', estado: 'RJ', tipo: 'PF' },
-  { id: 5,  nome: 'Ana Silva',             email: 'ana.silva@corp.com',       telefone: '(11) 96543-2109', cpf: '456.789.012-33', casos: 2, cidade: 'São Paulo',    estado: 'SP', tipo: 'PF' },
-  { id: 6,  nome: 'Paulo Lima',            email: 'p.lima@fintech.io',        telefone: '(61) 99988-1122', cpf: '567.890.123-44', casos: 1, cidade: 'Brasília',     estado: 'DF', tipo: 'PF' },
-  { id: 7,  nome: 'João Rodrigues',        email: 'joao.rod@email.com',       telefone: '(11) 95432-1098', cpf: '678.901.234-55', casos: 1, cidade: 'São Paulo',    estado: 'SP', tipo: 'PF' },
-  { id: 8,  nome: 'Fernanda Souza',        email: 'f.souza@yahoo.com',        telefone: '(11) 94321-0987', cpf: '789.012.345-66', casos: 1, cidade: 'São Paulo',    estado: 'SP', tipo: 'PF' },
-  { id: 9,  nome: 'Bruno Santos MEI',      email: 'bruno@santosmei.com',      telefone: '(19) 93210-9876', cnpj: '98.765.432/0001-10', casos: 1, cidade: 'Campinas', estado: 'SP', tipo: 'PJ' },
-  { id: 10, nome: 'Grupo XYZ S.A.',        email: 'juridico@grupoxyz.com.br', telefone: '(11) 3200-0000',  cnpj: '11.222.333/0001-44', casos: 2, cidade: 'São Paulo', estado: 'SP', tipo: 'PJ' },
-]
+/* ── data mapper ────────────────────────────────────────────────────── */
+function mapClient(c) {
+  return {
+    id:       c.id,
+    nome:     c.full_name,
+    email:    c.email ?? '—',
+    telefone: c.phone ?? '—',
+    cpf:      c.tipo !== 'PJ' ? c.cpf_cnpj : null,
+    cnpj:     c.tipo === 'PJ' ? c.cpf_cnpj : null,
+    casos:    c.cases?.[0]?.count ?? 0,
+    cidade:   c.cidade ?? '—',
+    estado:   c.estado ?? '—',
+    tipo:     c.tipo ?? 'PF',
+  }
+}
 
+/* ── helpers ────────────────────────────────────────────────────────── */
 function initials(nome) {
   return nome.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
 }
 
+/* ── sub-components ─────────────────────────────────────────────────── */
 function GridView({ clients }) {
   if (clients.length === 0) return (
     <div className={styles.emptyState}>
@@ -35,7 +40,7 @@ function GridView({ clients }) {
       {clients.map(c => (
         <div key={c.id} className={styles.clientCard}>
           <div className={styles.clientAvatar}
-            style={{ background: `hsl(${(c.id * 47) % 360}, 35%, 88%)`, color: `hsl(${(c.id * 47) % 360}, 55%, 32%)` }}>
+            style={{ background: `hsl(${(c.id.charCodeAt?.(0) ?? 0) * 47 % 360}, 35%, 88%)`, color: `hsl(${(c.id.charCodeAt?.(0) ?? 0) * 47 % 360}, 55%, 32%)` }}>
             {initials(c.nome)}
           </div>
           <div className={styles.clientName}>{c.nome}</div>
@@ -82,7 +87,7 @@ function ListView({ clients }) {
               <td>
                 <div className={styles.tableClientWrap}>
                   <div className={styles.tableAvatar}
-                    style={{ background: `hsl(${(c.id * 47) % 360}, 35%, 88%)`, color: `hsl(${(c.id * 47) % 360}, 55%, 32%)` }}>
+                    style={{ background: `hsl(${(c.id.charCodeAt?.(0) ?? 0) * 47 % 360}, 35%, 88%)`, color: `hsl(${(c.id.charCodeAt?.(0) ?? 0) * 47 % 360}, 55%, 32%)` }}>
                     {initials(c.nome)}
                   </div>
                   <div>
@@ -93,7 +98,7 @@ function ListView({ clients }) {
               </td>
               <td><span className={`badge ${c.tipo === 'PJ' ? 'st-blue' : 'st-teal'}`}>{c.tipo}</span></td>
               <td className={styles.phoneCell}>{c.telefone}</td>
-              <td className={styles.docCell}>{c.cpf ?? c.cnpj}</td>
+              <td className={styles.docCell}>{c.cpf ?? c.cnpj ?? '—'}</td>
               <td>{c.cidade}</td>
               <td><span className={styles.casosCount}>{c.casos}</span></td>
               <td><button className={styles.rowBtn}>Ver →</button></td>
@@ -105,13 +110,17 @@ function ListView({ clients }) {
   )
 }
 
+/* ── page ───────────────────────────────────────────────────────────── */
 export default function Clients() {
   const { lawyer } = useAuth()
   const prefs = loadPreferences(lawyer?.id)
 
-  const [view, setView] = useState(prefs.clientes_view ?? 'lista')
-  const [search, setSearch] = useState('')
+  const [view, setView]           = useState(prefs.clientes_view ?? 'lista')
+  const [search, setSearch]       = useState('')
   const [filterTipo, setFilterTipo] = useState('todos')
+
+  const { data: rawClients, loading, error } = useClients()
+  const clients = useMemo(() => (rawClients ?? []).map(mapClient), [rawClients])
 
   function handleViewChange(v) {
     const mapped = v === 'kanban' ? 'grid' : 'lista'
@@ -120,7 +129,7 @@ export default function Clients() {
   }
 
   const filtered = useMemo(() => {
-    let list = MOCK_CLIENTS
+    let list = clients
     if (filterTipo !== 'todos') list = list.filter(c => c.tipo === filterTipo)
     if (search.trim()) {
       const q = search.toLowerCase()
@@ -131,12 +140,12 @@ export default function Clients() {
       )
     }
     return list
-  }, [search, filterTipo])
+  }, [clients, search, filterTipo])
 
   return (
     <PageShell
       title="Clientes"
-      subtitle={`${MOCK_CLIENTS.length} clientes cadastrados`}
+      subtitle={loading ? 'Carregando…' : `${clients.length} clientes cadastrados`}
       viewToggle={<ViewToggle value={view === 'grid' ? 'kanban' : 'lista'} onChange={handleViewChange} />}
       action={
         <button className={styles.btnNovo}>
@@ -170,7 +179,10 @@ export default function Clients() {
         </>
       }
     >
-      {view === 'grid' ? <GridView clients={filtered} /> : <ListView clients={filtered} />}
+      {error
+        ? <div className={styles.emptyState}><p>Erro ao carregar clientes.</p></div>
+        : view === 'grid' ? <GridView clients={filtered} /> : <ListView clients={filtered} />
+      }
     </PageShell>
   )
 }
