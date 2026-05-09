@@ -3,7 +3,10 @@ import { supabase } from '@/lib/supabase'
 
 export function useClientCount() {
   return useSupabaseQuery(async () => {
-    return supabase.from('clients').select('id')
+    const { count, error } = await supabase
+      .from('clients')
+      .select('*', { count: 'exact', head: true })
+    return { data: count ?? 0, error }
   }, [])
 }
 

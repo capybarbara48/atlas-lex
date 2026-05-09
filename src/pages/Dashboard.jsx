@@ -155,15 +155,14 @@ function EntradaItem({ e }) {
 /* ── main dashboard ───────────────────────────────────────────────────── */
 export default function Dashboard() {
   const { lawyer } = useAuth()
-  const nome = lawyer?.full_name?.split(' ')[0] ?? 'Advogado'
 
   /* data hooks */
-  const { data: caseStats }    = useCaseStats()
-  const { data: rawCases }     = useCases()
-  const { data: rawClients }   = useClientCount()
-  const { data: rawTasks }     = useTodayTasks()
-  const { data: finMonth }     = useMonthFinancials()
-  const { data: rawEntries }   = useRecentEntries({ limit: 6 })
+  const { data: caseStats }     = useCaseStats()
+  const { data: rawCases }      = useCases()
+  const { data: clientesTotal } = useClientCount()
+  const { data: rawTasks }      = useTodayTasks()
+  const { data: finMonth }      = useMonthFinancials()
+  const { data: rawEntries }    = useRecentEntries({ limit: 6 })
 
   /* derived data */
   const cases   = useMemo(() => (rawCases   ?? []).map(mapDashCase),  [rawCases])
@@ -174,10 +173,9 @@ export default function Dashboard() {
   const overdueTasks = tasks.filter(t => t.prazo && t.prazo < today)
   const todayTasks   = tasks.filter(t => t.prazo === today)
 
-  const casosTotal   = caseStats?.total    ?? '—'
-  const casosAtivos  = caseStats?.ativo    ?? '—'
-  const clientesTotal = (rawClients ?? []).length
-  const tarefasHoje  = overdueTasks.length + todayTasks.length
+  const casosTotal  = caseStats?.total ?? '—'
+  const casosAtivos = caseStats?.ativo ?? '—'
+  const tarefasHoje = overdueTasks.length + todayTasks.length
   const receita      = finMonth?.receita   ?? 0
   const despesa      = finMonth?.despesa   ?? 0
   const saldo        = finMonth?.saldo     ?? 0
