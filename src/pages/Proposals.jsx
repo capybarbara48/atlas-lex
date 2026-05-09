@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react'
 import { useProposals } from '@/hooks/useProposals'
 import PageShell from '@/components/ui/PageShell'
+import Modal from '@/components/ui/Modal'
+import ProposalForm from '@/components/forms/ProposalForm'
 import styles from './Proposals.module.css'
 
 /* ── data mapper ────────────────────────────────────────────────────── */
@@ -29,7 +31,7 @@ function brl(v) {
 }
 
 /* ── sub-components ─────────────────────────────────────────────────── */
-function PipelineView({ proposals }) {
+function PipelineView({ proposals, onEdit }) {
   const cols = [
     { key: 'pendente',  label: 'Em Avaliação', color: 'st-gold' },
     { key: 'aprovado',  label: 'Aprovadas',    color: 'st-green' },
@@ -52,7 +54,7 @@ function PipelineView({ proposals }) {
                 {items.length === 0
                   ? <div className={styles.pipelineEmpty}>Nenhuma proposta</div>
                   : items.map(p => (
-                      <div key={p.id} className={styles.pipelineCard}>
+                      <div key={p.id} className={styles.pipelineCard} onClick={() => onEdit(p.id)} style={{ cursor: 'pointer' }}>
                         <div className={styles.pipelineCardTitle}>{p.titulo}</div>
                         <div className={styles.pipelineCardClient}>{p.cliente}</div>
                         <div className={styles.pipelineCardMeta}>
@@ -76,7 +78,7 @@ function PipelineView({ proposals }) {
   )
 }
 
-function ListView({ proposals }) {
+function ListView({ proposals, onEdit }) {
   if (proposals.length === 0) return (
     <div className={styles.emptyState}>
       <div className={styles.emptyIcon}>📄</div>
@@ -91,7 +93,7 @@ function ListView({ proposals }) {
         </thead>
         <tbody>
           {proposals.map(p => (
-            <tr key={p.id} className={styles.tableRow}>
+            <tr key={p.id} className={styles.tableRow} onClick={() => onEdit(p.id)} style={{ cursor: 'pointer' }}>
               <td className={styles.propTitle}>{p.titulo}</td>
               <td>{p.cliente}</td>
               <td><span className="badge st-teal">{TIPO_LABELS[p.tipo_honorario] ?? p.tipo_honorario}</span></td>
@@ -112,9 +114,19 @@ export default function Proposals() {
   const [view, setView]               = useState('pipeline')
   const [search, setSearch]           = useState('')
   const [filterStatus, setFilterStatus] = useState('todos')
+  const [formOpen, setFormOpen]       = useState(false)
+  const [editing,  setEditing]        = useState(null)
 
-  const { data: rawProposals, loading, error } = useProposals()
+  const { data: rawProposals, loading, error, refetch } = useProposals()
   const proposals = useMemo(() => (rawProposals ?? []).map(mapProposal), [rawProposals])
+
+  const rawById = useMemo(() =>
+    Object.fromEntries((rawProposals ?? []).map(r => [r.id, r]))
+  , [rawProposals])
+
+  function openNew()    { setEditing(null); setFormOpen(true) }
+  function openEdit(id) { setEditing(rawById[id] ?? null); setFormOpen(true) }
+  function handleSave() { refetch(); setFormOpen(false) }
 
   const filtered = useMemo(() => {
     let list = proposals
@@ -142,7 +154,7 @@ export default function Proposals() {
         </div>
       }
       action={
-        <button className={styles.btnNovo}>
+        <button className={styles.btnNovo} onClick={openNew}>
           <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.75.75 0 0 1 .75.75v5.5h5.5a.75.75 0 0 1 0 1.5h-5.5v5.5a.75.75 0 0 1-1.5 0v-5.5H1.75a.75.75 0 0 1 0-1.5h5.5v-5.5A.75.75 0 0 1 8 1Z"/></svg>
           Nova proposta
         </button>
@@ -175,8 +187,16 @@ export default function Proposals() {
     >
       {error
         ? <div className={styles.emptyState}><p>Erro ao carregar propostas.</p></div>
-        : view === 'pipeline' ? <PipelineView proposals={filtered} /> : <ListView proposals={filtered} />
+        : view === 'pipeline'
+          ? <PipelineView proposals={filtered} onEdit={openEdit} />
+          : <ListView proposals={filtered} onEdit={openEdit} />
       }
+
+      {formOpen && (
+        <Modal title={editing ? 'Editar proposta' : 'Nova proposta'} onClose={() => setFormOpen(false)} size="lg">
+          <ProposalForm initial={editing} onSave={handleSave} onClose={() => setFormOpen(false)} />
+        </Modal>
+      )}
     </PageShell>
   )
 }

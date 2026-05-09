@@ -4,6 +4,8 @@ import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
 import { useAllTasks } from '@/hooks/useTasks'
 import PageShell from '@/components/ui/PageShell'
 import ViewToggle from '@/components/ui/ViewToggle'
+import Modal from '@/components/ui/Modal'
+import TaskForm from '@/components/forms/TaskForm'
 import styles from './Tasks.module.css'
 
 /* ── data mapper ────────────────────────────────────────────────────── */
@@ -35,7 +37,7 @@ function fmtDate(d, opts) {
 }
 
 /* ── sub-components ─────────────────────────────────────────────────── */
-function KanbanView({ tasks }) {
+function KanbanView({ tasks, onEdit }) {
   const today = new Date().toISOString().split('T')[0]
   return (
     <div className={styles.kanbanWrapper}>
@@ -54,7 +56,8 @@ function KanbanView({ tasks }) {
                   : items.map(t => {
                       const vencida = t.status !== 'concluida' && t.vencimento && t.vencimento < today
                       return (
-                        <div key={t.id} className={`${styles.kanbanCard} ${vencida ? styles.overdue : ''}`}>
+                        <div key={t.id} className={`${styles.kanbanCard} ${vencida ? styles.overdue : ''}`}
+                          onClick={() => onEdit(t.id)} style={{ cursor: 'pointer' }}>
                           <div className={styles.kanbanCardTitle}>{t.titulo}</div>
                           <div className={styles.kanbanCardMeta}>
                             <span className={`badge ${PRI_CSS[t.prioridade]}`}>{PRI_LABELS[t.prioridade]}</span>
@@ -78,7 +81,7 @@ function KanbanView({ tasks }) {
   )
 }
 
-function ListView({ tasks }) {
+function ListView({ tasks, onEdit }) {
   const today = new Date().toISOString().split('T')[0]
   if (tasks.length === 0) return (
     <div className={styles.emptyState}>
@@ -96,7 +99,8 @@ function ListView({ tasks }) {
           {tasks.map(t => {
             const vencida = t.status !== 'concluida' && t.vencimento && t.vencimento < today
             return (
-              <tr key={t.id} className={`${styles.tableRow} ${vencida ? styles.overdueRow : ''}`}>
+              <tr key={t.id} className={`${styles.tableRow} ${vencida ? styles.overdueRow : ''}`}
+                onClick={() => onEdit(t.id)} style={{ cursor: 'pointer' }}>
                 <td className={styles.taskTitleCell}>{t.titulo}</td>
                 <td className={styles.caseCell}>{t.caso}</td>
                 <td><span className={`badge ${PRI_CSS[t.prioridade]}`}>{PRI_LABELS[t.prioridade]}</span></td>
@@ -124,9 +128,19 @@ export default function Tasks() {
   const [view, setView]         = useState(prefs.tarefas_view ?? 'kanban')
   const [search, setSearch]     = useState('')
   const [filterPri, setFilterPri] = useState('todos')
+  const [formOpen, setFormOpen] = useState(false)
+  const [editing,  setEditing]  = useState(null)
 
-  const { data: rawTasks, loading, error } = useAllTasks()
+  const { data: rawTasks, loading, error, refetch } = useAllTasks()
   const tasks = useMemo(() => (rawTasks ?? []).map(mapTask), [rawTasks])
+
+  const rawById = useMemo(() =>
+    Object.fromEntries((rawTasks ?? []).map(r => [r.id, r]))
+  , [rawTasks])
+
+  function openNew()    { setEditing(null); setFormOpen(true) }
+  function openEdit(id) { setEditing(rawById[id] ?? null); setFormOpen(true) }
+  function handleSave() { refetch(); setFormOpen(false) }
 
   function handleViewChange(v) {
     setView(v)
@@ -151,7 +165,7 @@ export default function Tasks() {
       subtitle={loading ? 'Carregando…' : `${tasks.length} tarefas · ${pendentes} pendentes`}
       viewToggle={<ViewToggle value={view} onChange={handleViewChange} />}
       action={
-        <button className={styles.btnNovo}>
+        <button className={styles.btnNovo} onClick={openNew}>
           <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.75.75 0 0 1 .75.75v5.5h5.5a.75.75 0 0 1 0 1.5h-5.5v5.5a.75.75 0 0 1-1.5 0v-5.5H1.75a.75.75 0 0 1 0-1.5h5.5v-5.5A.75.75 0 0 1 8 1Z"/></svg>
           Nova tarefa
         </button>
@@ -184,8 +198,16 @@ export default function Tasks() {
     >
       {error
         ? <div className={styles.emptyState}><p>Erro ao carregar tarefas.</p></div>
-        : view === 'kanban' ? <KanbanView tasks={filtered} /> : <ListView tasks={filtered} />
+        : view === 'kanban'
+          ? <KanbanView tasks={filtered} onEdit={openEdit} />
+          : <ListView tasks={filtered} onEdit={openEdit} />
       }
+
+      {formOpen && (
+        <Modal title={editing ? 'Editar tarefa' : 'Nova tarefa'} onClose={() => setFormOpen(false)}>
+          <TaskForm initial={editing} onSave={handleSave} onClose={() => setFormOpen(false)} />
+        </Modal>
+      )}
     </PageShell>
   )
 }

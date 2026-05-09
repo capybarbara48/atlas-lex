@@ -35,6 +35,20 @@ export function useTaskStats() {
   }, [])
 }
 
+export function useWeekDoneTasks() {
+  return useSupabaseQuery(async () => {
+    const now   = new Date()
+    const day   = now.getDay() === 0 ? 6 : now.getDay() - 1 // Mon=0
+    const monday = new Date(now); monday.setDate(now.getDate() - day); monday.setHours(0, 0, 0, 0)
+    return supabase
+      .from('tasks')
+      .select('id, title, completed_at')
+      .eq('status', 'concluida')
+      .gte('completed_at', monday.toISOString())
+      .order('completed_at', { ascending: false })
+  }, [])
+}
+
 /** Persist task status change — call from kanban or checklist */
 export async function updateTaskStatus(taskId, newStatus) {
   const updates = { status: newStatus }

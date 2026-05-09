@@ -55,6 +55,14 @@ const NAV_ITEMS = [
     ),
   },
   {
+    to: '/vitrine', label: 'Vitrine', end: false,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M1 5.25A2.25 2.25 0 0 1 3.25 3h13.5A2.25 2.25 0 0 1 19 5.25v9.5A2.25 2.25 0 0 1 16.75 17H3.25A2.25 2.25 0 0 1 1 14.75v-9.5Zm1.5 5.81v3.69c0 .414.336.75.75.75h13.5a.75.75 0 0 0 .75-.75v-2.69l-2.22-2.219a.75.75 0 0 0-1.06 0l-1.91 1.909-.47-.47a.75.75 0 0 0-1.06 0L6.53 11.06l-4.03-4.03v4.03Zm13-7.56H3.25a.75.75 0 0 0-.75.75v1.69l3.72-3.72a.75.75 0 0 1 1.06 0l2.69 2.69 1.91-1.909a.75.75 0 0 1 1.06 0L15.5 5.81V3.5h1.25a.75.75 0 0 0 .75-.75V5.25a.75.75 0 0 0-.75-.75ZM6.5 7.25a1.25 1.25 0 1 1-2.5 0 1.25 1.25 0 0 1 2.5 0Z" clipRule="evenodd"/>
+      </svg>
+    ),
+  },
+  {
     to: '/configuracoes', label: 'Configurações', end: false,
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor">
@@ -73,6 +81,7 @@ const PAGE_TITLES = {
   '/tarefas':        'Tarefas',
   '/financeiro':     'Financeiro',
   '/configuracoes':  'Configurações',
+  '/vitrine':        'Vitrine',
 }
 
 /* ── Clock ──────────────────────────────────────────────────────────── */

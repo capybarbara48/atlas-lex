@@ -4,6 +4,8 @@ import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
 import { useCases } from '@/hooks/useCases'
 import PageShell from '@/components/ui/PageShell'
 import ViewToggle from '@/components/ui/ViewToggle'
+import Modal from '@/components/ui/Modal'
+import CaseForm from '@/components/forms/CaseForm'
 import styles from './Cases.module.css'
 
 /* ── data mapper ────────────────────────────────────────────────────── */
@@ -49,7 +51,7 @@ function brl(v) {
 }
 
 /* ── sub-components ─────────────────────────────────────────────────── */
-function KanbanView({ cases }) {
+function KanbanView({ cases, onEdit }) {
   return (
     <div className={styles.kanbanWrapper}>
       <div className={styles.kanbanBoard}>
@@ -65,7 +67,7 @@ function KanbanView({ cases }) {
                 {items.length === 0
                   ? <div className={styles.kanbanEmpty}>Nenhum processo</div>
                   : items.map(c => (
-                      <div key={c.id} className={styles.kanbanCard}>
+                      <div key={c.id} className={styles.kanbanCard} onClick={() => onEdit(c.id)} style={{ cursor: 'pointer' }}>
                         <div className={styles.kanbanCardTitle}>{c.titulo}</div>
                         <div className={styles.kanbanCardClient}>{c.cliente}</div>
                         <div className={styles.kanbanCardMeta}>
@@ -84,7 +86,7 @@ function KanbanView({ cases }) {
   )
 }
 
-function ListView({ cases }) {
+function ListView({ cases, onEdit }) {
   if (cases.length === 0) return (
     <div className={styles.emptyState}>
       <div className={styles.emptyIcon}>⚖</div>
@@ -107,7 +109,7 @@ function ListView({ cases }) {
         </thead>
         <tbody>
           {cases.map(c => (
-            <tr key={c.id} className={styles.tableRow}>
+            <tr key={c.id} className={styles.tableRow} onClick={() => onEdit(c.id)} style={{ cursor: 'pointer' }}>
               <td>
                 <div className={styles.caseTitle}>{c.titulo}</div>
                 <div className={styles.caseNumber}>{c.numero}</div>
@@ -136,9 +138,19 @@ export default function Cases() {
   const [view, setView]               = useState(prefs.casos_view ?? 'kanban')
   const [search, setSearch]           = useState('')
   const [filterStatus, setFilterStatus] = useState('todos')
+  const [formOpen, setFormOpen]       = useState(false)
+  const [editing,  setEditing]        = useState(null)
 
-  const { data: rawCases, loading, error } = useCases()
+  const { data: rawCases, loading, error, refetch } = useCases()
   const cases = useMemo(() => (rawCases ?? []).map(mapCase), [rawCases])
+
+  const rawById = useMemo(() =>
+    Object.fromEntries((rawCases ?? []).map(r => [r.id, r]))
+  , [rawCases])
+
+  function openNew()    { setEditing(null); setFormOpen(true) }
+  function openEdit(id) { setEditing(rawById[id] ?? null); setFormOpen(true) }
+  function handleSave() { refetch(); setFormOpen(false) }
 
   function handleViewChange(v) {
     setView(v)
@@ -169,7 +181,7 @@ export default function Cases() {
       subtitle={loading ? 'Carregando…' : `${cases.length} processos · ${counts.ativo ?? 0} ativos`}
       viewToggle={<ViewToggle value={view} onChange={handleViewChange} />}
       action={
-        <button className={styles.btnNovo}>
+        <button className={styles.btnNovo} onClick={openNew}>
           <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.75.75 0 0 1 .75.75v5.5h5.5a.75.75 0 0 1 0 1.5h-5.5v5.5a.75.75 0 0 1-1.5 0v-5.5H1.75a.75.75 0 0 1 0-1.5h5.5v-5.5A.75.75 0 0 1 8 1Z"/></svg>
           Novo caso
         </button>
@@ -204,8 +216,16 @@ export default function Cases() {
     >
       {error
         ? <div className={styles.emptyState}><p>Erro ao carregar casos.</p></div>
-        : view === 'kanban' ? <KanbanView cases={filtered} /> : <ListView cases={filtered} />
+        : view === 'kanban'
+          ? <KanbanView cases={filtered} onEdit={openEdit} />
+          : <ListView cases={filtered} onEdit={openEdit} />
       }
+
+      {formOpen && (
+        <Modal title={editing ? 'Editar processo' : 'Novo processo'} onClose={() => setFormOpen(false)} size="lg">
+          <CaseForm initial={editing} onSave={handleSave} onClose={() => setFormOpen(false)} />
+        </Modal>
+      )}
     </PageShell>
   )
 }

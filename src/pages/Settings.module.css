@@ -349,6 +349,95 @@
   word-break: break-all;
 }
 
+/* ── Editable lists ──────────────────────────────────────────────── */
+.listEditor {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.listBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.listBlockTitle {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-2);
+}
+
+.listItems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.listTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(4,59,97,0.06);
+  border: 1px solid rgba(4,59,97,0.15);
+  border-radius: 6px;
+  padding: 0.25rem 0.55rem 0.25rem 0.7rem;
+  font-size: 0.78rem;
+  color: var(--text);
+}
+
+.listTagDel {
+  width: 14px; height: 14px;
+  border-radius: 3px;
+  background: transparent;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0;
+  transition: color 0.15s;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+.listTagDel:hover { color: var(--red); }
+
+.listAddRow {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.listInput {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid rgba(4,59,97,0.2);
+  border-radius: 8px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.825rem;
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.listInput:focus { border-color: var(--accent); }
+
+.btnListAdd {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.45rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.btnListAdd:hover { background: var(--accent-dark); }
+
 /* ── Dev box ─────────────────────────────────────────────────────── */
 .devBox {
   display: flex;

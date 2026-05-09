@@ -4,6 +4,8 @@ import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
 import { useClients } from '@/hooks/useClients'
 import PageShell from '@/components/ui/PageShell'
 import ViewToggle from '@/components/ui/ViewToggle'
+import Modal from '@/components/ui/Modal'
+import ClientForm from '@/components/forms/ClientForm'
 import styles from './Clients.module.css'
 
 /* ── data mapper ────────────────────────────────────────────────────── */
@@ -28,7 +30,7 @@ function initials(nome) {
 }
 
 /* ── sub-components ─────────────────────────────────────────────────── */
-function GridView({ clients }) {
+function GridView({ clients, onEdit }) {
   if (clients.length === 0) return (
     <div className={styles.emptyState}>
       <div className={styles.emptyIcon}>👤</div>
@@ -38,7 +40,7 @@ function GridView({ clients }) {
   return (
     <div className={styles.grid}>
       {clients.map(c => (
-        <div key={c.id} className={styles.clientCard}>
+        <div key={c.id} className={styles.clientCard} onClick={() => onEdit(c.id)} style={{ cursor: 'pointer' }}>
           <div className={styles.clientAvatar}
             style={{ background: `hsl(${(c.id.charCodeAt?.(0) ?? 0) * 47 % 360}, 35%, 88%)`, color: `hsl(${(c.id.charCodeAt?.(0) ?? 0) * 47 % 360}, 55%, 32%)` }}>
             {initials(c.nome)}
@@ -52,7 +54,6 @@ function GridView({ clients }) {
           </div>
           <div className={styles.clientFooter}>
             <span className={styles.clientCasos}>{c.casos} {c.casos === 1 ? 'processo' : 'processos'}</span>
-            <button className={styles.clientBtn}>Ver →</button>
           </div>
         </div>
       ))}
@@ -60,7 +61,7 @@ function GridView({ clients }) {
   )
 }
 
-function ListView({ clients }) {
+function ListView({ clients, onEdit }) {
   if (clients.length === 0) return (
     <div className={styles.emptyState}>
       <div className={styles.emptyIcon}>👤</div>
@@ -78,12 +79,11 @@ function ListView({ clients }) {
             <th>Documento</th>
             <th>Cidade</th>
             <th>Processos</th>
-            <th></th>
           </tr>
         </thead>
         <tbody>
           {clients.map(c => (
-            <tr key={c.id} className={styles.tableRow}>
+            <tr key={c.id} className={styles.tableRow} onClick={() => onEdit(c.id)} style={{ cursor: 'pointer' }}>
               <td>
                 <div className={styles.tableClientWrap}>
                   <div className={styles.tableAvatar}
@@ -101,7 +101,6 @@ function ListView({ clients }) {
               <td className={styles.docCell}>{c.cpf ?? c.cnpj ?? '—'}</td>
               <td>{c.cidade}</td>
               <td><span className={styles.casosCount}>{c.casos}</span></td>
-              <td><button className={styles.rowBtn}>Ver →</button></td>
             </tr>
           ))}
         </tbody>
@@ -118,9 +117,19 @@ export default function Clients() {
   const [view, setView]           = useState(prefs.clientes_view ?? 'lista')
   const [search, setSearch]       = useState('')
   const [filterTipo, setFilterTipo] = useState('todos')
+  const [formOpen, setFormOpen]   = useState(false)
+  const [editing,  setEditing]    = useState(null)
 
-  const { data: rawClients, loading, error } = useClients()
+  const { data: rawClients, loading, error, refetch } = useClients()
   const clients = useMemo(() => (rawClients ?? []).map(mapClient), [rawClients])
+
+  const rawById = useMemo(() =>
+    Object.fromEntries((rawClients ?? []).map(r => [r.id, r]))
+  , [rawClients])
+
+  function openNew()    { setEditing(null); setFormOpen(true) }
+  function openEdit(id) { setEditing(rawById[id] ?? null); setFormOpen(true) }
+  function handleSave() { refetch(); setFormOpen(false) }
 
   function handleViewChange(v) {
     const mapped = v === 'kanban' ? 'grid' : 'lista'
@@ -148,7 +157,7 @@ export default function Clients() {
       subtitle={loading ? 'Carregando…' : `${clients.length} clientes cadastrados`}
       viewToggle={<ViewToggle value={view === 'grid' ? 'kanban' : 'lista'} onChange={handleViewChange} />}
       action={
-        <button className={styles.btnNovo}>
+        <button className={styles.btnNovo} onClick={openNew}>
           <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.75.75 0 0 1 .75.75v5.5h5.5a.75.75 0 0 1 0 1.5h-5.5v5.5a.75.75 0 0 1-1.5 0v-5.5H1.75a.75.75 0 0 1 0-1.5h5.5v-5.5A.75.75 0 0 1 8 1Z"/></svg>
           Novo cliente
         </button>
@@ -181,8 +190,16 @@ export default function Clients() {
     >
       {error
         ? <div className={styles.emptyState}><p>Erro ao carregar clientes.</p></div>
-        : view === 'grid' ? <GridView clients={filtered} /> : <ListView clients={filtered} />
+        : view === 'grid'
+          ? <GridView clients={filtered} onEdit={openEdit} />
+          : <ListView clients={filtered} onEdit={openEdit} />
       }
+
+      {formOpen && (
+        <Modal title={editing ? 'Editar cliente' : 'Novo cliente'} onClose={() => setFormOpen(false)}>
+          <ClientForm initial={editing} onSave={handleSave} onClose={() => setFormOpen(false)} />
+        </Modal>
+      )}
     </PageShell>
   )
 }

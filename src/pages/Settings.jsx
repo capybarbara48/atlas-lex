@@ -6,6 +6,17 @@ import PageShell from '@/components/ui/PageShell'
 import styles from './Settings.module.css'
 
 /* Cores predefinidas para seleção rápida */
+const DEFAULT_SERVICE_TYPES = [
+  'Ação para Dano Moral','Ação para Dano Material','Ação para Dano Material e Dano Moral',
+  'Ação de Obrigação de Fazer','Mandado de Segurança','Assessoria Jurídica',
+  'Desenvolvimento de Contrato','Ação de Alimentos','Execução de Alimentos',
+  'Ação Trabalhista','Inventário','Restituição do INSS','Saque do FGTS',
+  'Execução de Título Extrajudicial','Ação de Divórcio','Ação Cível',
+  'Cumprimento de Sentença',
+]
+
+const DEFAULT_QUOTA_LITIS = ['5%','10%','15%','20%','25%','30%','35%']
+
 const PRESET_COLORS = [
   { hex: '#043b61', name: 'Navy (padrão)' },
   { hex: '#1a1a2e', name: 'Azul-marinho escuro' },
@@ -86,6 +97,13 @@ export default function Settings() {
   /* Preferences */
   const [prefs, setPrefs] = useState({})
 
+  /* Editable lists (saved to lawyers.preferences in Supabase) */
+  const [serviceTypes,    setServiceTypes]    = useState(DEFAULT_SERVICE_TYPES)
+  const [quotaLitis,      setQuotaLitis]      = useState(DEFAULT_QUOTA_LITIS)
+  const [newServiceType,  setNewServiceType]  = useState('')
+  const [newQuotaLitis,   setNewQuotaLitis]   = useState('')
+  const [listSaving,      setListSaving]      = useState(false)
+
   const [saving,  setSaving]  = useState(false)
   const [success, setSuccess] = useState('')
   const [error,   setError]   = useState('')
@@ -99,6 +117,9 @@ export default function Settings() {
     setLogoUrl(lawyer.logo_url     ?? '')
     setAccent(lawyer.theme_accent  ?? '#043b61')
     setPrefs(loadPreferences(lawyer.id))
+    const prefs = lawyer.preferences ?? {}
+    if (prefs.service_types?.length)    setServiceTypes(prefs.service_types)
+    if (prefs.quota_litis_options?.length) setQuotaLitis(prefs.quota_litis_options)
   }, [lawyer])
 
   /* Apply accent preview in real time */
@@ -153,6 +174,33 @@ export default function Settings() {
     setPrefs(loadPreferences(lawyer?.id))
     setSuccess('Preferências redefinidas para o padrão!')
     setTimeout(() => setSuccess(''), 3000)
+  }
+
+  async function handleSaveLists() {
+    setListSaving(true); setError(''); setSuccess('')
+    const { error } = await supabase
+      .from('lawyers')
+      .update({ preferences: { service_types: serviceTypes, quota_litis_options: quotaLitis } })
+      .eq('id', session.user.id)
+    setListSaving(false)
+    if (error) { setError('Erro ao salvar listas: ' + error.message); return }
+    await refreshLawyer()
+    setSuccess('Listas atualizadas com sucesso!')
+    setTimeout(() => setSuccess(''), 3000)
+  }
+
+  function addServiceType() {
+    const v = newServiceType.trim()
+    if (!v || serviceTypes.includes(v)) return
+    setServiceTypes(prev => [...prev, v])
+    setNewServiceType('')
+  }
+
+  function addQuotaLitis() {
+    const v = newQuotaLitis.trim()
+    if (!v || quotaLitis.includes(v)) return
+    setQuotaLitis(prev => [...prev, v])
+    setNewQuotaLitis('')
   }
 
   return (
@@ -311,6 +359,81 @@ export default function Settings() {
               Redefinir preferências
             </button>
             <span className={styles.prefNote}>Preferências salvas localmente neste dispositivo</span>
+          </div>
+        </Section>
+
+        {/* ── Listas personalizáveis ── */}
+        <Section
+          title="Listas Personalizáveis"
+          subtitle="Configure as opções disponíveis em Propostas e Honorários. Salvas na nuvem para todos os seus dispositivos."
+        >
+          <div className={styles.listEditor}>
+
+            {/* Tipos de serviço */}
+            <div className={styles.listBlock}>
+              <span className={styles.listBlockTitle}>Tipos de serviço (Propostas)</span>
+              <div className={styles.listItems}>
+                {serviceTypes.map(item => (
+                  <span key={item} className={styles.listTag}>
+                    {item}
+                    <button
+                      type="button"
+                      className={styles.listTagDel}
+                      onClick={() => setServiceTypes(prev => prev.filter(i => i !== item))}
+                      title="Remover"
+                    >×</button>
+                  </span>
+                ))}
+              </div>
+              <div className={styles.listAddRow}>
+                <input
+                  className={styles.listInput}
+                  value={newServiceType}
+                  onChange={e => setNewServiceType(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addServiceType())}
+                  placeholder="Novo tipo de serviço…"
+                />
+                <button type="button" className={styles.btnListAdd} onClick={addServiceType}>
+                  Adicionar
+                </button>
+              </div>
+            </div>
+
+            {/* Percentuais de quota-litis */}
+            <div className={styles.listBlock}>
+              <span className={styles.listBlockTitle}>Percentuais de Quota-Litis</span>
+              <div className={styles.listItems}>
+                {quotaLitis.map(item => (
+                  <span key={item} className={styles.listTag}>
+                    {item}
+                    <button
+                      type="button"
+                      className={styles.listTagDel}
+                      onClick={() => setQuotaLitis(prev => prev.filter(i => i !== item))}
+                      title="Remover"
+                    >×</button>
+                  </span>
+                ))}
+              </div>
+              <div className={styles.listAddRow}>
+                <input
+                  className={styles.listInput}
+                  value={newQuotaLitis}
+                  onChange={e => setNewQuotaLitis(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addQuotaLitis())}
+                  placeholder="Ex: 40%"
+                />
+                <button type="button" className={styles.btnListAdd} onClick={addQuotaLitis}>
+                  Adicionar
+                </button>
+              </div>
+            </div>
+
+          </div>
+          <div className={styles.formFooter} style={{ marginTop: '1.25rem' }}>
+            <button type="button" className={styles.btnSave} onClick={handleSaveLists} disabled={listSaving}>
+              {listSaving ? 'Salvando…' : 'Salvar listas'}
+            </button>
           </div>
         </Section>
 

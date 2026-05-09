@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react'
 import { useAllEntries } from '@/hooks/useFinancials'
 import PageShell from '@/components/ui/PageShell'
+import Modal from '@/components/ui/Modal'
+import EntryForm from '@/components/forms/EntryForm'
 import styles from './Financials.module.css'
 
 /* ── data mapper ────────────────────────────────────────────────────── */
@@ -41,9 +43,19 @@ export default function Financials() {
   const [filterTipo, setFilterTipo]     = useState('todos')
   const [filterStatus, setFilterStatus] = useState('todos')
   const [search, setSearch]             = useState('')
+  const [formOpen, setFormOpen]         = useState(false)
+  const [editing,  setEditing]          = useState(null)
 
-  const { data: rawEntries, loading, error } = useAllEntries()
+  const { data: rawEntries, loading, error, refetch } = useAllEntries()
   const entries = useMemo(() => (rawEntries ?? []).map(mapEntry), [rawEntries])
+
+  const rawById = useMemo(() =>
+    Object.fromEntries((rawEntries ?? []).map(r => [r.id, r]))
+  , [rawEntries])
+
+  function openNew()    { setEditing(null); setFormOpen(true) }
+  function openEdit(id) { setEditing(rawById[id] ?? null); setFormOpen(true) }
+  function handleSave() { refetch(); setFormOpen(false) }
 
   const filtered = useMemo(() => {
     let list = entries
@@ -70,7 +82,7 @@ export default function Financials() {
       title="Financeiro"
       subtitle={`${currentMonthLabel()} · Todos os lançamentos`}
       action={
-        <button className={styles.btnNovo}>
+        <button className={styles.btnNovo} onClick={openNew}>
           <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.75.75 0 0 1 .75.75v5.5h5.5a.75.75 0 0 1 0 1.5h-5.5v5.5a.75.75 0 0 1-1.5 0v-5.5H1.75a.75.75 0 0 1 0-1.5h5.5v-5.5A.75.75 0 0 1 8 1Z"/></svg>
           Novo lançamento
         </button>
@@ -124,7 +136,7 @@ export default function Financials() {
               : filtered.length === 0
               ? <tr><td colSpan={6} className={styles.emptyRow}>Nenhum lançamento encontrado</td></tr>
               : filtered.map(e => (
-                  <tr key={e.id} className={styles.tableRow}>
+                  <tr key={e.id} className={styles.tableRow} onClick={() => openEdit(e.id)} style={{ cursor: 'pointer' }}>
                     <td className={styles.descCell}>{e.desc}</td>
                     <td className={styles.caseCell}>{e.caso ?? '—'}</td>
                     <td><span className={`badge badge-${e.tipo}`}>{e.tipo === 'receita' ? 'Receita' : 'Despesa'}</span></td>
@@ -145,6 +157,12 @@ export default function Financials() {
           </tbody>
         </table>
       </div>
+
+      {formOpen && (
+        <Modal title={editing ? 'Editar lançamento' : 'Novo lançamento'} onClose={() => setFormOpen(false)}>
+          <EntryForm initial={editing} onSave={handleSave} onClose={() => setFormOpen(false)} />
+        </Modal>
+      )}
     </PageShell>
   )
 }
