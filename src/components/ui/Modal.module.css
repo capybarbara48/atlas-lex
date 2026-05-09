@@ -5,9 +5,10 @@
   backdrop-filter: blur(3px);
   z-index: 200;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 1.5rem;
+  padding: 2rem 1.5rem;
+  overflow-y: auto;
   animation: fadeIn 0.15s ease;
 }
 @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
@@ -18,7 +19,8 @@
   border-radius: var(--radius);
   box-shadow: 0 24px 64px rgba(0,0,0,0.25);
   width: 100%;
-  max-height: 90vh;
+  max-height: none;
+  margin: auto;
   display: flex;
   flex-direction: column;
   animation: slideUp 0.2s ease;
@@ -60,8 +62,6 @@
 .closeBtn svg { width: 16px; height: 16px; }
 
 .body {
-  overflow-y: auto;
-  flex: 1;
   padding: 1.5rem;
 }
 .body::-webkit-scrollbar { width: 4px; }
