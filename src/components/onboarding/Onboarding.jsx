@@ -108,7 +108,8 @@ export default function Onboarding() {
     setError('')
     const { error } = await supabase
       .from('lawyers')
-      .update({
+      .upsert({
+        id:                   session.user.id,
         full_name:            fullName.trim(),
         oab_number:           oabNumber.trim() || null,
         firm_name:            firmName.trim(),
@@ -116,8 +117,7 @@ export default function Onboarding() {
         theme_accent:         accent,
         theme_accent_dark:    darken(accent),
         onboarding_completed: true,
-      })
-      .eq('id', session.user.id)
+      }, { onConflict: 'id' })
 
     setSaving(false)
     if (error) {

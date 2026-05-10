@@ -42,8 +42,8 @@ function PrivateRoute({ children }) {
 
   if (!session) return <Navigate to="/login" replace />
 
-  // Lawyer row loaded but onboarding not completed → show wizard
-  if (lawyer && !lawyer.onboarding_completed) {
+  // No lawyer row yet, or onboarding not completed → show wizard
+  if (!lawyer || !lawyer.onboarding_completed) {
     return <Onboarding />
   }
 
