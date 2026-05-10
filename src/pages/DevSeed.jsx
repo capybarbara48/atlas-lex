@@ -9,7 +9,7 @@ function daysFrom(n) {
 }
 
 export default function DevSeed() {
-  const { lawyer } = useAuth()
+  const { lawyer, session } = useAuth()
   const [log,     setLog]     = useState([])
   const [loading, setLoading] = useState(false)
   const [done,    setDone]    = useState(false)
@@ -21,8 +21,8 @@ export default function DevSeed() {
   async function seed() {
     setLoading(true); setLog([]); setDone(false)
 
-    const lid = lawyer?.id
-    if (!lid) { push('Erro: lawyer não carregado', false); setLoading(false); return }
+    const lid = lawyer?.id ?? session?.user?.id
+    if (!lid) { push('Erro: não autenticado', false); setLoading(false); return }
 
     /* ── 1. Clients ─────────────────────────────────────────────── */
     const { data: clients, error: ce } = await supabase
