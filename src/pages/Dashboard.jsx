@@ -1,9 +1,12 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useCaseStats, useCases } from '@/hooks/useCases'
 import { useClientCount } from '@/hooks/useClients'
-import { useTodayTasks } from '@/hooks/useTasks'
+import { useTodayTasks, updateTaskStatus } from '@/hooks/useTasks'
 import { useMonthFinancials, useRecentEntries } from '@/hooks/useFinancials'
+import Modal from '@/components/ui/Modal'
+import CaseForm from '@/components/forms/CaseForm'
 import styles from './Dashboard.module.css'
 
 /* ── helpers ─────────────────────────────────────────────────────────── */
@@ -79,6 +82,7 @@ function StatBox({ num, label }) {
 }
 
 function KanbanBoard({ cases }) {
+  const navigate = useNavigate()
   return (
     <div className={styles.kanbanWrapper}>
       <div className={styles.kanbanBoard}>
@@ -94,7 +98,12 @@ function KanbanBoard({ cases }) {
                 {items.length === 0
                   ? <div className={styles.kanbanEmpty}>Vazio</div>
                   : items.map(item => (
-                      <div key={item.id} className={styles.kanbanItem}>
+                      <div
+                        key={item.id}
+                        className={styles.kanbanItem}
+                        onClick={() => navigate('/casos')}
+                        style={{ cursor: 'pointer' }}
+                      >
                         {item.titulo}
                         <span className={`${styles.kanbanTribunal} ${item.trib_color}`}>
                           {item.tribunal}
@@ -111,11 +120,16 @@ function KanbanBoard({ cases }) {
   )
 }
 
-function TarefaItem({ t }) {
+function TarefaItem({ t, onCheck }) {
   const vencida = !t.concluida && t.prazo && t.prazo < new Date().toISOString().split('T')[0]
   return (
     <div className={`${styles.taskItem} ${t.concluida ? styles.taskDone : ''} ${vencida ? styles.taskOverdue : ''}`}>
-      <div className={`${styles.taskCheck} ${t.concluida ? styles.checked : ''}`} />
+      <div
+        className={`${styles.taskCheck} ${t.concluida ? styles.checked : ''}`}
+        onClick={() => !t.concluida && onCheck(t.id)}
+        style={{ cursor: t.concluida ? 'default' : 'pointer' }}
+        title={t.concluida ? 'Concluída' : 'Marcar como concluída'}
+      />
       <div className={styles.taskBody}>
         <span className={styles.taskTitle}>{t.titulo}</span>
         <span className={styles.taskCase}>{t.caso}</span>
@@ -155,14 +169,15 @@ function EntradaItem({ e }) {
 /* ── main dashboard ───────────────────────────────────────────────────── */
 export default function Dashboard() {
   const { lawyer } = useAuth()
+  const [caseFormOpen, setCaseFormOpen] = useState(false)
 
   /* data hooks */
-  const { data: caseStats }     = useCaseStats()
-  const { data: rawCases }      = useCases()
-  const { data: clientesTotal } = useClientCount()
-  const { data: rawTasks }      = useTodayTasks()
-  const { data: finMonth }      = useMonthFinancials()
-  const { data: rawEntries }    = useRecentEntries({ limit: 6 })
+  const { data: caseStats }                         = useCaseStats()
+  const { data: rawCases,   refetch: refetchCases } = useCases()
+  const { data: clientesTotal }                     = useClientCount()
+  const { data: rawTasks,   refetch: refetchTasks } = useTodayTasks()
+  const { data: finMonth }                          = useMonthFinancials()
+  const { data: rawEntries }                        = useRecentEntries({ limit: 6 })
 
   /* derived data */
   const cases   = useMemo(() => (rawCases   ?? []).map(mapDashCase),  [rawCases])
@@ -179,6 +194,11 @@ export default function Dashboard() {
   const receita      = finMonth?.receita   ?? 0
   const despesa      = finMonth?.despesa   ?? 0
   const saldo        = finMonth?.saldo     ?? 0
+
+  async function handleTaskCheck(taskId) {
+    await updateTaskStatus(taskId, 'concluida')
+    refetchTasks()
+  }
 
   return (
     <div className={styles.page}>
@@ -199,7 +219,7 @@ export default function Dashboard() {
           <StatBox num={brl(saldo)}    label="Saldo / mês" />
         </div>
 
-        <button className={styles.btnNovo}>
+        <button className={styles.btnNovo} onClick={() => setCaseFormOpen(true)}>
           <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.75.75 0 0 1 .75.75v5.5h5.5a.75.75 0 0 1 0 1.5h-5.5v5.5a.75.75 0 0 1-1.5 0v-5.5H1.75a.75.75 0 0 1 0-1.5h5.5v-5.5A.75.75 0 0 1 8 1Z"/></svg>
           Novo caso
         </button>
@@ -218,7 +238,7 @@ export default function Dashboard() {
                 <div className={styles.cardSubtitle}>{casosTotal} processos · {casosAtivos} ativos</div>
               </div>
             </div>
-            <a href="/casos" className={styles.cardLink}>Ver todos →</a>
+            <Link to="/casos" className={styles.cardLink}>Ver todos →</Link>
           </div>
           <KanbanBoard cases={cases} />
         </div>
@@ -235,12 +255,12 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            <a href="/tarefas" className={styles.cardLink}>Ver todas →</a>
+            <Link to="/tarefas" className={styles.cardLink}>Ver todas →</Link>
           </div>
           <div className={styles.cardBody}>
             {overdueTasks.length === 0
               ? <div className={styles.emptyHint}>Tudo em dia!</div>
-              : overdueTasks.map(t => <TarefaItem key={t.id} t={t} />)
+              : overdueTasks.map(t => <TarefaItem key={t.id} t={t} onCheck={handleTaskCheck} />)
             }
           </div>
         </div>
@@ -257,12 +277,12 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            <a href="/tarefas" className={styles.cardLink}>Ver todas →</a>
+            <Link to="/tarefas" className={styles.cardLink}>Ver todas →</Link>
           </div>
           <div className={styles.cardBody}>
             {todayTasks.length === 0
               ? <div className={styles.emptyHint}>Nenhuma tarefa agendada para hoje</div>
-              : todayTasks.map(t => <TarefaItem key={t.id} t={t} />)
+              : todayTasks.map(t => <TarefaItem key={t.id} t={t} onCheck={handleTaskCheck} />)
             }
           </div>
         </div>
@@ -277,7 +297,7 @@ export default function Dashboard() {
                 <div className={styles.cardSubtitle}>Resumo do mês</div>
               </div>
             </div>
-            <a href="/financeiro" className={styles.cardLink}>Ver mais →</a>
+            <Link to="/financeiro" className={styles.cardLink}>Ver mais →</Link>
           </div>
 
           {/* Mini stats row */}
@@ -309,6 +329,17 @@ export default function Dashboard() {
         </div>
 
       </div>
+
+      {/* ── New case modal ── */}
+      {caseFormOpen && (
+        <Modal title="Novo Caso" onClose={() => setCaseFormOpen(false)} size="lg">
+          <CaseForm
+            onClose={() => setCaseFormOpen(false)}
+            onSave={() => { setCaseFormOpen(false); refetchCases() }}
+          />
+        </Modal>
+      )}
+
     </div>
   )
 }

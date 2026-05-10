@@ -10,6 +10,7 @@ import Tasks from '@/pages/Tasks'
 import Financials from '@/pages/Financials'
 import Settings from '@/pages/Settings'
 import Vitrine from '@/pages/Vitrine'
+import DevSeed from '@/pages/DevSeed'
 import AppLayout from '@/components/layout/AppLayout'
 
 function PrivateRoute({ children }) {
@@ -69,6 +70,7 @@ export default function App() {
         <Route path="financeiro"    element={<Financials />} />
         <Route path="configuracoes" element={<Settings />} />
         <Route path="vitrine"       element={<Vitrine />} />
+        <Route path="dev/seed"      element={<DevSeed />} />
       </Route>
     </Routes>
   )
