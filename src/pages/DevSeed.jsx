@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/context/AuthContext'
 
 const today = new Date().toISOString().split('T')[0]
 function daysFrom(n) {
@@ -8,6 +9,7 @@ function daysFrom(n) {
 }
 
 export default function DevSeed() {
+  const { lawyer } = useAuth()
   const [log,     setLog]     = useState([])
   const [loading, setLoading] = useState(false)
   const [done,    setDone]    = useState(false)
@@ -19,9 +21,8 @@ export default function DevSeed() {
   async function seed() {
     setLoading(true); setLog([]); setDone(false)
 
-    const { data: { user }, error: ue } = await supabase.auth.getUser()
-    if (ue || !user) { push('Erro: não autenticado', false); setLoading(false); return }
-    const lid = user.id
+    const lid = lawyer?.id
+    if (!lid) { push('Erro: lawyer não carregado', false); setLoading(false); return }
 
     /* ── 1. Clients ─────────────────────────────────────────────── */
     const { data: clients, error: ce } = await supabase
