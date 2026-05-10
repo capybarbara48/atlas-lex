@@ -22,6 +22,8 @@
   margin: auto 0;
   display: flex;
   flex-direction: column;
+  /* Cap height so the body can scroll internally — no white gap */
+  max-height: calc(100vh - 4rem);
   animation: slideUp 0.2s ease;
 }
 @keyframes slideUp {
@@ -61,7 +63,9 @@
 .closeBtn svg { width: 16px; height: 16px; }
 
 .body {
+  /* Scroll inside the modal body — never overflows the modal */
   flex: 1;
+  overflow-y: auto;
   padding: 1.5rem;
 }
 .body::-webkit-scrollbar { width: 4px; }
