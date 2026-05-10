@@ -22,16 +22,23 @@ export default function CaseForm({ initial, onSave, onClose }) {
     final_fees:       initial?.final_fees  != null ? String(initial.final_fees)       : '',
     sucumbencia_fees: initial?.sucumbencia_fees != null ? String(initial.sucumbencia_fees) : '',
   })
-  const [clients, setClients] = useState([])
-  const [saving,  setSaving]  = useState(false)
-  const [error,   setError]   = useState('')
+  const [clients,       setClients]       = useState([])
+  const [saving,        setSaving]        = useState(false)
+  const [error,         setError]         = useState('')
+
+  /* ── Inline new-client form ── */
+  const [newClientOpen, setNewClientOpen] = useState(false)
+  const [nc, setNc] = useState({ full_name: '', tipo: 'PF', email: '', phone: '' })
+  const [ncSaving, setNcSaving] = useState(false)
+  const [ncError,  setNcError]  = useState('')
 
   useEffect(() => {
     supabase.from('clients').select('id, full_name').order('full_name')
       .then(({ data }) => data && setClients(data))
   }, [])
 
-  const set = (k, v) => setF(f => ({ ...f, [k]: v }))
+  const set   = (k, v) => setF(f => ({ ...f, [k]: v }))
+  const setNcF = (k, v) => setNc(n => ({ ...n, [k]: v }))
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -64,6 +71,23 @@ export default function CaseForm({ initial, onSave, onClose }) {
     onSave()
   }
 
+  async function handleCreateClient(e) {
+    e.preventDefault()
+    if (!nc.full_name.trim()) { setNcError('Nome é obrigatório.'); return }
+    setNcSaving(true); setNcError('')
+    const { data, error } = await supabase
+      .from('clients')
+      .insert({ lawyer_id: session.user.id, full_name: nc.full_name.trim(), tipo: nc.tipo, email: nc.email.trim() || null, phone: nc.phone.trim() || null })
+      .select('id, full_name')
+      .single()
+    setNcSaving(false)
+    if (error) { setNcError(error.message); return }
+    setClients(prev => [...prev, data].sort((a, b) => a.full_name.localeCompare(b.full_name)))
+    setF(f => ({ ...f, client_id: data.id }))
+    setNc({ full_name: '', tipo: 'PF', email: '', phone: '' })
+    setNewClientOpen(false)
+  }
+
   return (
     <form className={s.form} onSubmit={handleSubmit}>
       <div className={s.grid}>
@@ -86,6 +110,52 @@ export default function CaseForm({ initial, onSave, onClose }) {
             <option value="">— Selecionar —</option>
             {clients.map(c => <option key={c.id} value={c.id}>{c.full_name}</option>)}
           </select>
+          <button
+            type="button"
+            className={s.inlineLink}
+            onClick={() => { setNewClientOpen(v => !v); setNcError('') }}
+          >
+            {newClientOpen ? '✕ Cancelar novo cliente' : '+ Criar novo cliente'}
+          </button>
+
+          {newClientOpen && (
+            <div className={s.inlineCard}>
+              <div className={s.inlineCardTitle}>Novo cliente</div>
+              <div className={s.inlineGrid}>
+                <div className={`${s.field} ${s.span2}`}>
+                  <label className={s.label}>Nome completo *</label>
+                  <input className={s.input} value={nc.full_name}
+                    onChange={e => setNcF('full_name', e.target.value)}
+                    placeholder="Ex: Maria Silva" autoFocus />
+                </div>
+                <div className={s.field}>
+                  <label className={s.label}>Tipo</label>
+                  <select className={s.select} value={nc.tipo} onChange={e => setNcF('tipo', e.target.value)}>
+                    <option value="PF">Pessoa Física</option>
+                    <option value="PJ">Pessoa Jurídica</option>
+                  </select>
+                </div>
+                <div className={s.field}>
+                  <label className={s.label}>Telefone</label>
+                  <input className={s.input} value={nc.phone}
+                    onChange={e => setNcF('phone', e.target.value)}
+                    placeholder="(11) 99999-0000" />
+                </div>
+                <div className={`${s.field} ${s.span2}`}>
+                  <label className={s.label}>E-mail</label>
+                  <input className={s.input} type="email" value={nc.email}
+                    onChange={e => setNcF('email', e.target.value)}
+                    placeholder="cliente@email.com" />
+                </div>
+              </div>
+              {ncError && <div className={s.error}>{ncError}</div>}
+              <div className={s.inlineActions}>
+                <button type="button" className={s.btnSave} disabled={ncSaving} onClick={handleCreateClient}>
+                  {ncSaving ? 'Criando…' : 'Criar e selecionar'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className={s.field}>

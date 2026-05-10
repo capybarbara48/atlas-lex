@@ -130,6 +130,51 @@
 }
 .btnDelete:hover { background: rgba(220,38,38,0.07); border-color: #dc2626; }
 
+/* ── Inline new-client card ── */
+.inlineLink {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 0.25rem;
+  text-align: left;
+  transition: opacity 0.15s;
+}
+.inlineLink:hover { opacity: 0.75; }
+
+.inlineCard {
+  margin-top: 0.75rem;
+  background: var(--bg);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.inlineCardTitle {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.inlineGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1rem;
+}
+
+.inlineActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 /* ── Responsive ── */
 @media (max-width: 480px) {
   .grid { grid-template-columns: 1fr; }
