@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
+import Modal from '@/components/ui/Modal'
+import ClientForm from './ClientForm'
 import s from './Form.module.css'
 
 const AREAS = ['Cível','Trabalhista','Família','Criminal','Tributário','Bancário',
@@ -27,7 +29,8 @@ export default function CaseForm({ initial, onSave, onClose }) {
   const [error,         setError]         = useState('')
 
   /* ── Inline new-client form ── */
-  const [newClientOpen, setNewClientOpen] = useState(false)
+  const [newClientOpen,  setNewClientOpen]  = useState(false)
+  const [clientFormOpen, setClientFormOpen] = useState(false)
   const [nc, setNc] = useState({ full_name: '', tipo: 'PF', email: '', phone: '' })
   const [ncSaving, setNcSaving] = useState(false)
   const [ncError,  setNcError]  = useState('')
@@ -69,6 +72,24 @@ export default function CaseForm({ initial, onSave, onClose }) {
     const { error } = await supabase.from('cases').delete().eq('id', initial.id)
     if (error) { setError(error.message); return }
     onSave()
+  }
+
+  async function handleFullClientSave() {
+    const { data } = await supabase
+      .from('clients')
+      .select('id, full_name, created_at')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+    if (data) {
+      setClients(prev =>
+        [...prev.filter(c => c.id !== data.id), { id: data.id, full_name: data.full_name }]
+          .sort((a, b) => a.full_name.localeCompare(b.full_name))
+      )
+      setF(f => ({ ...f, client_id: data.id }))
+    }
+    setClientFormOpen(false)
+    setNewClientOpen(false)
   }
 
   async function handleCreateClient(e) {
@@ -150,6 +171,9 @@ export default function CaseForm({ initial, onSave, onClose }) {
               </div>
               {ncError && <div className={s.error}>{ncError}</div>}
               <div className={s.inlineActions}>
+                <button type="button" className={s.btnCancel} onClick={() => setClientFormOpen(true)}>
+                  Cadastro completo →
+                </button>
                 <button type="button" className={s.btnSave} disabled={ncSaving} onClick={handleCreateClient}>
                   {ncSaving ? 'Criando…' : 'Criar e selecionar'}
                 </button>
@@ -219,6 +243,15 @@ export default function CaseForm({ initial, onSave, onClose }) {
       </div>
 
       {error && <div className={s.error}>{error}</div>}
+
+      {clientFormOpen && (
+        <Modal title="Novo Cliente" onClose={() => setClientFormOpen(false)} size="md">
+          <ClientForm
+            onClose={() => setClientFormOpen(false)}
+            onSave={handleFullClientSave}
+          />
+        </Modal>
+      )}
 
       <div className={s.footer}>
         {initial && <button type="button" className={s.btnDelete} onClick={handleDelete}>Excluir</button>}
