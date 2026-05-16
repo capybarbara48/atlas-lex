@@ -1,0 +1,335 @@
+/* ── Page wrapper ───────────────────────────────────────────────── */
+.page {
+  padding: 1.75rem 2rem 3rem;
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ── Loading ────────────────────────────────────────────────────── */
+.loadingWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  gap: 1rem;
+}
+.spinner {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 3px solid rgba(4,59,97,0.12);
+  border-top-color: var(--accent);
+  animation: spin 0.75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Page header ────────────────────────────────────────────────── */
+.pageHeader {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: transparent;
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.875rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-2);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.backBtn svg { width: 16px; height: 16px; }
+.backBtn:hover { background: var(--bg); color: var(--text); }
+
+.headerCenter {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.headerAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.clientName {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.3rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.editBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.editBtn svg { width: 15px; height: 15px; }
+.editBtn:hover { background: var(--accent-dark); }
+
+/* ── Info card ──────────────────────────────────────────────────── */
+.infoCard {
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem 1.5rem;
+}
+
+.infoField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.infoSpan { grid-column: 1 / -1; }
+
+.infoLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-3);
+}
+
+.infoValue {
+  font-size: 0.875rem;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* ── Section card ───────────────────────────────────────────────── */
+.section {
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: var(--border);
+}
+
+.sectionTitle {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sectionMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sectionExtra {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.countBadge {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.empty {
+  padding: 1.5rem 1.25rem;
+  font-size: 0.82rem;
+  color: var(--text-3);
+}
+
+/* ── Casos list ─────────────────────────────────────────────────── */
+.caseList { display: flex; flex-direction: column; }
+
+.caseRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem 1.25rem;
+  border-bottom: var(--border);
+  flex-wrap: wrap;
+}
+.caseRow:last-child { border-bottom: none; }
+.caseRow:hover { background: var(--bg); }
+
+.caseMain {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.caseTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.caseNumber {
+  font-size: 0.72rem;
+  color: var(--text-3);
+  font-family: monospace;
+}
+
+.caseMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.caseArea, .caseCourt {
+  font-size: 0.72rem;
+  color: var(--text-2);
+}
+
+.caseDate {
+  font-size: 0.72rem;
+  color: var(--text-3);
+}
+
+/* ── Tasks list ─────────────────────────────────────────────────── */
+.taskList { display: flex; flex-direction: column; }
+
+.taskRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  border-bottom: var(--border);
+  flex-wrap: wrap;
+}
+.taskRow:last-child { border-bottom: none; }
+.taskRow:hover { background: var(--bg); }
+
+.taskMain {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.taskTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+}
+.done { text-decoration: line-through; color: var(--text-3); }
+
+.taskCase {
+  font-size: 0.72rem;
+  color: var(--text-3);
+}
+
+.taskMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.taskDate {
+  font-size: 0.72rem;
+  color: var(--text-3);
+}
+
+/* ── Financial entries list ─────────────────────────────────────── */
+.entryList { display: flex; flex-direction: column; }
+
+.entryRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  border-bottom: var(--border);
+  flex-wrap: wrap;
+}
+.entryRow:last-child { border-bottom: none; }
+.entryRow:hover { background: var(--bg); }
+
+.entryMain { flex: 1; min-width: 0; }
+
+.entryDesc {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.entryMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.entryAmount {
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.entryDate {
+  font-size: 0.72rem;
+  color: var(--text-3);
+}
+
+/* ── Responsive ─────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .page { padding: 1.25rem 1rem 2rem; }
+  .infoCard { grid-template-columns: 1fr; }
+  .pageHeader { flex-wrap: wrap; gap: 0.75rem; }
+  .headerCenter { order: -1; width: 100%; }
+}

@@ -36,3 +36,6 @@
 .rowBtn { font-size: 0.75rem; color: var(--accent); background: transparent; font-family: inherit; }
 .emptyState { text-align: center; padding: 3rem 1rem; color: var(--text-2); background: var(--card); border: var(--border); border-radius: var(--radius); }
 .emptyIcon { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.35; }
+
+.editIconBtn { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; background: transparent; border: var(--border); color: var(--text-3); cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
+.editIconBtn:hover { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }

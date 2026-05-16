@@ -285,6 +285,58 @@ export default function DevSeed() {
     if (fe) { push(`Erro ao criar lançamentos: ${fe.message}`, false); setLoading(false); return }
     push(`✓ ${entries.length} lançamentos financeiros criados`)
 
+    /* ── 6. Notas ──────────────────────────────────────────────── */
+    const { data: notas, error: ne } = await supabase
+      .from('notas')
+      .insert([
+        {
+          lawyer_id: lid,
+          titulo: 'Audiências da semana',
+          corpo: 'Segunda: TRT1 às 9h (Ricardo)\nTerça: TJSP às 14h (Ana Clara)\nQuinta: Reunião com TechBrasil',
+          cor: 'azul',
+          fixada: true,
+        },
+        {
+          lawyer_id: lid,
+          titulo: 'Contato urgente — Dr. Lima',
+          corpo: 'Retornar ligação sobre o processo de inventário. Tel: (11) 99800-0001',
+          cor: 'vermelho',
+          fixada: true,
+        },
+        {
+          lawyer_id: lid,
+          titulo: 'Pesquisa: jurisprudência STJ danos morais 2025',
+          corpo: 'Buscar acórdãos recentes sobre quantum indenizatório em casos de negativação indevida.',
+          cor: 'amarelo',
+          fixada: false,
+        },
+        {
+          lawyer_id: lid,
+          titulo: null,
+          corpo: 'Ligar para a assistente da Dra. Fernanda sobre a perícia do caso 3.',
+          cor: null,
+          fixada: false,
+        },
+        {
+          lawyer_id: lid,
+          titulo: 'Renovação OAB',
+          corpo: 'Prazo de renovação da anuidade: 31/07/2026. Organizar documentação.',
+          cor: 'verde',
+          fixada: false,
+        },
+      ])
+      .select()
+
+    if (ne) {
+      if (ne.message?.includes('relation "public.notas" does not exist') || ne.code === '42P01') {
+        push('⚠ Tabela "notas" não existe — aplique a migration 20240105000000_add_notas.sql no Supabase dashboard', false)
+      } else {
+        push(`Erro ao criar notas: ${ne.message}`, false)
+      }
+    } else {
+      push(`✓ ${notas.length} notas criadas`)
+    }
+
     push('─────────────────────────────────')
     push('Dados de teste inseridos com sucesso!')
     setDone(true)
@@ -305,7 +357,7 @@ export default function DevSeed() {
         Seed de dados de teste
       </h2>
       <p style={{ color: 'var(--text-2)', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
-        Insere 3 clientes, 4 casos, 5 tarefas, 2 propostas e 5 lançamentos financeiros para testes.
+        Insere 3 clientes, 4 casos, 5 tarefas, 2 propostas, 5 lançamentos financeiros e 5 notas para testes.
         Use apenas em ambiente de desenvolvimento.
       </p>
 

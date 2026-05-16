@@ -9,6 +9,8 @@ import Proposals from '@/pages/Proposals'
 import Tasks from '@/pages/Tasks'
 import Financials from '@/pages/Financials'
 import Settings from '@/pages/Settings'
+import Notes from '@/pages/Notes'
+import ClientDetail from '@/pages/ClientDetail'
 import Vitrine from '@/pages/Vitrine'
 import DevSeed from '@/pages/DevSeed'
 import AppLayout from '@/components/layout/AppLayout'
@@ -65,10 +67,12 @@ export default function App() {
         <Route index                element={<Dashboard />} />
         <Route path="casos"         element={<Cases />} />
         <Route path="clientes"      element={<Clients />} />
+        <Route path="clientes/:id"  element={<ClientDetail />} />
         <Route path="propostas"     element={<Proposals />} />
         <Route path="tarefas"       element={<Tasks />} />
         <Route path="financeiro"    element={<Financials />} />
         <Route path="configuracoes" element={<Settings />} />
+        <Route path="notas"         element={<Notes />} />
         <Route path="vitrine"       element={<Vitrine />} />
         <Route path="dev/seed"      element={<DevSeed />} />
       </Route>

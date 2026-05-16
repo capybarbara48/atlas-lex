@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
 import { useClients } from '@/hooks/useClients'
@@ -7,6 +8,13 @@ import ViewToggle from '@/components/ui/ViewToggle'
 import Modal from '@/components/ui/Modal'
 import ClientForm from '@/components/forms/ClientForm'
 import styles from './Clients.module.css'
+
+const EditIcon = () => (
+  <svg viewBox="0 0 20 20" fill="currentColor" width="13" height="13">
+    <path d="M5.433 13.917l1.262-3.155A4 4 0 0 1 7.58 9.42l6.92-6.918a2.121 2.121 0 0 1 3 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 0 1-.65-.65Z"/>
+    <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0 0 10 3H4.75A2.75 2.75 0 0 0 2 5.75v9.5A2.75 2.75 0 0 0 4.75 18h9.5A2.75 2.75 0 0 0 17 15.25V10a.75.75 0 0 0-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5Z"/>
+  </svg>
+)
 
 /* ── data mapper ────────────────────────────────────────────────────── */
 function mapClient(c) {
@@ -30,7 +38,7 @@ function initials(nome) {
 }
 
 /* ── sub-components ─────────────────────────────────────────────────── */
-function GridView({ clients, onEdit }) {
+function GridView({ clients, onNavigate, onEdit }) {
   if (clients.length === 0) return (
     <div className={styles.emptyState}>
       <div className={styles.emptyIcon}>👤</div>
@@ -40,7 +48,7 @@ function GridView({ clients, onEdit }) {
   return (
     <div className={styles.grid}>
       {clients.map(c => (
-        <div key={c.id} className={styles.clientCard} onClick={() => onEdit(c.id)} style={{ cursor: 'pointer' }}>
+        <div key={c.id} className={styles.clientCard} onClick={() => onNavigate(c.id)} style={{ cursor: 'pointer' }}>
           <div className={styles.clientAvatar}
             style={{ background: `hsl(${(c.id.charCodeAt?.(0) ?? 0) * 47 % 360}, 35%, 88%)`, color: `hsl(${(c.id.charCodeAt?.(0) ?? 0) * 47 % 360}, 55%, 32%)` }}>
             {initials(c.nome)}
@@ -54,6 +62,13 @@ function GridView({ clients, onEdit }) {
           </div>
           <div className={styles.clientFooter}>
             <span className={styles.clientCasos}>{c.casos} {c.casos === 1 ? 'processo' : 'processos'}</span>
+            <button
+              className={styles.editIconBtn}
+              title="Editar"
+              onClick={e => { e.stopPropagation(); onEdit(c.id) }}
+            >
+              <EditIcon />
+            </button>
           </div>
         </div>
       ))}
@@ -61,7 +76,7 @@ function GridView({ clients, onEdit }) {
   )
 }
 
-function ListView({ clients, onEdit }) {
+function ListView({ clients, onNavigate, onEdit }) {
   if (clients.length === 0) return (
     <div className={styles.emptyState}>
       <div className={styles.emptyIcon}>👤</div>
@@ -79,11 +94,12 @@ function ListView({ clients, onEdit }) {
             <th>Documento</th>
             <th>Cidade</th>
             <th>Processos</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
           {clients.map(c => (
-            <tr key={c.id} className={styles.tableRow} onClick={() => onEdit(c.id)} style={{ cursor: 'pointer' }}>
+            <tr key={c.id} className={styles.tableRow} onClick={() => onNavigate(c.id)} style={{ cursor: 'pointer' }}>
               <td>
                 <div className={styles.tableClientWrap}>
                   <div className={styles.tableAvatar}
@@ -101,6 +117,11 @@ function ListView({ clients, onEdit }) {
               <td className={styles.docCell}>{c.cpf ?? c.cnpj ?? '—'}</td>
               <td>{c.cidade}</td>
               <td><span className={styles.casosCount}>{c.casos}</span></td>
+              <td onClick={e => e.stopPropagation()}>
+                <button className={styles.editIconBtn} title="Editar" onClick={() => onEdit(c.id)}>
+                  <EditIcon />
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -112,6 +133,7 @@ function ListView({ clients, onEdit }) {
 /* ── page ───────────────────────────────────────────────────────────── */
 export default function Clients() {
   const { lawyer } = useAuth()
+  const navigate = useNavigate()
   const prefs = loadPreferences(lawyer?.id)
 
   const [view, setView]           = useState(prefs.clientes_view ?? 'lista')
@@ -127,9 +149,10 @@ export default function Clients() {
     Object.fromEntries((rawClients ?? []).map(r => [r.id, r]))
   , [rawClients])
 
-  function openNew()    { setEditing(null); setFormOpen(true) }
-  function openEdit(id) { setEditing(rawById[id] ?? null); setFormOpen(true) }
-  function handleSave() { refetch(); setFormOpen(false) }
+  function openNew()       { setEditing(null); setFormOpen(true) }
+  function openEdit(id)    { setEditing(rawById[id] ?? null); setFormOpen(true) }
+  function handleNavigate(id) { navigate('/clientes/' + id) }
+  function handleSave()    { refetch(); setFormOpen(false) }
 
   function handleViewChange(v) {
     const mapped = v === 'kanban' ? 'grid' : 'lista'
@@ -191,8 +214,8 @@ export default function Clients() {
       {error
         ? <div className={styles.emptyState}><p>Erro ao carregar clientes.</p></div>
         : view === 'grid'
-          ? <GridView clients={filtered} onEdit={openEdit} />
-          : <ListView clients={filtered} onEdit={openEdit} />
+          ? <GridView clients={filtered} onNavigate={handleNavigate} onEdit={openEdit} />
+          : <ListView clients={filtered} onNavigate={handleNavigate} onEdit={openEdit} />
       }
 
       {formOpen && (
