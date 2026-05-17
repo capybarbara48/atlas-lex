@@ -318,6 +318,32 @@
   gap: 1.25rem;
 }
 
+.searchTrigger {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.65rem;
+  background: var(--card);
+  border: var(--border);
+  border-radius: 8px;
+  font-size: 0.78rem;
+  color: var(--text-2);
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, color 0.15s;
+}
+.searchTrigger:hover { border-color: var(--accent); color: var(--accent); }
+.searchTriggerLabel { font-size: 0.78rem; }
+.searchKbd {
+  font-family: monospace;
+  font-size: 0.62rem;
+  background: var(--bg);
+  border: var(--border);
+  border-radius: 4px;
+  padding: 0.05rem 0.3rem;
+  color: var(--text-3);
+}
+
 .livePill {
   display: flex;
   align-items: center;

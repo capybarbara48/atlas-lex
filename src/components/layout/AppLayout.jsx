@@ -2,6 +2,7 @@ import { Outlet, NavLink, useLocation, Link } from 'react-router-dom'
 import { useState, useEffect, Suspense } from 'react'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import FeedbackButton from '@/components/ui/FeedbackButton'
+import SearchPalette from '@/components/ui/SearchPalette'
 import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
 import styles from './AppLayout.module.css'
@@ -144,8 +145,20 @@ function PageLoader() {
 export default function AppLayout() {
   const { lawyer, session, isAdmin, isBeta } = useAuth()
   const location = useLocation()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen]   = useState(false)
   const [overdueCount, setOverdueCount] = useState(0)
+  const [searchOpen, setSearchOpen]     = useState(false)
+
+  useEffect(() => {
+    function onKey(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setSearchOpen(v => !v)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   useEffect(() => {
     const today = new Date().toISOString()
@@ -268,6 +281,13 @@ export default function AppLayout() {
             <span className={styles.pageTitle}>{pageTitle}</span>
           </div>
           <div className={styles.topbarRight}>
+            <button className={styles.searchTrigger} onClick={() => setSearchOpen(true)} title="Busca global (⌘K)">
+              <svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15">
+                <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clipRule="evenodd"/>
+              </svg>
+              <span className={styles.searchTriggerLabel}>Buscar</span>
+              <kbd className={styles.searchKbd}>⌘K</kbd>
+            </button>
             <div className={styles.livePill}>
               <span className={styles.liveDot} />
               <span className={styles.liveLabel}>Online</span>
@@ -295,6 +315,9 @@ export default function AppLayout() {
 
       {/* Floating feedback button */}
       <FeedbackButton />
+
+      {/* Global search palette */}
+      {searchOpen && <SearchPalette onClose={() => setSearchOpen(false)} />}
 
     </div>
   )
