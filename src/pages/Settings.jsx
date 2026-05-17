@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { loadPreferences, savePreferences, resetPreferences } from '@/hooks/usePreferences'
 import PageShell from '@/components/ui/PageShell'
 import SuporteSection from '@/components/support/SuporteSection'
+import LogoUpload from '@/components/ui/LogoUpload'
 import styles from './Settings.module.css'
 
 /* Cores predefinidas para seleção rápida */
@@ -308,14 +309,8 @@ export default function Settings() {
                   placeholder="Reis Advocacia"
                 />
               </Field>
-              <Field label="URL do logotipo" hint="Link público de uma imagem (PNG/SVG recomendado)">
-                <input
-                  className={styles.input}
-                  type="url"
-                  value={logoUrl}
-                  onChange={e => setLogoUrl(e.target.value)}
-                  placeholder="https://seu-site.com/logo.svg"
-                />
+              <Field label="Logotipo" hint="PNG, JPG, WebP ou SVG · máx. 2 MB">
+                <LogoUpload value={logoUrl} onChange={setLogoUrl} />
               </Field>
             </div>
 

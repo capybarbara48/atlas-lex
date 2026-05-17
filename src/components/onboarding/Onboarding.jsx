@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
+import LogoUpload from '@/components/ui/LogoUpload'
 import styles from './Onboarding.module.css'
 
 /* ── Preset brand colors ─────────────────────────────────────────── */
@@ -197,22 +198,9 @@ export default function Onboarding() {
         </div>
         <div className={styles.field}>
           <label className={styles.label}>
-            Logo <span className={styles.optional}>(URL de imagem pública — opcional)</span>
+            Logo <span className={styles.optional}>(opcional)</span>
           </label>
-          <input
-            className={styles.input}
-            type="url"
-            value={logoUrl}
-            onChange={e => setLogoUrl(e.target.value)}
-            placeholder="https://seu-site.com/logo.svg"
-          />
-          {logoUrl && (
-            <div className={styles.logoPreview}>
-              <img src={logoUrl} alt="logo preview"
-                onError={e => { e.target.style.display = 'none' }}
-              />
-            </div>
-          )}
+          <LogoUpload value={logoUrl} onChange={setLogoUrl} />
         </div>
       </div>
     </div>,
@@ -281,7 +269,7 @@ export default function Onboarding() {
         </div>
         <div className={styles.summaryRow}>
           <span className={styles.summaryKey}>Logo</span>
-          <span className={styles.summaryVal}>{logoUrl || 'Não configurado (usaremos as iniciais)'}</span>
+          <span className={styles.summaryVal}>{logoUrl ? 'Configurado ✓' : 'Não configurado (usaremos as iniciais)'}</span>
         </div>
         <div className={styles.summaryRow}>
           <span className={styles.summaryKey}>Conta</span>
