@@ -119,7 +119,8 @@
 }
 .kanbanCard:hover { background: var(--card-hover); box-shadow: var(--shadow); }
 .kanbanCardTitle { font-size: 0.78rem; font-weight: 600; color: var(--text); line-height: 1.3; margin-bottom: 0.2rem; }
-.kanbanCardClient { font-size: 0.68rem; color: var(--text-2); margin-bottom: 0.3rem; }
+.kanbanCardClient { font-size: 0.68rem; color: var(--text-2); margin-bottom: 0.3rem; text-decoration: none; display: block; transition: color 0.15s; }
+.kanbanCardClient:hover { color: var(--accent); }
 .kanbanCardMeta { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; flex-wrap: wrap; }
 .kanbanCardValor { font-size: 0.65rem; color: var(--text-2); font-weight: 600; }
 
@@ -152,6 +153,8 @@
 .caseTitle { font-weight: 600; color: var(--text); margin-bottom: 0.1rem; }
 .caseNumber { font-size: 0.68rem; color: var(--text-3); font-family: monospace; }
 .clientCell { font-weight: 500; }
+.clientLink { color: var(--accent); font-weight: 600; text-decoration: none; transition: opacity 0.15s; }
+.clientLink:hover { opacity: 0.7; text-decoration: underline; }
 .valorCell { font-weight: 600; font-variant-numeric: tabular-nums; }
 .dateCell { font-size: 0.78rem; color: var(--text-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
 

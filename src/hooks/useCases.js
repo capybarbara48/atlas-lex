@@ -7,8 +7,8 @@ export function useCases({ status, limit } = {}) {
       .from('cases')
       .select(`
         id, title, case_number, status, area, court, valor,
-        opened_at, updated_at, created_at,
-        clients ( full_name )
+        opened_at, updated_at, created_at, client_id,
+        clients ( id, full_name )
       `)
       .order('updated_at', { ascending: false })
     if (status) q = q.eq('status', status)

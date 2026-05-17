@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
 import { useCases } from '@/hooks/useCases'
@@ -26,6 +27,7 @@ function mapCase(c) {
     numero:     c.case_number ?? '—',
     titulo:     c.title,
     cliente:    c.clients?.full_name ?? '—',
+    clienteId:  c.clients?.id ?? c.client_id ?? null,
     status:     c.status,
     tipo:       c.area ?? '—',
     tribunal:   c.court ?? '—',
@@ -70,7 +72,10 @@ function KanbanView({ cases, onEdit }) {
                   : items.map(c => (
                       <div key={c.id} className={styles.kanbanCard} onClick={() => onEdit(c.id)} style={{ cursor: 'pointer' }}>
                         <div className={styles.kanbanCardTitle}>{c.titulo}</div>
-                        <div className={styles.kanbanCardClient}>{c.cliente}</div>
+                        {c.clienteId
+                          ? <Link to={`/painel/clientes/${c.clienteId}`} className={styles.kanbanCardClient} onClick={e => e.stopPropagation()}>{c.cliente}</Link>
+                          : <div className={styles.kanbanCardClient}>{c.cliente}</div>}
+
                         <div className={styles.kanbanCardMeta}>
                           <span className={`badge ${c.trib_color}`}>{c.tribunal}</span>
                           {c.valor > 0 && <span className={styles.kanbanCardValor}>{brl(c.valor)}</span>}
@@ -115,7 +120,11 @@ function ListView({ cases, onEdit }) {
                 <div className={styles.caseTitle}>{c.titulo}</div>
                 <div className={styles.caseNumber}>{c.numero}</div>
               </td>
-              <td className={styles.clientCell}>{c.cliente}</td>
+              <td className={styles.clientCell} onClick={e => e.stopPropagation()}>
+                {c.clienteId
+                  ? <Link to={`/painel/clientes/${c.clienteId}`} className={styles.clientLink}>{c.cliente}</Link>
+                  : c.cliente}
+              </td>
               <td><span className="badge st-teal">{c.tipo}</span></td>
               <td><span className={`badge ${c.trib_color}`}>{c.tribunal}</span></td>
               <td className={styles.valorCell}>{brl(c.valor)}</td>

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import Modal from '@/components/ui/Modal'
 import ClientForm from '@/components/forms/ClientForm'
+import CaseForm from '@/components/forms/CaseForm'
 import styles from './ClientDetail.module.css'
 
 function brl(v) {
@@ -55,7 +56,8 @@ export default function ClientDetail() {
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState(null)
-  const [editing, setEditing] = useState(false)
+  const [editing,    setEditing]    = useState(false)
+  const [newCase,    setNewCase]    = useState(false)
 
   async function load() {
     setLoading(true)
@@ -145,9 +147,14 @@ export default function ClientDetail() {
           </div>
         </div>
 
-        <button className={styles.editBtn} onClick={() => setEditing(true)}>
-          Editar
-        </button>
+        <div className={styles.headerActions}>
+          <button className={styles.newCaseBtn} onClick={() => setNewCase(true)}>
+            + Novo caso
+          </button>
+          <button className={styles.editBtn} onClick={() => setEditing(true)}>
+            Editar
+          </button>
+        </div>
       </div>
 
       {/* ── Info card ── */}
@@ -251,10 +258,16 @@ export default function ClientDetail() {
 
       {editing && (
         <Modal title="Editar cliente" onClose={() => setEditing(false)}>
-          <ClientForm
-            initial={client}
-            onSave={handleSave}
-            onClose={() => setEditing(false)}
+          <ClientForm initial={client} onSave={handleSave} onClose={() => setEditing(false)} />
+        </Modal>
+      )}
+
+      {newCase && (
+        <Modal title="Novo caso" onClose={() => setNewCase(false)}>
+          <CaseForm
+            initial={{ client_id: client.id }}
+            onSave={() => { setNewCase(false); load() }}
+            onClose={() => setNewCase(false)}
           />
         </Modal>
       )}
