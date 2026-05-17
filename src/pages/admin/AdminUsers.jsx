@@ -3,10 +3,12 @@ import { supabase } from '@/lib/supabase'
 import { useToast } from '@/context/ToastContext'
 import styles from './AdminUsers.module.css'
 
-const ROLES = ['member', 'admin']
+const ROLES = ['member', 'beta', 'admin']
 
 function roleLabel(role) {
-  return role === 'admin' ? 'Admin' : 'Membro'
+  if (role === 'admin') return 'Admin'
+  if (role === 'beta')  return 'Beta'
+  return 'Membro'
 }
 
 export default function AdminUsers() {
@@ -81,6 +83,7 @@ export default function AdminUsers() {
         >
           <option value="all">Todos os perfis</option>
           <option value="admin">Admin</option>
+          <option value="beta">Beta</option>
           <option value="member">Membro</option>
         </select>
       </div>
@@ -126,7 +129,7 @@ export default function AdminUsers() {
                     <td className={styles.firmCell}>{u.firm_name || '—'}</td>
                     <td className={styles.oabCell}>{u.oab_number || '—'}</td>
                     <td>
-                      <span className={u.role === 'admin' ? styles.badgeAdmin : styles.badgeMember}>
+                      <span className={u.role === 'admin' ? styles.badgeAdmin : u.role === 'beta' ? styles.badgeBeta : styles.badgeMember}>
                         {roleLabel(u.role)}
                       </span>
                     </td>

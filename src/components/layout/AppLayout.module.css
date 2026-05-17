@@ -173,7 +173,9 @@
 }
 
 .userName {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   font-size: 0.8rem;
   font-weight: 600;
   color: #fff;
@@ -181,6 +183,22 @@
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.2;
+}
+
+.betaPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.08rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(139,92,246,0.3);
+  border: 1px solid rgba(167,139,250,0.45);
+  color: #c4b5fd;
+  flex-shrink: 0;
+  line-height: 1.4;
 }
 
 .userEmail {

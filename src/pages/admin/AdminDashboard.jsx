@@ -16,7 +16,9 @@ function KpiCard({ label, value, sub, accent }) {
 }
 
 function roleLabel(role) {
-  return role === 'admin' ? 'Admin' : 'Membro'
+  if (role === 'admin') return 'Admin'
+  if (role === 'beta')  return 'Beta'
+  return 'Membro'
 }
 
 export default function AdminDashboard() {
@@ -135,7 +137,7 @@ export default function AdminDashboard() {
                   <td className={styles.emailCell}>{u.email || '—'}</td>
                   <td>{u.firm_name || '—'}</td>
                   <td>
-                    <span className={u.role === 'admin' ? styles.badgeAdmin : styles.badgeMember}>
+                    <span className={u.role === 'admin' ? styles.badgeAdmin : u.role === 'beta' ? styles.badgeBeta : styles.badgeMember}>
                       {roleLabel(u.role)}
                     </span>
                   </td>

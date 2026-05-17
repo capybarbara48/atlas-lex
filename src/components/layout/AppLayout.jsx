@@ -142,7 +142,7 @@ function PageLoader() {
 
 /* ── Layout ─────────────────────────────────────────────────────────── */
 export default function AppLayout() {
-  const { lawyer, session, isAdmin } = useAuth()
+  const { lawyer, session, isAdmin, isBeta } = useAuth()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -216,6 +216,7 @@ export default function AppLayout() {
             <div className={styles.userInfo}>
               <span className={styles.userName}>
                 {lawyer?.full_name?.split(' ')[0] ?? session?.user?.email?.split('@')[0] ?? '—'}
+                {isBeta && <span className={styles.betaPill}>Beta</span>}
               </span>
               <span className={styles.userEmail}>{session?.user?.email}</span>
             </div>
