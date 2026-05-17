@@ -343,22 +343,25 @@ export default function Settings() {
                     onChange={e => setAccent(e.target.value)}
                     title="Cor personalizada"
                   />
-                  <input
-                    type="text"
-                    className={styles.colorHexInput}
-                    value={accent}
-                    maxLength={7}
-                    placeholder="#043b61"
-                    onChange={e => {
-                      const v = e.target.value.startsWith('#') ? e.target.value : '#' + e.target.value
-                      if (/^#[0-9a-fA-F]{6}$/.test(v)) setAccent(v)
-                      else if (v.length <= 7) setAccent(v)
-                    }}
-                    onBlur={e => {
-                      const v = e.target.value
-                      if (!/^#[0-9a-fA-F]{6}$/.test(v)) setAccent(accent)
-                    }}
-                  />
+                  <div className={styles.hexInputWrap}>
+                    <span className={styles.hexDot} style={{ background: accent }} />
+                    <input
+                      type="text"
+                      className={styles.colorHexInput}
+                      value={accent}
+                      maxLength={7}
+                      placeholder="#043b61"
+                      onChange={e => {
+                        const v = e.target.value.startsWith('#') ? e.target.value : '#' + e.target.value
+                        if (/^#[0-9a-fA-F]{6}$/.test(v)) setAccent(v)
+                        else if (v.length <= 7) setAccent(v)
+                      }}
+                      onBlur={e => {
+                        const v = e.target.value
+                        if (!/^#[0-9a-fA-F]{6}$/.test(v)) setAccent(accent)
+                      }}
+                    />
+                  </div>
                   <span className={styles.colorDarkPreview} style={{ background: darken(accent) }}>
                     Variante escura
                   </span>
