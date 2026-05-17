@@ -35,6 +35,11 @@
   --radius:      16px;
   --radius-sm:   10px;
 
+  /* Typography — overridden at runtime by lawyer font preferences */
+  --font-primary:   inherit;
+  --font-secondary: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  --font-mono:      ui-monospace, 'Roboto Mono', 'Courier New', monospace;
+
   /* alias compat */
   --color-bg:           var(--bg);
   --color-surface:      var(--card);
@@ -54,7 +59,7 @@
 html { font-size: 16px; scroll-behavior: smooth; }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  font-family: var(--font-secondary);
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -76,6 +81,8 @@ body::before {
 
 a { color: var(--accent); text-decoration: none; }
 button { cursor: pointer; font-family: inherit; border: none; background: none; }
+h1, h2, h3, h4 { font-family: var(--font-primary); }
+code, kbd, pre, samp, .mono { font-family: var(--font-mono); }
 img { display: block; max-width: 100%; }
 
 /* ── Badges (status) ─────────────────────────────────────────────── */

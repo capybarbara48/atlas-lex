@@ -1,8 +1,37 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
+import { loadGoogleFont, applyFonts } from '@/lib/fonts'
 import LogoUpload from '@/components/ui/LogoUpload'
 import styles from './Onboarding.module.css'
+
+/* ── Font options ─────────────────────────────────────────────────── */
+const HEADING_FONTS = [
+  { family: null,                label: 'Padrão Atlas',      sample: 'Aa' },
+  { family: 'Playfair Display',  label: 'Playfair Display',  sample: 'Aa' },
+  { family: 'Merriweather',      label: 'Merriweather',      sample: 'Aa' },
+  { family: 'EB Garamond',       label: 'EB Garamond',       sample: 'Aa' },
+  { family: 'Lora',              label: 'Lora',              sample: 'Aa' },
+  { family: 'Raleway',           label: 'Raleway',           sample: 'Aa' },
+]
+
+const BODY_FONTS = [
+  { family: null,            label: 'Padrão (sistema)', sample: 'Aa' },
+  { family: 'Inter',         label: 'Inter',            sample: 'Aa' },
+  { family: 'Poppins',       label: 'Poppins',          sample: 'Aa' },
+  { family: 'Lato',          label: 'Lato',             sample: 'Aa' },
+  { family: 'Source Sans 3', label: 'Source Sans 3',    sample: 'Aa' },
+]
+
+const MONO_FONTS = [
+  { family: null,             label: 'Padrão (mono)'  },
+  { family: 'IBM Plex Mono',  label: 'IBM Plex Mono'  },
+  { family: 'JetBrains Mono', label: 'JetBrains Mono' },
+]
+
+const ALL_FONT_FAMILIES = [
+  ...HEADING_FONTS, ...BODY_FONTS, ...MONO_FONTS,
+].map(f => f.family).filter(Boolean)
 
 /* ── Preset brand colors ─────────────────────────────────────────── */
 const PRESETS = [
@@ -57,7 +86,8 @@ function HeaderPreview({ firmName, accent, initials }) {
 }
 
 /* ── Main component ──────────────────────────────────────────────── */
-const TOTAL_STEPS = 4
+const TOTAL_STEPS = 5
+const FONT_STEP   = 3
 
 export default function Onboarding() {
   const { lawyer, session, refreshLawyer } = useAuth()
@@ -66,6 +96,12 @@ export default function Onboarding() {
   const [direction, setDirection] = useState('forward') // for animation
   const [saving, setSaving]     = useState(false)
   const [error, setError]       = useState('')
+
+  /* Font state */
+  const [fontHeading, setFontHeading] = useState(null)
+  const [fontBody,    setFontBody]    = useState(null)
+  const [fontMono,    setFontMono]    = useState(null)
+  const [fontScope,   setFontScope]   = useState('all')
 
   /* Form state — pre-filled from lawyer row */
   const [fullName,  setFullName]  = useState(lawyer?.full_name  ?? '')
@@ -87,6 +123,16 @@ export default function Onboarding() {
     document.documentElement.style.setProperty('--color-accent',      accent)
     document.documentElement.style.setProperty('--color-accent-dark', darken(accent))
   }, [accent])
+
+  /* Preload all fonts when reaching the font step */
+  useEffect(() => {
+    if (step === FONT_STEP) ALL_FONT_FAMILIES.forEach(loadGoogleFont)
+  }, [step])
+
+  /* Apply font choices live (only when scope = all) */
+  useEffect(() => {
+    applyFonts({ font_heading: fontHeading, font_body: fontBody, font_mono: fontMono, font_scope: fontScope })
+  }, [fontHeading, fontBody, fontMono, fontScope])
 
   function goNext() {
     setDirection('forward')
@@ -118,6 +164,12 @@ export default function Onboarding() {
         theme_accent:         accent,
         theme_accent_dark:    darken(accent),
         onboarding_completed: true,
+        preferences: {
+          font_heading: fontHeading ?? null,
+          font_body:    fontBody    ?? null,
+          font_mono:    fontMono    ?? null,
+          font_scope:   fontScope,
+        },
       }, { onConflict: 'id' })
 
     setSaving(false)
@@ -243,8 +295,100 @@ export default function Onboarding() {
       </div>
     </div>,
 
-    /* Step 3 — Pronto */
+    /* Step 3 — Fontes */
     <div key="step3" className={styles.stepContent}>
+      <div className={styles.stepIcon}>🔤</div>
+      <h2 className={styles.stepTitle}>Tipografia</h2>
+      <p className={styles.stepDesc}>
+        Escolha as fontes que representam seu escritório. Você pode alterá-las a qualquer momento em Configurações.
+      </p>
+
+      {/* Scope toggle */}
+      <div className={styles.fontScopeRow}>
+        <span className={styles.fontScopeLabel}>Aplicar em:</span>
+        <div className={styles.fontScopeBtns}>
+          {[
+            { v: 'all',      l: 'Todo o sistema' },
+            { v: 'pdf_only', l: 'Só em PDF / documentos' },
+          ].map(({ v, l }) => (
+            <button key={v} type="button"
+              className={`${styles.fontScopeBtn} ${fontScope === v ? styles.fontScopeBtnActive : ''}`}
+              onClick={() => setFontScope(v)}
+            >{l}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Heading font */}
+      <div className={styles.fontSection}>
+        <span className={styles.fontSectionLabel}>Fonte principal (títulos)</span>
+        <div className={styles.fontGrid}>
+          {HEADING_FONTS.map(f => (
+            <button key={f.label} type="button"
+              className={`${styles.fontOption} ${fontHeading === f.family ? styles.fontOptionActive : ''}`}
+              style={{ fontFamily: f.family ? `'${f.family}', serif` : 'inherit' }}
+              onClick={() => setFontHeading(f.family)}
+            >
+              <span className={styles.fontSample}>Aa</span>
+              <span className={styles.fontOptionLabel}>{f.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Body font */}
+      <div className={styles.fontSection}>
+        <span className={styles.fontSectionLabel}>Fonte secundária (texto)</span>
+        <div className={styles.fontGrid}>
+          {BODY_FONTS.map(f => (
+            <button key={f.label} type="button"
+              className={`${styles.fontOption} ${fontBody === f.family ? styles.fontOptionActive : ''}`}
+              style={{ fontFamily: f.family ? `'${f.family}', sans-serif` : 'inherit' }}
+              onClick={() => setFontBody(f.family)}
+            >
+              <span className={styles.fontSample}>Aa</span>
+              <span className={styles.fontOptionLabel}>{f.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Mono font */}
+      <div className={styles.fontSection}>
+        <span className={styles.fontSectionLabel}>Fonte terciária (números, processos)</span>
+        <div className={styles.fontGrid}>
+          {MONO_FONTS.map(f => (
+            <button key={f.label} type="button"
+              className={`${styles.fontOption} ${fontMono === f.family ? styles.fontOptionActive : ''}`}
+              style={{ fontFamily: f.family ? `'${f.family}', monospace` : 'monospace' }}
+              onClick={() => setFontMono(f.family)}
+            >
+              <span className={styles.fontSample}>01</span>
+              <span className={styles.fontOptionLabel}>{f.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Live preview */}
+      <div className={styles.fontPreview}>
+        <div className={styles.fontPreviewHeading}
+          style={{ fontFamily: fontHeading ? `'${fontHeading}', serif` : 'inherit' }}>
+          Assessoria Jurídica Especializada
+        </div>
+        <div className={styles.fontPreviewBody}
+          style={{ fontFamily: fontBody ? `'${fontBody}', sans-serif` : 'inherit' }}>
+          Atendemos famílias e empresas com comprometimento, ética e excelência. Cada caso é tratado com dedicação e rigor técnico.
+        </div>
+        <div className={styles.fontPreviewMono}
+          style={{ fontFamily: fontMono ? `'${fontMono}', monospace` : 'monospace' }}>
+          Proc. nº 1234.567.2024.8.00
+        </div>
+      </div>
+    </div>,
+
+    /* Step 4 — Pronto */
+    <div key="step4" className={styles.stepContent}>
       <div className={styles.checkmark}>✓</div>
       <h2 className={styles.stepTitle}>Tudo pronto, {fullName.split(' ')[0] || 'Advogado'}!</h2>
       <p className={styles.stepDesc}>
@@ -270,6 +414,13 @@ export default function Onboarding() {
         <div className={styles.summaryRow}>
           <span className={styles.summaryKey}>Logo</span>
           <span className={styles.summaryVal}>{logoUrl ? 'Configurado ✓' : 'Não configurado (usaremos as iniciais)'}</span>
+        </div>
+        <div className={styles.summaryRow}>
+          <span className={styles.summaryKey}>Fontes</span>
+          <span className={styles.summaryVal}>
+            {fontHeading || 'Padrão'} · {fontBody || 'Padrão'} · {fontMono || 'Mono padrão'}
+            {fontScope === 'pdf_only' && <span style={{ color: 'var(--text-3)', fontSize: '0.75em' }}> (só PDF)</span>}
+          </span>
         </div>
         <div className={styles.summaryRow}>
           <span className={styles.summaryKey}>Conta</span>

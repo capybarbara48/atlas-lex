@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { applyFonts } from '@/lib/fonts'
 
 const AuthContext = createContext(null)
 
@@ -42,6 +43,14 @@ export function AuthProvider({ children }) {
     if (!session?.user?.id) return
     await fetchLawyer(session.user.id)
   }
+
+  useEffect(() => {
+    if (!lawyer?.preferences) return
+    const { font_heading, font_body, font_mono, font_scope } = lawyer.preferences
+    if (font_heading || font_body || font_mono) {
+      applyFonts({ font_heading, font_body, font_mono, font_scope })
+    }
+  }, [lawyer])
 
   const isAdmin = lawyer?.role === 'admin'
   const isBeta  = lawyer?.role === 'beta'
