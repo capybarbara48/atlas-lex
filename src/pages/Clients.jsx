@@ -8,6 +8,7 @@ import PageShell from '@/components/ui/PageShell'
 import ViewToggle from '@/components/ui/ViewToggle'
 import Modal from '@/components/ui/Modal'
 import ClientForm from '@/components/forms/ClientForm'
+import { Skeleton, SkeletonTable } from '@/components/ui/Skeleton'
 import styles from './Clients.module.css'
 
 const EditIcon = () => (
@@ -131,6 +132,22 @@ function ListView({ clients, onNavigate, onEdit }) {
   )
 }
 
+function SkeletonGrid() {
+  return (
+    <div className={styles.grid}>
+      {Array.from({ length: 8 }, (_, i) => (
+        <div key={i} className={styles.clientCard} style={{ gap: '0.55rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Skeleton width="52px" height="52px" radius="50%" />
+          <Skeleton width="60%" height="0.85rem" />
+          <Skeleton width="2.5rem" height="1.2rem" radius="999px" />
+          <Skeleton width="80%" height="0.65rem" />
+          <Skeleton width="65%" height="0.65rem" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 /* ── page ───────────────────────────────────────────────────────────── */
 export default function Clients() {
   const { lawyer } = useAuth()
@@ -219,9 +236,13 @@ export default function Clients() {
     >
       {error
         ? <div className={styles.emptyState}><p>Erro ao carregar clientes.</p></div>
-        : view === 'grid'
-          ? <GridView clients={filtered} onNavigate={handleNavigate} onEdit={openEdit} />
-          : <ListView clients={filtered} onNavigate={handleNavigate} onEdit={openEdit} />
+        : loading
+          ? view === 'grid'
+            ? <SkeletonGrid />
+            : <div className={styles.tableCard}><SkeletonTable rows={7} cols={7} /></div>
+          : view === 'grid'
+            ? <GridView clients={filtered} onNavigate={handleNavigate} onEdit={openEdit} />
+            : <ListView clients={filtered} onNavigate={handleNavigate} onEdit={openEdit} />
       }
 
       {formOpen && (

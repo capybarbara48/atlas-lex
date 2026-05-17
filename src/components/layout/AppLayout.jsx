@@ -145,6 +145,17 @@ export default function AppLayout() {
   const { lawyer, session, isAdmin, isBeta } = useAuth()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [overdueCount, setOverdueCount] = useState(0)
+
+  useEffect(() => {
+    const today = new Date().toISOString()
+    supabase
+      .from('tasks')
+      .select('id', { count: 'exact', head: true })
+      .not('status', 'in', '("concluida","cancelada")')
+      .lt('due_date', today)
+      .then(({ count }) => setOverdueCount(count ?? 0))
+  }, [location.pathname])
 
   useEffect(() => { setSidebarOpen(false) }, [location.pathname])
 
@@ -155,7 +166,9 @@ export default function AppLayout() {
   const firmName  = lawyer?.firm_name ?? 'Atlas Lex'
   const firmShort = firmName.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
   const pageTitle = PAGE_TITLES[location.pathname]
-    ?? (location.pathname.startsWith('/painel/clientes/') ? 'Cliente' : 'Atlas Lex')
+    ?? (location.pathname.startsWith('/painel/clientes/') ? 'Cliente'
+      : location.pathname.startsWith('/painel/casos/') ? 'Processo'
+      : 'Atlas Lex')
 
 
   return (
@@ -197,6 +210,9 @@ export default function AppLayout() {
             >
               <span className={styles.navIcon}>{icon}</span>
               <span className={styles.navLabel}>{label}</span>
+              {label === 'Tarefas' && overdueCount > 0 && (
+                <span className={styles.navBadge}>{overdueCount > 99 ? '99+' : overdueCount}</span>
+              )}
             </NavLink>
           ))}
         </nav>

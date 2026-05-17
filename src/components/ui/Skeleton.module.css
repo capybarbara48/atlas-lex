@@ -1,0 +1,91 @@
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(var(--accent-rgb), 0.06) 25%,
+    rgba(var(--accent-rgb), 0.12) 50%,
+    rgba(var(--accent-rgb), 0.06) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Text group */
+.textGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: 100%;
+}
+
+/* Table rows */
+.table {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid rgba(var(--accent-rgb), 0.05);
+}
+.row:last-child { border-bottom: none; }
+
+/* Card */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.75rem;
+  background: var(--card);
+  border: var(--border);
+  border-radius: 8px;
+}
+
+/* List item (matches ClientDetail listItem) */
+.listItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 1.5rem;
+  border-bottom: var(--border);
+}
+.listItem:last-child { border-bottom: none; }
+
+.listMain {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+}
+.listMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Kanban card */
+.kanbanCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.55rem 0.7rem;
+  background: var(--card);
+  border: var(--border);
+  border-radius: 8px;
+}
+.kanbanMeta {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.1rem;
+}

@@ -1,0 +1,288 @@
+.page {
+  padding: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.loadWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 240px;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.backBtn {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.4rem 0;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+.backBtn:hover { opacity: 0.7; }
+
+.headerMain {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.caseIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--accent-dim);
+  color: var(--accent);
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.caseName {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.caseSub {
+  font-size: 0.78rem;
+  color: var(--text-2);
+  margin-top: 0.15rem;
+  font-family: monospace;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.addTaskBtn,
+.addEntryBtn {
+  background: var(--bg);
+  color: var(--text-2);
+  border: var(--border);
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s;
+}
+.addTaskBtn:hover,
+.addEntryBtn:hover {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border-color: rgba(var(--accent-rgb), 0.2);
+}
+
+.editBtn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 0.5rem 1.1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.editBtn:hover { background: var(--accent-dark); }
+
+/* ── Info card ── */
+.infoCard {
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem 2rem;
+}
+
+.infoRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.infoRowFull {
+  grid-column: 1 / -1;
+}
+
+.infoLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-3);
+}
+
+.infoValue {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.clientLink {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.clientLink:hover { opacity: 0.75; text-decoration: underline; }
+
+/* ── Section ── */
+.section {
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-bottom: var(--border);
+}
+
+.sectionTitle {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.sectionCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: rgba(var(--accent-rgb), 0.1);
+  color: var(--accent);
+}
+
+.saldoBadge {
+  margin-left: auto;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.sectionBody {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── List items ── */
+.listItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 1.5rem;
+  border-bottom: var(--border);
+  flex-wrap: wrap;
+}
+.listItem:last-child { border-bottom: none; }
+.listItem:hover { background: var(--card-hover); }
+
+.listItemOverdue {
+  border-left: 3px solid #ef4444;
+}
+
+.listMain {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.listTitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.listSub {
+  font-size: 0.72rem;
+  color: var(--text-3);
+}
+
+.listMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.listDate {
+  font-size: 0.72rem;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dateOverdue {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.listAmt {
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ── Empty ── */
+.empty {
+  padding: 2rem 1.5rem;
+  font-size: 0.82rem;
+  color: var(--text-3);
+  text-align: center;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .page { padding: 1rem; }
+  .header { flex-wrap: wrap; }
+  .headerActions { flex-wrap: wrap; }
+  .infoCard { grid-template-columns: 1fr 1fr; }
+  .listItem { flex-direction: column; align-items: flex-start; }
+}

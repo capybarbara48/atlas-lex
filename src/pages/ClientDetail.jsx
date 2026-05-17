@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import Modal from '@/components/ui/Modal'
 import ClientForm from '@/components/forms/ClientForm'
 import CaseForm from '@/components/forms/CaseForm'
+import { Skeleton, SkeletonListItem } from '@/components/ui/Skeleton'
 import styles from './ClientDetail.module.css'
 
 function brl(v) {
@@ -108,8 +109,36 @@ export default function ClientDetail() {
   }
 
   if (loading) return (
-    <div className={styles.loadWrap}>
-      <div className={styles.spinner} />
+    <div className={styles.page}>
+      <div className={styles.header}>
+        <Skeleton width="5rem" height="0.75rem" />
+        <div className={styles.headerMain}>
+          <Skeleton width="48px" height="48px" radius="12px" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
+            <Skeleton width="45%" height="1rem" />
+            <Skeleton width="28%" height="0.7rem" />
+          </div>
+        </div>
+      </div>
+      <div className={styles.infoCard}>
+        {[1,2,3,4,5].map(i => (
+          <div key={i} className={styles.infoRow}>
+            <Skeleton width="50%" height="0.6rem" />
+            <Skeleton width="75%" height="0.8rem" />
+          </div>
+        ))}
+      </div>
+      {[4, 3, 3].map((rows, si) => (
+        <div key={si} className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <Skeleton width="5rem" height="0.75rem" />
+            <Skeleton width="1.5rem" height="1.2rem" radius="999px" />
+          </div>
+          <div className={styles.sectionBody}>
+            {Array.from({ length: rows }, (_, i) => <SkeletonListItem key={i} />)}
+          </div>
+        </div>
+      ))}
     </div>
   )
 
@@ -177,7 +206,7 @@ export default function ClientDetail() {
           : cases.map(c => {
               const st = STATUS_CASE[c.status] ?? { label: c.status, cls: 'st-gray' }
               return (
-                <div key={c.id} className={styles.listItem}>
+                <Link key={c.id} to={`/painel/casos/${c.id}`} className={styles.listItem} style={{ textDecoration: 'none' }}>
                   <div className={styles.listMain}>
                     <span className={styles.listTitle}>{c.title}</span>
                     {c.case_number && <span className={styles.listSub}>{c.case_number}</span>}
@@ -189,7 +218,7 @@ export default function ClientDetail() {
                     {c.valor > 0 && <span className={styles.listAmt}>{brl(c.valor)}</span>}
                     <span className={styles.listDate}>{fmt(c.opened_at)}</span>
                   </div>
-                </div>
+                </Link>
               )
             })
         }

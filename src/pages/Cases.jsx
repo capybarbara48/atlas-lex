@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
 import { useCases } from '@/hooks/useCases'
@@ -8,6 +8,7 @@ import PageShell from '@/components/ui/PageShell'
 import ViewToggle from '@/components/ui/ViewToggle'
 import Modal from '@/components/ui/Modal'
 import CaseForm from '@/components/forms/CaseForm'
+import { SkeletonTable, SkeletonKanbanCard } from '@/components/ui/Skeleton'
 import styles from './Cases.module.css'
 
 /* ── data mapper ────────────────────────────────────────────────────── */
@@ -140,10 +141,30 @@ function ListView({ cases, onEdit }) {
   )
 }
 
+function SkeletonKanban() {
+  return (
+    <div className={styles.kanbanWrapper}>
+      <div className={styles.kanbanBoard}>
+        {STATUS_COLS.map(col => (
+          <div key={col.key} className={styles.kanbanCol}>
+            <div className={styles.kanbanColHeader}>
+              <span className={`${styles.kanbanColTitle} ${col.color}`}>{col.label}</span>
+            </div>
+            <div className={styles.kanbanItems}>
+              {[1, 2, 3].map(i => <SkeletonKanbanCard key={i} />)}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 /* ── page ───────────────────────────────────────────────────────────── */
 export default function Cases() {
   const { lawyer } = useAuth()
   const toast = useToast()
+  const navigate = useNavigate()
   const prefs = loadPreferences(lawyer?.id)
 
   const [view, setView]               = useState(prefs.casos_view ?? 'kanban')
@@ -159,8 +180,8 @@ export default function Cases() {
     Object.fromEntries((rawCases ?? []).map(r => [r.id, r]))
   , [rawCases])
 
-  function openNew()    { setEditing(null); setFormOpen(true) }
-  function openEdit(id) { setEditing(rawById[id] ?? null); setFormOpen(true) }
+  function openNew()      { setEditing(null); setFormOpen(true) }
+  function openDetail(id) { navigate('/painel/casos/' + id) }
   function handleSave() {
     refetch()
     setFormOpen(false)
@@ -231,9 +252,13 @@ export default function Cases() {
     >
       {error
         ? <div className={styles.emptyState}><p>Erro ao carregar casos.</p></div>
-        : view === 'kanban'
-          ? <KanbanView cases={filtered} onEdit={openEdit} />
-          : <ListView cases={filtered} onEdit={openEdit} />
+        : loading
+          ? view === 'kanban'
+            ? <SkeletonKanban />
+            : <div className={styles.tableCard}><SkeletonTable rows={6} cols={7} /></div>
+          : view === 'kanban'
+            ? <KanbanView cases={filtered} onEdit={openDetail} />
+            : <ListView cases={filtered} onEdit={openDetail} />
       }
 
       {formOpen && (

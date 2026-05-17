@@ -11,6 +11,7 @@ const Dashboard    = lazy(() => import('@/pages/Dashboard'))
 const Cases        = lazy(() => import('@/pages/Cases'))
 const Clients      = lazy(() => import('@/pages/Clients'))
 const ClientDetail = lazy(() => import('@/pages/ClientDetail'))
+const CaseDetail   = lazy(() => import('@/pages/CaseDetail'))
 const Proposals    = lazy(() => import('@/pages/Proposals'))
 const Tasks        = lazy(() => import('@/pages/Tasks'))
 const Financials   = lazy(() => import('@/pages/Financials'))
@@ -107,6 +108,7 @@ export default function App() {
       >
         <Route index                        element={<Dashboard />} />
         <Route path="casos"                 element={<Cases />} />
+        <Route path="casos/:id"             element={<CaseDetail />} />
         <Route path="clientes"              element={<Clients />} />
         <Route path="clientes/:id"          element={<ClientDetail />} />
         <Route path="propostas"             element={<Proposals />} />
