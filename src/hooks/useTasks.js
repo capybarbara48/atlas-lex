@@ -6,7 +6,7 @@ export function useTodayTasks() {
     const today = new Date().toISOString().split('T')[0]
     return supabase
       .from('tasks')
-      .select('id, title, status, priority, due_date, assigned_to, cases ( title )')
+      .select('id, title, status, priority, due_date, cases ( title )')
       .lte('due_date', today + 'T23:59:59')
       .neq('status', 'concluida')
       .neq('status', 'cancelada')
@@ -20,7 +20,7 @@ export function useAllTasks() {
   return useSupabaseQuery(async () => {
     return supabase
       .from('tasks')
-      .select('id, title, status, priority, due_date, assigned_to, cases ( title )')
+      .select('id, title, status, priority, due_date, cases ( title )')
       .order('due_date', { ascending: true, nullsFirst: false })
   }, [])
 }

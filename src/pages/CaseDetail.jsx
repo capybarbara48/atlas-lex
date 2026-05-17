@@ -160,8 +160,6 @@ export default function CaseDetail() {
         </div>
 
         <div className={styles.headerActions}>
-          <button className={styles.addTaskBtn} onClick={() => setNewTask(true)}>+ Tarefa</button>
-          <button className={styles.addEntryBtn} onClick={() => setNewEntry(true)}>+ Lançamento</button>
           <button className={styles.editBtn} onClick={() => setEditing(true)}>Editar</button>
         </div>
       </div>
@@ -189,7 +187,7 @@ export default function CaseDetail() {
       </div>
 
       {/* ── Tarefas ── */}
-      <Section title="Tarefas" count={tasks.length}>
+      <Section title="Tarefas" count={tasks.length} onAdd={() => setNewTask(true)} addLabel="+ Tarefa">
         {tasks.length === 0
           ? <Empty text="Nenhuma tarefa vinculada" />
           : tasks.map(t => {
@@ -217,8 +215,10 @@ export default function CaseDetail() {
       <Section
         title="Financeiro"
         count={entries.length}
+        onAdd={() => setNewEntry(true)}
+        addLabel="+ Lançamento"
         badge={entries.length > 0
-          ? <span className={styles.saldoBadge} style={{ color: saldo >= 0 ? 'var(--green)' : 'var(--red)' }}>{brl(saldo)}</span>
+          ? <span className={styles.saldoBadge} style={{ color: saldo >= 0 ? 'var(--green)' : 'var(--red)', marginLeft: 'auto' }}>{brl(saldo)}</span>
           : null
         }
       >
@@ -286,13 +286,16 @@ function InfoRow({ label, value }) {
   )
 }
 
-function Section({ title, count, badge, children }) {
+function Section({ title, count, badge, onAdd, addLabel, children }) {
   return (
     <div className={styles.section}>
       <div className={styles.sectionHeader}>
         <span className={styles.sectionTitle}>{title}</span>
         {count !== undefined && <span className={styles.sectionCount}>{count}</span>}
         {badge}
+        {onAdd && (
+          <button className={styles.sectionAddBtn} onClick={onAdd}>{addLabel}</button>
+        )}
       </div>
       <div className={styles.sectionBody}>{children}</div>
     </div>

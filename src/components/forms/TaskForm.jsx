@@ -38,7 +38,7 @@ export default function TaskForm({ initial, onSave, onClose }) {
       description: f.description.trim() || null,
       assigned_to: f.assigned_to.trim() || null,
     }
-    const { error } = initial
+    const { error } = initial?.id
       ? await supabase.from('tasks').update(payload).eq('id', initial.id)
       : await supabase.from('tasks').insert({ ...payload, lawyer_id: session.user.id })
     setSaving(false)
@@ -122,7 +122,7 @@ export default function TaskForm({ initial, onSave, onClose }) {
       {error && <div className={s.error}>{error}</div>}
 
       <div className={s.footer}>
-        {initial && <button type="button" className={s.btnDelete} onClick={handleDelete}>Excluir</button>}
+        {initial?.id && <button type="button" className={s.btnDelete} onClick={handleDelete}>Excluir</button>}
         <div className={s.spacer} />
         <button type="button" className={s.btnCancel} onClick={onClose}>Cancelar</button>
         <button type="submit" className={s.btnSave} disabled={saving}>

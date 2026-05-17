@@ -39,7 +39,7 @@ export default function EntryForm({ initial, onSave, onClose }) {
       due_date:    f.due_date  || null,
       paid_at:     f.status === 'pago' ? (f.paid_at || null) : null,
     }
-    const { error } = initial
+    const { error } = initial?.id
       ? await supabase.from('financial_entries').update(payload).eq('id', initial.id)
       : await supabase.from('financial_entries').insert({ ...payload, lawyer_id: session.user.id })
     setSaving(false)
@@ -121,7 +121,7 @@ export default function EntryForm({ initial, onSave, onClose }) {
       {error && <div className={s.error}>{error}</div>}
 
       <div className={s.footer}>
-        {initial && <button type="button" className={s.btnDelete} onClick={handleDelete}>Excluir</button>}
+        {initial?.id && <button type="button" className={s.btnDelete} onClick={handleDelete}>Excluir</button>}
         <div className={s.spacer} />
         <button type="button" className={s.btnCancel} onClick={onClose}>Cancelar</button>
         <button type="submit" className={s.btnSave} disabled={saving}>
