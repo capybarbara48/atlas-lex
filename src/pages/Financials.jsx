@@ -38,6 +38,81 @@ function SummaryCard({ label, value, sub, color }) {
   )
 }
 
+function MonthlyChart({ entries }) {
+  const months = useMemo(() => {
+    const result = []
+    const now = new Date()
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      const label = d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')
+      result.push({ key, label })
+    }
+    return result
+  }, [])
+
+  const data = useMemo(() => months.map(({ key }) => {
+    const paid = entries.filter(e => e.data?.startsWith(key) && e.status === 'pago')
+    return {
+      receita: paid.filter(e => e.tipo === 'receita').reduce((s, e) => s + e.valor, 0),
+      despesa: paid.filter(e => e.tipo === 'despesa').reduce((s, e) => s + e.valor, 0),
+    }
+  }), [entries, months])
+
+  const maxVal = Math.max(...data.flatMap(d => [d.receita, d.despesa]), 1)
+
+  const W = 600, H = 170
+  const padL = 8, padR = 8, padT = 12, padB = 28
+  const chartW = W - padL - padR
+  const chartH = H - padT - padB
+  const groupW = chartW / months.length
+  const barW = groupW * 0.3
+  const gap = groupW * 0.06
+
+  return (
+    <div className={styles.chartCard}>
+      <div className={styles.chartHeader}>
+        <span className={styles.chartTitle}>Últimos 6 meses (pagamentos)</span>
+        <div className={styles.chartLegend}>
+          <span className={styles.legendDot} style={{ background: 'var(--green)' }} />
+          <span>Receitas</span>
+          <span className={styles.legendDot} style={{ background: 'var(--red)', marginLeft: '0.75rem' }} />
+          <span>Despesas</span>
+        </div>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} className={styles.chartSvg} preserveAspectRatio="none">
+        {[0.25, 0.5, 0.75, 1].map(f => (
+          <line key={f}
+            x1={padL} x2={W - padR}
+            y1={padT + chartH * (1 - f)} y2={padT + chartH * (1 - f)}
+            stroke="rgba(128,128,128,0.1)" strokeWidth="1"
+          />
+        ))}
+        {data.map((d, i) => {
+          const cx = padL + i * groupW + groupW / 2
+          const rH = Math.max((d.receita / maxVal) * chartH, d.receita > 0 ? 3 : 0)
+          const dH = Math.max((d.despesa / maxVal) * chartH, d.despesa > 0 ? 3 : 0)
+          return (
+            <g key={i}>
+              <rect x={cx - barW - gap / 2} y={padT + chartH - rH} width={barW} height={rH} rx={3}
+                fill="var(--green)" opacity="0.75" />
+              <rect x={cx + gap / 2} y={padT + chartH - dH} width={barW} height={dH} rx={3}
+                fill="var(--red)" opacity="0.75" />
+            </g>
+          )
+        })}
+        {months.map((m, i) => (
+          <text key={i}
+            x={padL + i * groupW + groupW / 2}
+            y={H - 8}
+            textAnchor="middle" fontSize="11" fill="var(--text-3)" fontFamily="inherit"
+          >{m.label}</text>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
 /* ── page ───────────────────────────────────────────────────────────── */
 export default function Financials() {
   const [filterTipo, setFilterTipo]     = useState('todos')
@@ -121,6 +196,9 @@ export default function Financials() {
         <SummaryCard label="Saldo"               value={brl(saldo)}                                               color={saldo >= 0 ? 'var(--green)' : 'var(--red)'} />
         <SummaryCard label="A receber"           value={brl(pendentes)} sub={`${nPendentes} lançamentos pendentes`} color="var(--blue)" />
       </div>
+
+      {/* Monthly chart */}
+      {!loading && !error && entries.length > 0 && <MonthlyChart entries={entries} />}
 
       {/* Entries table */}
       <div className={styles.tableCard}>
