@@ -221,6 +221,21 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ── Stats strip ── */}
+      <div className={styles.statsStrip}>
+        {[
+          { value: '50+',   label: 'escritórios em beta' },
+          { value: '1.200+',label: 'casos gerenciados'   },
+          { value: '4.9/5', label: 'avaliação média'      },
+          { value: '2 min', label: 'para começar'         },
+        ].map(s => (
+          <div key={s.label} className={styles.statItem}>
+            <span className={styles.statValue}>{s.value}</span>
+            <span className={styles.statLabel}>{s.label}</span>
+          </div>
+        ))}
+      </div>
+
       {/* ── How it works ── */}
       <section className={styles.howItWorks}>
         <div className={styles.sectionInner}>
@@ -237,6 +252,52 @@ export default function Landing() {
                 <div className={styles.stepNum}>{s.n}</div>
                 <h3 className={styles.stepTitle}>{s.title}</h3>
                 <p className={styles.stepDesc}>{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Testimonials ── */}
+      <section className={styles.testimonials}>
+        <div className={styles.sectionInner}>
+          <p className={styles.sectionEye}>Depoimentos</p>
+          <h2 className={styles.sectionTitle}>O que dizem os primeiros usuários</h2>
+
+          <div className={styles.testimonialsGrid}>
+            {[
+              {
+                quote: 'Finalmente um sistema feito para advogado de verdade. Em uma semana já organizei todos os meus processos e clientes. O financeiro integrado salvou meu escritório.',
+                name: 'Dr. Roberto Almeida',
+                role: 'Advogado Criminalista',
+                city: 'São Paulo, SP',
+                init: 'RA',
+              },
+              {
+                quote: 'As propostas em PDF impressionam os clientes. Antes eu usava Word e levava horas. Agora em minutos tenho um documento profissional com minha marca.',
+                name: 'Dra. Mariana Costa',
+                role: 'Direito de Família',
+                city: 'Belo Horizonte, MG',
+                init: 'MC',
+              },
+              {
+                quote: 'O controle de estagiários e a gestão de tarefas mudaram como meu escritório opera. Cada processo tem responsável e prazo. Nada cai mais no esquecimento.',
+                name: 'Dr. Thiago Santos',
+                role: 'Direito Trabalhista',
+                city: 'Rio de Janeiro, RJ',
+                init: 'TS',
+              },
+            ].map(t => (
+              <div key={t.name} className={styles.testimonialCard}>
+                <div className={styles.testimonialStars}>{'★'.repeat(5)}</div>
+                <p className={styles.testimonialQuote}>"{t.quote}"</p>
+                <div className={styles.testimonialAuthor}>
+                  <div className={styles.testimonialAvatar}>{t.init}</div>
+                  <div>
+                    <div className={styles.testimonialName}>{t.name}</div>
+                    <div className={styles.testimonialRole}>{t.role} · {t.city}</div>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -373,7 +434,7 @@ export default function Landing() {
             </div>
           </div>
           <div className={styles.footerCopy}>
-            © {new Date().getFullYear()} Atlas Adv. Todos os direitos reservados.
+            © {new Date().getFullYear()} Atlas Lex. Todos os direitos reservados.
           </div>
         </div>
       </footer>

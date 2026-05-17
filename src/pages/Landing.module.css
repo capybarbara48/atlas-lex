@@ -418,6 +418,113 @@
   line-height: 1.6;
 }
 
+/* ── Stats strip ─────────────────────────────────────────────────────── */
+.statsStrip {
+  background: #fff;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4rem;
+  flex-wrap: wrap;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.statValue {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+  font-family: 'Archivo Black', sans-serif;
+}
+
+.statLabel {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* ── Testimonials ────────────────────────────────────────────────────── */
+.testimonials {
+  padding: 6rem 0;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.testimonialsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-top: 2rem;
+  width: 100%;
+}
+
+.testimonialCard {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.testimonialStars {
+  color: #f59e0b;
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+}
+
+.testimonialQuote {
+  font-size: 0.9rem;
+  color: #334155;
+  line-height: 1.7;
+  flex: 1;
+}
+
+.testimonialAuthor {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.testimonialAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent, #043b61);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.testimonialName {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.testimonialRole {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin-top: 0.1rem;
+}
+
 /* ── Features ────────────────────────────────────────────────────────── */
 .features {
   padding: 6rem 0;
@@ -867,10 +974,12 @@
   .heroSub { text-align: center; }
   .heroCtas { justify-content: center; }
   .featureGrid { grid-template-columns: repeat(2, 1fr); }
+  .testimonialsGrid { grid-template-columns: 1fr; max-width: 480px; }
   .securityGrid { grid-template-columns: 1fr; }
   .stepsRow { grid-template-columns: 1fr; }
   .stepsRow::before { display: none; }
   .plansRow { grid-template-columns: 1fr; max-width: 380px; }
+  .statsStrip { gap: 2rem; }
 }
 
 @media (max-width: 600px) {
@@ -878,4 +987,6 @@
   .navLinks { display: none; }
   .featureGrid { grid-template-columns: 1fr; }
   .strip { gap: 1rem; }
+  .statsStrip { gap: 1.5rem; padding: 1.5rem 1rem; }
+  .statValue { font-size: 1.4rem; }
 }
