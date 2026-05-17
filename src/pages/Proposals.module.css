@@ -4,7 +4,7 @@
 .searchWrap { position: relative; flex: 1; max-width: 360px; }
 .searchIcon { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--text-3); pointer-events: none; }
 .searchInput { width: 100%; padding: 0.5rem 0.875rem 0.5rem 2.25rem; background: var(--card); border: var(--border); border-radius: var(--radius-sm); font-size: 0.85rem; font-family: inherit; color: var(--text); outline: none; }
-.searchInput:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(4,59,97,0.1); }
+.searchInput:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.1); }
 .searchInput::placeholder { color: var(--text-3); }
 .filterGroup { display: flex; gap: 0.35rem; flex-wrap: wrap; }
 .filterBtn { padding: 0.35rem 0.8rem; background: var(--card); border: var(--border); border-radius: 999px; font-size: 0.75rem; font-weight: 500; color: var(--text-2); transition: all 0.15s; font-family: inherit; }
@@ -13,7 +13,7 @@
 .viewSwitch { display: flex; background: var(--bg); border: var(--border); border-radius: var(--radius-sm); padding: 3px; gap: 2px; }
 .viewBtn { padding: 0.25rem 0.75rem; border-radius: 7px; font-size: 0.75rem; font-weight: 500; color: var(--text-2); transition: all 0.15s; background: transparent; font-family: inherit; }
 .viewBtn:hover { background: var(--card); }
-.viewActive { background: var(--card) !important; color: var(--accent) !important; box-shadow: 0 1px 4px rgba(4,59,97,0.12); }
+.viewActive { background: var(--card) !important; color: var(--accent) !important; box-shadow: 0 1px 4px rgba(var(--accent-rgb),0.12); }
 .pipelineWrapper { overflow-x: auto; padding-bottom: 0.5rem; }
 .pipeline { display: flex; gap: 1rem; align-items: flex-start; min-width: max-content; }
 .pipelineCol { background: var(--bg); border: var(--border); border-radius: var(--radius-sm); width: 280px; flex-shrink: 0; display: flex; flex-direction: column; }
@@ -34,9 +34,9 @@
 .tableCard { background: var(--card); border: var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
 .table { width: 100%; border-collapse: collapse; }
 .table th { text-align: left; font-size: 0.67rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--text-3); padding: 0.75rem 1rem; border-bottom: var(--border); background: var(--bg); }
-.table td { padding: 0.75rem 1rem; font-size: 0.82rem; border-bottom: 1px solid rgba(4,59,97,0.05); vertical-align: middle; }
+.table td { padding: 0.75rem 1rem; font-size: 0.82rem; border-bottom: 1px solid rgba(var(--accent-rgb),0.05); vertical-align: middle; }
 .tableRow:last-child td { border-bottom: none; }
-.tableRow:hover td { background: rgba(4,59,97,0.02); }
+.tableRow:hover td { background: rgba(var(--accent-rgb),0.02); }
 .propTitle { font-weight: 500; }
 .valorCell { font-weight: 700; font-variant-numeric: tabular-nums; }
 .dateCell { font-size: 0.78rem; color: var(--text-2); white-space: nowrap; }
@@ -47,7 +47,7 @@
   display: inline-flex; align-items: center; gap: 0.25rem;
   padding: 0.22rem 0.5rem; border-radius: 6px;
   background: var(--accent-dim); color: var(--accent);
-  border: 1px solid rgba(4,59,97,0.18);
+  border: 1px solid rgba(var(--accent-rgb),0.18);
   font-size: 0.62rem; font-weight: 700; letter-spacing: 0.02em;
   cursor: pointer; transition: all 0.15s; white-space: nowrap;
 }

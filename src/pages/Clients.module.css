@@ -4,7 +4,7 @@
 .searchWrap { position: relative; flex: 1; max-width: 360px; }
 .searchIcon { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--text-3); pointer-events: none; }
 .searchInput { width: 100%; padding: 0.5rem 0.875rem 0.5rem 2.25rem; background: var(--card); border: var(--border); border-radius: var(--radius-sm); font-size: 0.85rem; font-family: inherit; color: var(--text); outline: none; }
-.searchInput:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(4,59,97,0.1); }
+.searchInput:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.1); }
 .searchInput::placeholder { color: var(--text-3); }
 .filterGroup { display: flex; gap: 0.35rem; flex-wrap: wrap; }
 .filterBtn { padding: 0.35rem 0.8rem; background: var(--card); border: var(--border); border-radius: 999px; font-size: 0.75rem; font-weight: 500; color: var(--text-2); transition: all 0.15s; font-family: inherit; }
@@ -12,7 +12,7 @@
 .filterActive { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
 .clientCard { background: var(--card); border: var(--border); border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow); display: flex; flex-direction: column; align-items: center; gap: 0.5rem; text-align: center; transition: all 0.2s; }
-.clientCard:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); border-color: rgba(4,59,97,0.2); }
+.clientCard:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); border-color: rgba(var(--accent-rgb),0.2); }
 .clientAvatar { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 800; }
 .clientName { font-size: 0.9rem; font-weight: 700; color: var(--text); }
 .clientMeta { display: flex; flex-direction: column; gap: 0.15rem; font-size: 0.72rem; color: var(--text-2); width: 100%; }
@@ -23,9 +23,9 @@
 .tableCard { background: var(--card); border: var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
 .table { width: 100%; border-collapse: collapse; }
 .table th { text-align: left; font-size: 0.67rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--text-3); padding: 0.75rem 1rem; border-bottom: var(--border); background: var(--bg); }
-.table td { padding: 0.75rem 1rem; font-size: 0.82rem; border-bottom: 1px solid rgba(4,59,97,0.05); vertical-align: middle; }
+.table td { padding: 0.75rem 1rem; font-size: 0.82rem; border-bottom: 1px solid rgba(var(--accent-rgb),0.05); vertical-align: middle; }
 .tableRow:last-child td { border-bottom: none; }
-.tableRow:hover td { background: rgba(4,59,97,0.02); }
+.tableRow:hover td { background: rgba(var(--accent-rgb),0.02); }
 .tableClientWrap { display: flex; align-items: center; gap: 0.6rem; }
 .tableAvatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
 .clientNameRow { font-weight: 600; color: var(--text); }

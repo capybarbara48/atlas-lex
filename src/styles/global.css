@@ -7,12 +7,14 @@
   --bg-2:        #e8e8ec;
   --card:        #ffffff;
   --card-hover:  #f8f8fa;
-  --border:      1px solid rgba(4,59,97,0.12);
 
   /* Accent — sobrescrito em runtime pelo ThemeContext */
+  --accent-rgb:  4, 59, 97;
   --accent:      #043b61;
-  --accent-dim:  rgba(4,59,97,0.08);
+  --accent-dim:  rgba(var(--accent-rgb), 0.08);
   --accent-dark: #022a47;
+
+  --border:      1px solid rgba(var(--accent-rgb), 0.12);
   --color-accent: #043b61;
   --color-accent-dark: #022a47;
 
@@ -22,21 +24,21 @@
   --blue:        #3b82f6;
   --blue-dim:    rgba(59,130,246,0.10);
   --purple:      #043b61;
-  --purple-dim:  rgba(4,59,97,0.08);
+  --purple-dim:  rgba(var(--accent-rgb),0.08);
 
   --text:        #000000;
   --text-2:      #545454;
   --text-3:      #a0a0a6;
 
-  --shadow:      0 2px 16px rgba(4,59,97,0.08);
-  --shadow-lg:   0 8px 40px rgba(4,59,97,0.16);
+  --shadow:      0 2px 16px rgba(var(--accent-rgb),0.08);
+  --shadow-lg:   0 8px 40px rgba(var(--accent-rgb),0.16);
   --radius:      16px;
   --radius-sm:   10px;
 
   /* alias compat */
   --color-bg:           var(--bg);
   --color-surface:      var(--card);
-  --color-border:       rgba(4,59,97,0.12);
+  --color-border:       rgba(var(--accent-rgb),0.12);
   --color-text:         var(--text);
   --color-text-muted:   var(--text-2);
   --color-text-light:   var(--text-3);
@@ -66,8 +68,8 @@ body::before {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 60% 50% at 10% 40%, rgba(4,59,97,0.08) 0%, transparent 65%),
-    radial-gradient(ellipse 50% 40% at 90% 10%, rgba(4,59,97,0.06) 0%, transparent 65%);
+    radial-gradient(ellipse 60% 50% at 10% 40%, rgba(var(--accent-rgb), 0.08) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 40% at 90% 10%, rgba(var(--accent-rgb), 0.06) 0%, transparent 65%);
   pointer-events: none;
   z-index: 0;
 }
@@ -123,7 +125,7 @@ img { display: block; max-width: 100%; }
 .skel {
   height: 52px;
   background: linear-gradient(90deg,
-    rgba(4,59,97,0.06) 0%, rgba(4,59,97,0.13) 50%, rgba(4,59,97,0.06) 100%);
+    rgba(var(--accent-rgb), 0.06) 0%, rgba(var(--accent-rgb), 0.13) 50%, rgba(var(--accent-rgb), 0.06) 100%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 9px;

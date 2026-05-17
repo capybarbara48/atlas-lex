@@ -13,7 +13,7 @@
   transition: all 0.2s;
   flex-shrink: 0;
 }
-.btnNovo:hover { background: var(--accent-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(4,59,97,0.25); }
+.btnNovo:hover { background: var(--accent-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(var(--accent-rgb),0.25); }
 .btnNovo svg { width: 14px; height: 14px; flex-shrink: 0; }
 
 /* Filters */
@@ -43,7 +43,7 @@
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
-.searchInput:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(4,59,97,0.1); }
+.searchInput:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.1); }
 .searchInput::placeholder { color: var(--text-3); }
 
 .filterGroup {
@@ -78,7 +78,7 @@
 /* Kanban */
 .kanbanWrapper { overflow-x: auto; padding-bottom: 0.5rem; }
 .kanbanWrapper::-webkit-scrollbar { height: 4px; }
-.kanbanWrapper::-webkit-scrollbar-thumb { background: rgba(4,59,97,0.2); border-radius: 4px; }
+.kanbanWrapper::-webkit-scrollbar-thumb { background: rgba(var(--accent-rgb),0.2); border-radius: 4px; }
 .kanbanBoard { display: flex; gap: 0.75rem; align-items: flex-start; min-width: max-content; }
 .kanbanCol {
   background: var(--bg);
@@ -110,7 +110,7 @@
   display: flex; flex-direction: column; gap: 0.3rem;
 }
 .kanbanItems::-webkit-scrollbar { width: 3px; }
-.kanbanItems::-webkit-scrollbar-thumb { background: rgba(4,59,97,0.2); border-radius: 4px; }
+.kanbanItems::-webkit-scrollbar-thumb { background: rgba(var(--accent-rgb),0.2); border-radius: 4px; }
 .kanbanEmpty { text-align: center; color: var(--text-3); font-size: 0.72rem; padding: 0.75rem 0; }
 .kanbanCard {
   background: var(--card); border: var(--border); border-radius: 8px;
@@ -144,11 +144,11 @@
 .table td {
   padding: 0.75rem 1rem;
   font-size: 0.82rem;
-  border-bottom: 1px solid rgba(4,59,97,0.05);
+  border-bottom: 1px solid rgba(var(--accent-rgb),0.05);
   vertical-align: middle;
 }
 .tableRow:last-child td { border-bottom: none; }
-.tableRow:hover td { background: rgba(4,59,97,0.02); }
+.tableRow:hover td { background: rgba(var(--accent-rgb),0.02); }
 .caseTitle { font-weight: 600; color: var(--text); margin-bottom: 0.1rem; }
 .caseNumber { font-size: 0.68rem; color: var(--text-3); font-family: monospace; }
 .clientCell { font-weight: 500; }

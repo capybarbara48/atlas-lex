@@ -24,5 +24,5 @@
 .active {
   background: var(--card) !important;
   color: var(--accent) !important;
-  box-shadow: 0 1px 4px rgba(4,59,97,0.12);
+  box-shadow: 0 1px 4px rgba(var(--accent-rgb),0.12);
 }

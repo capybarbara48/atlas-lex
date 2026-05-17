@@ -29,7 +29,7 @@
   opacity: 0;
   transition: opacity 0.3s;
 }
-.card:hover { border-color: rgba(4,59,97,0.22); box-shadow: var(--shadow-lg); }
+.card:hover { border-color: rgba(var(--accent-rgb),0.22); box-shadow: var(--shadow-lg); }
 .card:hover::before { opacity: 1; }
 
 /* ── Stats banner ────────────────────────────────────────────────── */
@@ -74,7 +74,7 @@
 
 .statBox {
   background: var(--accent-dim);
-  border: 1px solid rgba(4,59,97,0.2);
+  border: 1px solid rgba(var(--accent-rgb),0.2);
   border-radius: var(--radius-sm);
   padding: 0.75rem 1rem;
   text-align: center;
@@ -114,7 +114,7 @@
 .btnNovo:hover {
   background: var(--accent-dark);
   transform: translateY(-1px);
-  box-shadow: 0 4px 20px rgba(4,59,97,0.3);
+  box-shadow: 0 4px 20px rgba(var(--accent-rgb),0.3);
 }
 .btnNovo svg { width: 16px; height: 16px; flex-shrink: 0; }
 
@@ -161,7 +161,7 @@
   font-size: 0.7rem;
   color: var(--accent);
   padding: 0.35rem 0.8rem;
-  border: 1px solid rgba(4,59,97,0.25);
+  border: 1px solid rgba(var(--accent-rgb),0.25);
   border-radius: 7px;
   transition: all 0.2s;
   white-space: nowrap;
@@ -179,7 +179,7 @@
   max-height: 340px;
 }
 .cardBody::-webkit-scrollbar { width: 3px; }
-.cardBody::-webkit-scrollbar-thumb { background: rgba(4,59,97,0.2); border-radius: 2px; }
+.cardBody::-webkit-scrollbar-thumb { background: rgba(var(--accent-rgb),0.2); border-radius: 2px; }
 
 /* ── Kanban ──────────────────────────────────────────────────────── */
 .cardCasos { grid-column: 1 / -1; }
@@ -189,7 +189,7 @@
   padding-bottom: 0.5rem;
 }
 .kanbanWrapper::-webkit-scrollbar { height: 4px; }
-.kanbanWrapper::-webkit-scrollbar-thumb { background: rgba(4,59,97,0.2); border-radius: 4px; }
+.kanbanWrapper::-webkit-scrollbar-thumb { background: rgba(var(--accent-rgb),0.2); border-radius: 4px; }
 
 .kanbanBoard {
   display: flex;
@@ -246,7 +246,7 @@
   gap: 0.3rem;
 }
 .kanbanItems::-webkit-scrollbar { width: 3px; }
-.kanbanItems::-webkit-scrollbar-thumb { background: rgba(4,59,97,0.2); border-radius: 4px; }
+.kanbanItems::-webkit-scrollbar-thumb { background: rgba(var(--accent-rgb),0.2); border-radius: 4px; }
 
 .kanbanItem {
   background: var(--card);
@@ -305,14 +305,14 @@
   align-items: stretch;
   gap: 1rem;
   padding: 0.875rem 1rem;
-  background: rgba(4,59,97,0.04);
+  background: rgba(var(--accent-rgb),0.04);
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
   transition: all 0.2s;
 }
 .eventItem:hover {
-  background: rgba(4,59,97,0.08);
-  border-color: rgba(4,59,97,0.18);
+  background: rgba(var(--accent-rgb),0.08);
+  border-color: rgba(var(--accent-rgb),0.18);
 }
 
 .evDateCol {
@@ -338,7 +338,7 @@
 
 .evSep {
   width: 1px;
-  background: rgba(4,59,97,0.12);
+  background: rgba(var(--accent-rgb),0.12);
   flex-shrink: 0;
 }
 
@@ -385,19 +385,19 @@
   gap: 0.75rem;
   padding: 0.6rem 0.75rem;
   border-radius: var(--radius-sm);
-  background: rgba(4,59,97,0.03);
+  background: rgba(var(--accent-rgb),0.03);
   border: 1px solid transparent;
   margin-bottom: 0.4rem;
   transition: all 0.15s;
 }
-.taskItem:hover { background: rgba(4,59,97,0.07); border-color: rgba(4,59,97,0.14); }
+.taskItem:hover { background: rgba(var(--accent-rgb),0.07); border-color: rgba(var(--accent-rgb),0.14); }
 .taskDone { opacity: 0.45; }
 .taskOverdue { border-left: 3px solid var(--red) !important; background: rgba(224,60,60,0.04) !important; }
 
 .taskCheck {
   width: 18px; height: 18px;
   border-radius: 4px;
-  border: 1.5px solid rgba(4,59,97,0.25);
+  border: 1.5px solid rgba(var(--accent-rgb),0.25);
   background: var(--bg);
   flex-shrink: 0;
   transition: all 0.15s;
@@ -447,7 +447,7 @@
   align-items: stretch;
   gap: 0;
   background: var(--accent-dim);
-  border: 1px solid rgba(4,59,97,0.15);
+  border: 1px solid rgba(var(--accent-rgb),0.15);
   border-radius: var(--radius-sm);
   padding: 1rem 1.25rem;
   margin-bottom: 1rem;
@@ -461,7 +461,7 @@
 }
 .finStatDiv {
   width: 1px;
-  background: rgba(4,59,97,0.15);
+  background: rgba(var(--accent-rgb),0.15);
   flex-shrink: 0;
   margin: 0 1rem;
 }
@@ -503,7 +503,7 @@
 .abarPct   { font-size: 0.68rem; color: var(--text-2); font-weight: 600; }
 .abarTrack {
   height: 5px;
-  background: rgba(4,59,97,0.12);
+  background: rgba(var(--accent-rgb),0.12);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -532,7 +532,7 @@
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.55rem 0;
-  border-bottom: 1px solid rgba(4,59,97,0.07);
+  border-bottom: 1px solid rgba(var(--accent-rgb),0.07);
 }
 .entryRow:last-child { border-bottom: none; }
 

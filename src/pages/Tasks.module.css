@@ -4,7 +4,7 @@
 .searchWrap { position: relative; flex: 1; max-width: 360px; }
 .searchIcon { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--text-3); pointer-events: none; }
 .searchInput { width: 100%; padding: 0.5rem 0.875rem 0.5rem 2.25rem; background: var(--card); border: var(--border); border-radius: var(--radius-sm); font-size: 0.85rem; font-family: inherit; color: var(--text); outline: none; }
-.searchInput:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(4,59,97,0.1); }
+.searchInput:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.1); }
 .searchInput::placeholder { color: var(--text-3); }
 .filterGroup { display: flex; gap: 0.35rem; flex-wrap: wrap; }
 .filterBtn { padding: 0.35rem 0.8rem; background: var(--card); border: var(--border); border-radius: 999px; font-size: 0.75rem; font-weight: 500; color: var(--text-2); transition: all 0.15s; font-family: inherit; }
@@ -29,9 +29,9 @@
 .tableCard { background: var(--card); border: var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
 .table { width: 100%; border-collapse: collapse; }
 .table th { text-align: left; font-size: 0.67rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--text-3); padding: 0.75rem 1rem; border-bottom: var(--border); background: var(--bg); }
-.table td { padding: 0.75rem 1rem; font-size: 0.82rem; border-bottom: 1px solid rgba(4,59,97,0.05); vertical-align: middle; }
+.table td { padding: 0.75rem 1rem; font-size: 0.82rem; border-bottom: 1px solid rgba(var(--accent-rgb),0.05); vertical-align: middle; }
 .tableRow:last-child td { border-bottom: none; }
-.tableRow:hover td { background: rgba(4,59,97,0.02); }
+.tableRow:hover td { background: rgba(var(--accent-rgb),0.02); }
 .overdueRow td { background: rgba(224,60,60,0.03); }
 .taskTitleCell { font-weight: 500; }
 .caseCell { font-size: 0.78rem; color: var(--text-2); }
@@ -110,7 +110,7 @@
 }
 .calMonthBody {
   display: grid; grid-template-columns: repeat(7, 1fr);
-  gap: 1px; background: rgba(4,59,97,0.08);
+  gap: 1px; background: rgba(var(--accent-rgb),0.08);
 }
 .calCell {
   min-height: 88px;
@@ -121,8 +121,8 @@
 }
 .calCell:hover { background: var(--bg); }
 .calCellOther { opacity: 0.35; }
-.calCellToday { background: rgba(4,59,97,0.04); }
-.calCellToday:hover { background: rgba(4,59,97,0.07); }
+.calCellToday { background: rgba(var(--accent-rgb),0.04); }
+.calCellToday:hover { background: rgba(var(--accent-rgb),0.07); }
 .calCellNum {
   font-size: 0.7rem; font-weight: 600; color: var(--text-2); line-height: 1;
 }
@@ -147,13 +147,13 @@
 .calWeek {
   display: grid; grid-template-columns: repeat(7, 1fr);
   min-height: 280px;
-  gap: 1px; background: rgba(4,59,97,0.08);
+  gap: 1px; background: rgba(var(--accent-rgb),0.08);
 }
 .calWeekCol {
   background: var(--card);
   display: flex; flex-direction: column;
 }
-.calWeekColToday { background: rgba(4,59,97,0.03); }
+.calWeekColToday { background: rgba(var(--accent-rgb),0.03); }
 
 .calWeekColHeader {
   padding: 0.6rem 0.4rem 0.5rem;
@@ -184,7 +184,7 @@
   padding: 0.22rem 0.35rem 0.22rem 0.42rem;
   cursor: pointer; transition: background 0.1s;
 }
-.calWeekTask:hover { background: rgba(4,59,97,0.06); }
+.calWeekTask:hover { background: rgba(var(--accent-rgb),0.06); }
 .calWeekTaskTitle {
   display: block; font-size: 0.65rem; font-weight: 600;
   color: var(--text); line-height: 1.3;
@@ -209,7 +209,7 @@
   border-radius: var(--radius-sm); padding: 0.75rem 1rem 0.75rem 0.875rem;
   cursor: pointer; transition: all 0.15s;
 }
-.calDayTask:hover { background: rgba(4,59,97,0.04); box-shadow: var(--shadow); }
+.calDayTask:hover { background: rgba(var(--accent-rgb),0.04); box-shadow: var(--shadow); }
 .calDayTaskMain { flex: 1; min-width: 0; }
 .calDayTaskTitle {
   display: block; font-size: 0.875rem; font-weight: 600;

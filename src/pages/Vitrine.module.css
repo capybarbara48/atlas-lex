@@ -303,9 +303,9 @@
   flex-direction: column;
   gap: 0.2rem;
   padding: 1rem;
-  background: rgba(4,59,97,0.03);
+  background: rgba(var(--accent-rgb),0.03);
   border-radius: var(--radius-sm);
-  border: 1px solid rgba(4,59,97,0.07);
+  border: 1px solid rgba(var(--accent-rgb),0.07);
 }
 
 .bNum {
@@ -333,7 +333,7 @@
   color: var(--text-3);
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  border-top: 1px solid rgba(4,59,97,0.08);
+  border-top: 1px solid rgba(var(--accent-rgb),0.08);
   padding-top: 0.75rem;
 }
 
@@ -463,9 +463,9 @@
   border: 1px solid transparent;
 }
 
-.cItemEarned { background: rgba(4,59,97,0.05); }
+.cItemEarned { background: rgba(var(--accent-rgb),0.05); }
 .cItemLocked { opacity: 0.5; }
-.cItemActive { border-color: var(--opt-accent) !important; background: rgba(4,59,97,0.08) !important; }
+.cItemActive { border-color: var(--opt-accent) !important; background: rgba(var(--accent-rgb),0.08) !important; }
 
 .cItemIcon { font-size: 1rem; flex-shrink: 0; }
 .cItemLabel { font-size: 0.75rem; font-weight: 500; color: var(--text); }

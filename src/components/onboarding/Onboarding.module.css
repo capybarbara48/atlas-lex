@@ -17,8 +17,8 @@
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 60% 50% at 10% 40%, rgba(4,59,97,0.10) 0%, transparent 65%),
-    radial-gradient(ellipse 50% 40% at 90% 10%, rgba(4,59,97,0.07) 0%, transparent 65%);
+    radial-gradient(ellipse 60% 50% at 10% 40%, rgba(var(--accent-rgb),0.10) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 40% at 90% 10%, rgba(var(--accent-rgb),0.07) 0%, transparent 65%);
   pointer-events: none;
   z-index: 0;
 }
@@ -70,7 +70,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: rgba(4,59,97,0.15);
+  background: rgba(var(--accent-rgb),0.15);
   transition: all 0.3s;
 }
 
@@ -185,7 +185,7 @@
 
 .input {
   background: var(--bg);
-  border: 1px solid rgba(4,59,97,0.2);
+  border: 1px solid rgba(var(--accent-rgb),0.2);
   border-radius: 9px;
   padding: 0.65rem 0.9rem;
   font-size: 0.925rem;
@@ -197,7 +197,7 @@
 }
 .input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(4,59,97,0.12);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.12);
 }
 .input::placeholder { color: var(--text-3); }
 
@@ -372,7 +372,7 @@
   align-items: flex-start;
   gap: 1rem;
   padding: 0.6rem 0.875rem;
-  border-bottom: 1px solid rgba(4,59,97,0.06);
+  border-bottom: 1px solid rgba(var(--accent-rgb),0.06);
 }
 .summaryRow:last-child { border-bottom: none; }
 .summaryKey {
