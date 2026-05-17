@@ -78,7 +78,7 @@ function HeaderPreview({ firmName, accent }) {
           <div className={styles.previewLogoMark} style={{ border: '1px solid rgba(255,255,255,0.3)' }}>
             {firmName?.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || 'AL'}
           </div>
-          <span className={styles.previewFirmName}>{firmName || 'Atlas Lex'}</span>
+          <span className={styles.previewFirmName}>{firmName || 'Atlas Adv'}</span>
         </div>
         <div className={styles.previewClock}>14:35:00</div>
         <div className={styles.previewRight}>
@@ -247,7 +247,7 @@ export default function Settings() {
   return (
     <PageShell
       title="Configurações"
-      subtitle="Personalize o Atlas Lex para o seu escritório"
+      subtitle="Personalize o Atlas Adv para o seu escritório"
     >
       <div className={styles.layout}>
 
@@ -590,7 +590,7 @@ export default function Settings() {
         {/* ── Conta ── */}
         <Section
           title="Conta"
-          subtitle="Informações da sua conta no Atlas Lex"
+          subtitle="Informações da sua conta no Atlas Adv"
         >
           <div className={styles.accountInfo}>
             <div className={styles.accountRow}>

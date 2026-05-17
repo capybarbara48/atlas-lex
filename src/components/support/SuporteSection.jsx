@@ -55,7 +55,7 @@ function ReplyThread({ ticketId, lawyerName }) {
       {replies.map(r => (
         <div key={r.id} className={`${styles.bubble} ${r.is_admin ? styles.bubbleAdmin : styles.bubbleUser}`}>
           <div className={styles.bubbleMeta}>
-            <span className={styles.bubbleAuthor}>{r.is_admin ? 'Suporte Atlas Lex' : (lawyerName ?? 'Você')}</span>
+            <span className={styles.bubbleAuthor}>{r.is_admin ? 'Suporte Atlas Adv' : (lawyerName ?? 'Você')}</span>
             <span className={styles.bubbleDate}>{fmtDate(r.created_at)}</span>
           </div>
           <p className={styles.bubbleBody}>{r.body}</p>

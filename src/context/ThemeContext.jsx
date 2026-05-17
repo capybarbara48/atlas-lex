@@ -5,7 +5,7 @@ const ThemeContext = createContext(null)
 
 const DEFAULTS = {
   accent:    '#043b61',
-  firmName:  'Atlas Lex',
+  firmName:  'Atlas Adv',
   logoUrl:   null,
 }
 

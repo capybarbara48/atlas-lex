@@ -27,7 +27,7 @@ export default function DevSeed() {
     /* ── 0. Ensure lawyer row exists ────────────────────────────── */
     const { error: le } = await supabase
       .from('lawyers')
-      .upsert({ id: lid, firm_name: 'Atlas Lex', onboarding_completed: true }, { onConflict: 'id', ignoreDuplicates: true })
+      .upsert({ id: lid, firm_name: 'Atlas Adv', onboarding_completed: true }, { onConflict: 'id', ignoreDuplicates: true })
     if (le) { push(`Erro ao garantir perfil: ${le.message}`, false); setLoading(false); return }
     push('✓ Perfil de advogado verificado')
 

@@ -74,7 +74,7 @@ export default function AdminDashboard() {
       <div className={styles.pageHeader}>
         <div>
           <h1 className={styles.title}>Dashboard</h1>
-          <p className={styles.sub}>Visão geral da plataforma Atlas Lex</p>
+          <p className={styles.sub}>Visão geral da plataforma Atlas Adv</p>
         </div>
       </div>
 

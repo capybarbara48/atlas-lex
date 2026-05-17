@@ -107,7 +107,7 @@ export default function Onboarding() {
   const [fullName,  setFullName]  = useState(lawyer?.full_name  ?? '')
   const [oabNumber, setOabNumber] = useState(lawyer?.oab_number ?? '')
   const [firmName,  setFirmName]  = useState(
-    lawyer?.firm_name && lawyer.firm_name !== 'Atlas Lex' ? lawyer.firm_name : ''
+    lawyer?.firm_name && lawyer.firm_name !== 'Atlas Adv' ? lawyer.firm_name : ''
   )
   const [logoUrl,   setLogoUrl]   = useState(lawyer?.logo_url   ?? '')
   const [accent,    setAccent]    = useState(lawyer?.theme_accent ?? '#043b61')
@@ -187,7 +187,7 @@ export default function Onboarding() {
     /* Step 0 — Boas-vindas */
     <div key="step0" className={styles.stepContent}>
       <div className={styles.stepIcon}>⚖</div>
-      <h2 className={styles.stepTitle}>Bem-vindo ao Atlas Lex!</h2>
+      <h2 className={styles.stepTitle}>Bem-vindo ao Atlas Adv!</h2>
       <p className={styles.stepDesc}>
         Vamos configurar seu espaço em <strong>3 passos rápidos</strong>.
         Cada advogado tem o seu próprio ambiente — com sua marca, sua cor e seus dados.
@@ -441,7 +441,7 @@ export default function Onboarding() {
       {/* Ambient glow (same as body::before in global.css) */}
       <div className={styles.glow} />
 
-      <div className={styles.wordmark}>ATLAS LEX</div>
+      <div className={styles.wordmark}>ATLAS ADV</div>
 
       <div className={styles.card}>
         {/* Top accent line */}
@@ -494,7 +494,7 @@ export default function Onboarding() {
               onClick={handleFinish}
               disabled={saving}
             >
-              {saving ? 'Salvando…' : '🚀 Entrar no Atlas Lex'}
+              {saving ? 'Salvando…' : '🚀 Entrar no Atlas Adv'}
             </button>
           )}
         </div>

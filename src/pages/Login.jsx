@@ -22,7 +22,7 @@ export default function Login() {
   return (
     <div className={styles.wrapper}>
       <div className={styles.card}>
-        <h1 className={styles.title}>Atlas Lex</h1>
+        <h1 className={styles.title}>Atlas Adv</h1>
         <p className={styles.subtitle}>Gestão jurídica inteligente</p>
         <button className="btn-primary" onClick={handleGoogleLogin}>
           Entrar com Google

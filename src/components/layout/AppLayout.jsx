@@ -176,12 +176,12 @@ export default function AppLayout() {
     ? lawyer.full_name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
     : 'AL'
 
-  const firmName  = lawyer?.firm_name ?? 'Atlas Lex'
+  const firmName  = lawyer?.firm_name ?? 'Atlas Adv'
   const firmShort = firmName.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
   const pageTitle = PAGE_TITLES[location.pathname]
     ?? (location.pathname.startsWith('/painel/clientes/') ? 'Cliente'
       : location.pathname.startsWith('/painel/casos/') ? 'Processo'
-      : 'Atlas Lex')
+      : 'Atlas Adv')
 
 
   return (
@@ -308,7 +308,7 @@ export default function AppLayout() {
         {/* Footer */}
         <footer className={styles.footer}>
           <span>{firmName} © {new Date().getFullYear()}</span>
-          <span>Atlas Lex v1.0</span>
+          <span>Atlas Adv v1.0</span>
         </footer>
 
       </div>

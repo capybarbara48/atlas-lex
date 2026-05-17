@@ -71,7 +71,7 @@ function LiveClock({ className }) {
   )
 }
 
-/* ── Atlas Lex watermark ────────────────────────────────────────── */
+/* ── Atlas Adv watermark ────────────────────────────────────────── */
 function AtlasLexMark() {
   return (
     <div className={s.watermark}>
@@ -102,7 +102,7 @@ function VitrineMix({ lawyer, todayTasks, weekDone, fullscreen, onClose }) {
   const [now,     setNow]     = useState(new Date())
 
   const accent   = lawyer?.theme_accent ?? '#043b61'
-  const firm     = lawyer?.firm_name    ?? 'Atlas Lex'
+  const firm     = lawyer?.firm_name    ?? 'Atlas Adv'
   const frase    = FRASES[dayOfYear() % FRASES.length]
 
   /* clock tick */
@@ -266,7 +266,7 @@ function OptionA({ lawyer, todayTasks }) {
   const [secs, setSecs] = useState(DURATION)
   const [running, setRunning] = useState(false)
   const accent = lawyer?.theme_accent ?? '#043b61'
-  const firm   = lawyer?.firm_name    ?? 'Atlas Lex'
+  const firm   = lawyer?.firm_name    ?? 'Atlas Adv'
   const pct = ((DURATION - secs) / DURATION) * 100
   const C   = 2 * Math.PI * 88
   const mm = String(Math.floor(secs / 60)).padStart(2, '0')
@@ -329,7 +329,7 @@ function OptionA({ lawyer, todayTasks }) {
 /* ── Option B ───────────────────────────────────────────────────── */
 function OptionB({ lawyer, cases, clients, weekDone, financials }) {
   const accent  = lawyer?.theme_accent ?? '#043b61'
-  const firm    = lawyer?.firm_name    ?? 'Atlas Lex'
+  const firm    = lawyer?.firm_name    ?? 'Atlas Adv'
   const initials = firm.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
   const today   = new Date()
   const monday  = new Date(today); monday.setDate(today.getDate() - today.getDay() + 1)
@@ -359,7 +359,7 @@ function OptionB({ lawyer, cases, clients, weekDone, financials }) {
           ))}
         </div>
         <div className={s.bFooter}>
-          <span>Atlas Lex · Gestão Jurídica</span>
+          <span>Atlas Adv · Gestão Jurídica</span>
           <span>{today.toLocaleDateString('pt-BR', { month:'long', year:'numeric' })}</span>
         </div>
       </div>
@@ -370,7 +370,7 @@ function OptionB({ lawyer, cases, clients, weekDone, financials }) {
 /* ── Option C placeholder (em desenvolvimento) ──────────────────── */
 function OptionCTeaser({ lawyer }) {
   const accent = lawyer?.theme_accent ?? '#043b61'
-  const firm   = lawyer?.firm_name    ?? 'Atlas Lex'
+  const firm   = lawyer?.firm_name    ?? 'Atlas Adv'
   return (
     <div className={s.optCard} style={{ '--opt-accent': accent }}>
       <div className={s.teaserShell} style={{ background: accent }}>
@@ -386,7 +386,7 @@ function OptionCTeaser({ lawyer }) {
 /* ── Option D ───────────────────────────────────────────────────── */
 function OptionD({ lawyer, cases, clients, todayTasks, financials }) {
   const accent   = lawyer?.theme_accent ?? '#043b61'
-  const firm     = lawyer?.firm_name    ?? 'Atlas Lex'
+  const firm     = lawyer?.firm_name    ?? 'Atlas Adv'
   const initials = firm.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
   const today    = new Date().toISOString().split('T')[0]
   const overdue  = (todayTasks ?? []).filter(t => t.due_date?.split('T')[0] < today).length
@@ -436,7 +436,7 @@ function OptionD({ lawyer, cases, clients, todayTasks, financials }) {
 /* ── Option E ───────────────────────────────────────────────────── */
 function OptionE({ lawyer, cases, clients, weekDone }) {
   const accent  = lawyer?.theme_accent ?? '#043b61'
-  const firm    = lawyer?.firm_name    ?? 'Atlas Lex'
+  const firm    = lawyer?.firm_name    ?? 'Atlas Adv'
   const month   = new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'}).replace(/^\w/,c=>c.toUpperCase())
   const dots    = Array.from({length:35},(_,i)=>({ size:4+((i*7+3)%5)*2.5, opacity:0.12+((i*13)%7)*0.1 }))
   return (
@@ -452,7 +452,7 @@ function OptionE({ lawyer, cases, clients, weekDone }) {
           <div className={s.eSep}/>
           <div className={s.eNum}><span className={s.eNumVal}>{(clients??[]).length}</span><span className={s.eNumLabel}>clientes<br/>atendidos</span></div>
         </div>
-        <div className={s.eFooter}><div className={s.eSealRing}><span className={s.eSealText}>ATLAS LEX · GESTÃO JURÍDICA</span></div></div>
+        <div className={s.eFooter}><div className={s.eSealRing}><span className={s.eSealText}>ATLAS ADV · GESTÃO JURÍDICA</span></div></div>
       </div>
     </div>
   )

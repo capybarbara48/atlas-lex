@@ -17,7 +17,7 @@ function Navbar({ onLogin }) {
       <div className={styles.navInner}>
         <div className={styles.navBrand}>
           <div className={styles.navLogoMark}>A</div>
-          <span className={styles.navWordmark}>Atlas Lex</span>
+          <span className={styles.navWordmark}>Atlas Adv</span>
         </div>
         <nav className={styles.navLinks}>
           <a href="#recursos" className={styles.navLink}>Recursos</a>
@@ -224,7 +224,7 @@ export default function Landing() {
       {/* ── Differentiators ── */}
       <section className={styles.diff}>
         <div className={styles.sectionInner}>
-          <p className={styles.sectionEye}>Por que Atlas Lex?</p>
+          <p className={styles.sectionEye}>Por que Atlas Adv?</p>
           <h2 className={styles.sectionTitle}>Quatro razões que fazem a diferença</h2>
 
           <div className={styles.diffGrid}>
@@ -234,7 +234,7 @@ export default function Landing() {
               <h3 className={styles.diffTitle}>Abriu, entendeu.</h3>
               <p className={styles.diffSub}>Pronto em 2 minutos, não em 2 semanas.</p>
               <p className={styles.diffBody}>
-                Não existe botão de dúvida no Atlas Lex. A interface fala por si —
+                Não existe botão de dúvida no Atlas Adv. A interface fala por si —
                 você foca no direito, não em aprender software.
               </p>
             </div>
@@ -254,7 +254,7 @@ export default function Landing() {
               <h3 className={styles.diffTitle}>Sua marca. Sua cor. Sua identidade.</h3>
               <p className={styles.diffBody}>
                 Logo, cor de marca, nome do escritório em cada proposta e cada tela.
-                Atlas Lex fica nos bastidores. Você fica na frente.
+                Atlas Adv fica nos bastidores. Você fica na frente.
               </p>
             </div>
 
@@ -291,7 +291,7 @@ export default function Landing() {
                     </tr>
                   ))}
                   <tr className={styles.ptRowAtlas}>
-                    <td className={styles.ptCellAtlas}>Atlas Lex Pro</td>
+                    <td className={styles.ptCellAtlas}>Atlas Adv Pro</td>
                     <td className={styles.ptCellAtlas}>R$97/mês</td>
                     <td className={styles.ptCellAtlas}>R$1.164/ano</td>
                     <td className={styles.ptCellAtlas}>—</td>
@@ -391,7 +391,7 @@ export default function Landing() {
       <section id="comparativo" className={styles.comparison}>
         <div className={styles.sectionInner}>
           <p className={styles.sectionEye}>Comparativo</p>
-          <h2 className={styles.sectionTitle}>Por que Atlas Lex?</h2>
+          <h2 className={styles.sectionTitle}>Por que Atlas Adv?</h2>
           <p className={styles.sectionSub}>Compare com as alternativas que os escritórios usam hoje.</p>
 
           <div className={styles.tableWrap}>
@@ -402,7 +402,7 @@ export default function Landing() {
                   <th className={styles.thAtlas}>
                     <div className={styles.atlasHeader}>
                       <span className={styles.atlasHeaderMark}>A</span>
-                      Atlas Lex
+                      Atlas Adv
                     </div>
                   </th>
                   <th>Planilhas</th>
@@ -512,12 +512,12 @@ export default function Landing() {
           <div className={styles.footerBrand}>
             <div className={styles.navLogoMark}>A</div>
             <div>
-              <div className={styles.footerName}>Atlas Lex</div>
+              <div className={styles.footerName}>Atlas Adv</div>
               <div className={styles.footerSub}>Gestão jurídica inteligente</div>
             </div>
           </div>
           <div className={styles.footerCopy}>
-            © {new Date().getFullYear()} Atlas Lex. Todos os direitos reservados.
+            © {new Date().getFullYear()} Atlas Adv. Todos os direitos reservados.
           </div>
         </div>
       </footer>

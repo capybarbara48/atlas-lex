@@ -82,7 +82,7 @@ function AppFallback({ error, onReset }) {
         fontSize: '1.25rem', fontWeight: 700,
         color: 'var(--text)', margin: '0 0 0.5rem',
       }}>
-        Atlas Lex encontrou um problema
+        Atlas Adv encontrou um problema
       </h1>
       <p style={{
         fontSize: '0.875rem', color: 'var(--text-2)',

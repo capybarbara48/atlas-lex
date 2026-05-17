@@ -31,7 +31,7 @@ export default function AdminLayout() {
           <div className={styles.brand}>
             <div className={styles.brandMark}>A</div>
             <div className={styles.brandText}>
-              <span className={styles.brandName}>Atlas Lex</span>
+              <span className={styles.brandName}>Atlas Adv</span>
               <span className={styles.brandSub}>Admin</span>
             </div>
           </div>

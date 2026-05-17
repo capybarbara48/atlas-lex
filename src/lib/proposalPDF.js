@@ -33,7 +33,7 @@ export function generateProposalPDF(proposal, lawyer) {
   const accentBorder = lighten(accent, 0.22)
   const accentRGB   = rgb(accent)
 
-  const firmName = lawyer?.firm_name    ?? 'Atlas Lex'
+  const firmName = lawyer?.firm_name    ?? 'Atlas Adv'
   const oabLabel = lawyer?.oab_number   ? `OAB ${lawyer.oab_number}` : 'Advocacia'
 
   const clientName = proposal.clients?.full_name ?? '—'
