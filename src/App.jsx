@@ -46,7 +46,7 @@ function PrivateRoute({ children }) {
       }}>
         <div style={{
           width: 40, height: 40, borderRadius: '50%',
-          border: '3px solid rgba(4,59,97,0.15)',
+          border: '3px solid rgba(var(--accent-rgb),0.15)',
           borderTopColor: 'var(--accent)',
           animation: 'spin 0.8s linear infinite',
         }} />

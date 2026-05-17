@@ -10,7 +10,7 @@ function PageLoader() {
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 240 }}>
       <div style={{
         width: 32, height: 32, borderRadius: '50%',
-        border: '3px solid rgba(4,59,97,0.12)',
+        border: '3px solid rgba(var(--accent-rgb),0.12)',
         borderTopColor: 'var(--accent)',
         animation: 'spin 0.75s linear infinite',
       }} />

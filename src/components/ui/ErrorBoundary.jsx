@@ -122,7 +122,7 @@ function AppFallback({ error, onReset }) {
           style={{
             padding: '0.6rem 1.5rem',
             background: 'transparent', color: 'var(--text-2)',
-            border: '1px solid var(--border-color, rgba(4,59,97,0.15))',
+            border: '1px solid rgba(var(--accent-rgb),0.15)',
             borderRadius: '8px',
             fontSize: '0.875rem', fontWeight: 500,
             fontFamily: 'inherit', cursor: 'pointer',
