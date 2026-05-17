@@ -60,6 +60,11 @@
   font-weight: 800;
   font-size: 1rem;
   letter-spacing: -0.01em;
+  color: #fff;
+  transition: color 0.2s;
+}
+
+.navScrolled .navWordmark {
   color: #0f172a;
 }
 
@@ -73,13 +78,16 @@
 .navLink {
   font-size: 0.85rem;
   font-weight: 500;
-  color: #475569;
+  color: rgba(255, 255, 255, 0.8);
   text-decoration: none;
   padding: 0.4rem 0.75rem;
   border-radius: 8px;
   transition: color 0.15s, background 0.15s;
 }
-.navLink:hover { color: #0f172a; background: #f1f5f9; }
+.navLink:hover { color: #fff; background: rgba(255,255,255,0.12); }
+
+.navScrolled .navLink { color: #475569; }
+.navScrolled .navLink:hover { color: #0f172a; background: #f1f5f9; }
 
 .navCta {
   margin-left: auto;
