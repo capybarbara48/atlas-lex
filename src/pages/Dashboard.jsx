@@ -101,7 +101,7 @@ function KanbanBoard({ cases }) {
                       <div
                         key={item.id}
                         className={styles.kanbanItem}
-                        onClick={() => navigate('/casos')}
+                        onClick={() => navigate('/painel/casos')}
                         style={{ cursor: 'pointer' }}
                       >
                         {item.titulo}
@@ -238,7 +238,7 @@ export default function Dashboard() {
                 <div className={styles.cardSubtitle}>{casosTotal} processos · {casosAtivos} ativos</div>
               </div>
             </div>
-            <Link to="/casos" className={styles.cardLink}>Ver todos →</Link>
+            <Link to="/painel/casos" className={styles.cardLink}>Ver todos →</Link>
           </div>
           <KanbanBoard cases={cases} />
         </div>
@@ -255,7 +255,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            <Link to="/tarefas" className={styles.cardLink}>Ver todas →</Link>
+            <Link to="/painel/tarefas" className={styles.cardLink}>Ver todas →</Link>
           </div>
           <div className={styles.cardBody}>
             {overdueTasks.length === 0
@@ -277,7 +277,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            <Link to="/tarefas" className={styles.cardLink}>Ver todas →</Link>
+            <Link to="/painel/tarefas" className={styles.cardLink}>Ver todas →</Link>
           </div>
           <div className={styles.cardBody}>
             {todayTasks.length === 0
@@ -297,7 +297,7 @@ export default function Dashboard() {
                 <div className={styles.cardSubtitle}>Resumo do mês</div>
               </div>
             </div>
-            <Link to="/financeiro" className={styles.cardLink}>Ver mais →</Link>
+            <Link to="/painel/financeiro" className={styles.cardLink}>Ver mais →</Link>
           </div>
 
           {/* Mini stats row */}

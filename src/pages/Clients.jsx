@@ -153,7 +153,7 @@ export default function Clients() {
 
   function openNew()       { setEditing(null); setFormOpen(true) }
   function openEdit(id)    { setEditing(rawById[id] ?? null); setFormOpen(true) }
-  function handleNavigate(id) { navigate('/clientes/' + id) }
+  function handleNavigate(id) { navigate('/painel/clientes/' + id) }
   function handleSave() {
     refetch()
     setFormOpen(false)

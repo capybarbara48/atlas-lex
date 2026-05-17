@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import Onboarding from '@/components/onboarding/Onboarding'
 import Login from '@/pages/Login'
+import Landing from '@/pages/Landing'
 import AppLayout from '@/components/layout/AppLayout'
 
 /* ── Lazy page chunks ───────────────────────────────────────────────── */
@@ -52,7 +53,7 @@ function PrivateRoute({ children }) {
     )
   }
 
-  if (!session) return <Navigate to="/login" replace />
+  if (!session) return <Navigate to="/" replace />
 
   if (!lawyer || !lawyer.onboarding_completed) {
     return <Onboarding />
@@ -90,27 +91,30 @@ export default function App() {
         <Route path="feedback"    element={<AdminFeedback />} />
       </Route>
 
+      {/* ── Landing (public) ── */}
+      <Route path="/" element={<Landing />} />
+
       {/* ── Main app ── */}
       <Route
-        path="/"
+        path="/painel"
         element={
           <PrivateRoute>
             <AppLayout />
           </PrivateRoute>
         }
       >
-        <Route index                element={<Dashboard />} />
-        <Route path="casos"         element={<Cases />} />
-        <Route path="clientes"      element={<Clients />} />
-        <Route path="clientes/:id"  element={<ClientDetail />} />
-        <Route path="propostas"     element={<Proposals />} />
-        <Route path="tarefas"       element={<Tasks />} />
-        <Route path="financeiro"    element={<Financials />} />
-        <Route path="configuracoes" element={<Settings />} />
-        <Route path="notas"         element={<Notes />} />
-        <Route path="estagiarios"   element={<Interns />} />
-        <Route path="vitrine"       element={<Vitrine />} />
-        <Route path="dev/seed"      element={<DevSeed />} />
+        <Route index                        element={<Dashboard />} />
+        <Route path="casos"                 element={<Cases />} />
+        <Route path="clientes"              element={<Clients />} />
+        <Route path="clientes/:id"          element={<ClientDetail />} />
+        <Route path="propostas"             element={<Proposals />} />
+        <Route path="tarefas"               element={<Tasks />} />
+        <Route path="financeiro"            element={<Financials />} />
+        <Route path="configuracoes"         element={<Settings />} />
+        <Route path="notas"                 element={<Notes />} />
+        <Route path="estagiarios"           element={<Interns />} />
+        <Route path="vitrine"               element={<Vitrine />} />
+        <Route path="dev/seed"              element={<DevSeed />} />
       </Route>
     </Routes>
   )

@@ -50,7 +50,7 @@ function PageFallback({ error, onReset }) {
           Tentar novamente
         </button>
         <a
-          href="/"
+          href="/painel"
           style={{
             padding: '0.55rem 1.25rem',
             background: 'var(--card)', color: 'var(--text-2)',

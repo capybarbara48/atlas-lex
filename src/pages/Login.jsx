@@ -9,13 +9,13 @@ export default function Login() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (session) navigate('/', { replace: true })
+    if (session) navigate('/painel', { replace: true })
   }, [session, navigate])
 
   async function handleGoogleLogin() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: window.location.origin + '/painel' },
     })
   }
 
