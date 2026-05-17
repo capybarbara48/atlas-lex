@@ -54,7 +54,6 @@
   max-height: 32px;
   max-width: 130px;
   object-fit: contain;
-  filter: brightness(0) invert(1);
 }
 
 .firmInfo { min-width: 0; }
