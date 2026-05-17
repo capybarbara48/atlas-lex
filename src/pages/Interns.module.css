@@ -1,0 +1,308 @@
+/* ── Member selector bar ────────────────────────────────────────────── */
+.memberBar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.memberPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.9rem;
+  border: var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-2);
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.memberPill:hover { border-color: var(--accent); color: var(--accent); }
+.memberPillActive { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; }
+
+.pillAvatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.memberPill:not(.memberPillActive) .pillAvatar {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+.pillCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  padding: 0 4px;
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.25);
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+.memberPill:not(.memberPillActive) .pillCount {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+/* ── Overview grid ──────────────────────────────────────────────────── */
+.overviewGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.memberCard {
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1rem 1rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.35rem;
+}
+.memberCard:hover { box-shadow: var(--shadow); transform: translateY(-1px); border-color: var(--accent); }
+
+.memberCardAvatar {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.memberCardName {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.memberCardStats {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  font-size: 0.72rem;
+  color: var(--text-2);
+}
+
+.progressWrap {
+  width: 100%;
+  height: 4px;
+  background: var(--accent-dim);
+  border-radius: 999px;
+  margin-top: 0.5rem;
+  overflow: hidden;
+}
+.progressBar {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+  min-width: 2px;
+}
+
+.progressLabels {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 0.65rem;
+  color: var(--text-3);
+}
+.progressPct { color: var(--accent); font-weight: 600; }
+
+/* ── Stats row (member view) ────────────────────────────────────────── */
+.statsRow {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.statCard {
+  flex: 1;
+  min-width: 100px;
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.875rem 1rem;
+  text-align: center;
+}
+.statCardDanger { border-color: rgba(220,38,38,0.25); background: rgba(220,38,38,0.04); }
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+.statCardDanger .statValue { color: var(--red, #dc2626); }
+
+.statLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-3);
+}
+
+/* ── Task list section ──────────────────────────────────────────────── */
+.section {
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: var(--border);
+  flex-wrap: wrap;
+}
+
+.sectionTitle {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-2);
+}
+
+.filterGroup { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+.filterBtn {
+  padding: 0.3rem 0.7rem;
+  border: var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-2);
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.filterBtn:hover { border-color: var(--accent); color: var(--accent); }
+.filterActive { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; }
+
+.taskList { display: flex; flex-direction: column; }
+
+.taskRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(4,59,97,0.05);
+  transition: background 0.12s;
+}
+.taskRow:last-child { border-bottom: none; }
+.taskRow:hover { background: rgba(4,59,97,0.02); }
+.taskRowOverdue { background: rgba(220,38,38,0.03) !important; }
+.taskRowOverdue:hover { background: rgba(220,38,38,0.06) !important; }
+
+.taskRowMain { flex: 1; min-width: 0; }
+.taskRowTitle {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.taskDone { text-decoration: line-through; color: var(--text-3); }
+
+.taskRowCase {
+  font-size: 0.7rem;
+  color: var(--text-3);
+  margin-top: 0.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.taskRowMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.statusSelect {
+  padding: 0.2rem 0.5rem;
+  border: var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  font-size: 0.72rem;
+  font-family: inherit;
+  color: var(--text-2);
+  cursor: pointer;
+  outline: none;
+}
+.statusSelect:focus { border-color: var(--accent); }
+
+.taskRowDate {
+  font-size: 0.72rem;
+  color: var(--text-3);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.taskRowDateOverdue { color: var(--red, #dc2626); }
+
+.overdueTag {
+  display: inline-block;
+  margin-left: 0.3rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  background: rgba(220,38,38,0.1);
+  color: var(--red, #dc2626);
+  font-size: 0.6rem;
+  font-weight: 700;
+}
+
+/* ── Empty states ───────────────────────────────────────────────────── */
+.emptyState {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--text-3);
+  font-size: 0.85rem;
+}
+
+.emptySetup {
+  text-align: center;
+  padding: 4rem 2rem;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.emptySetupIcon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.4; }
+.emptySetupTitle { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; }
+.emptySetupText { font-size: 0.875rem; color: var(--text-2); line-height: 1.6; }

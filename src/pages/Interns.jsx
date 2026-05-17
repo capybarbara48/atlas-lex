@@ -1,0 +1,253 @@
+import { useState, useMemo } from 'react'
+import { useAuth } from '@/context/AuthContext'
+import { useAllTasks, updateTaskStatus } from '@/hooks/useTasks'
+import PageShell from '@/components/ui/PageShell'
+import styles from './Interns.module.css'
+
+const PRI_CSS    = { urgente: 'badge-alta', alta: 'badge-alta', media: 'badge-media', baixa: 'badge-baixa' }
+const PRI_LABELS = { urgente: 'Urgente', alta: 'Alta', media: 'Média', baixa: 'Baixa' }
+
+const ST_LABELS = { pendente: 'Pendente', em_andamento: 'Em andamento', concluida: 'Concluída', cancelada: 'Cancelada' }
+const ST_CSS    = { pendente: 'badge-pendente', em_andamento: 'badge-pendente', concluida: 'badge-concluida', cancelada: 'badge-cancelada' }
+
+function fmtDate(d) {
+  if (!d) return '—'
+  return new Date(d.split('T')[0] + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+}
+
+function initials(name) {
+  return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+}
+
+function isOverdue(task) {
+  if (!task.due_date) return false
+  if (task.status === 'concluida' || task.status === 'cancelada') return false
+  return task.due_date.split('T')[0] < new Date().toISOString().split('T')[0]
+}
+
+/* ── Member overview card ───────────────────────────────────────────── */
+function MemberCard({ name, tasks, onClick }) {
+  const total    = tasks.length
+  const done     = tasks.filter(t => t.status === 'concluida').length
+  const active   = tasks.filter(t => t.status === 'pendente' || t.status === 'em_andamento').length
+  const overdue  = tasks.filter(t => isOverdue(t)).length
+  const pct      = total > 0 ? Math.round((done / total) * 100) : 0
+
+  return (
+    <div className={styles.memberCard} onClick={onClick}>
+      <div className={styles.memberCardAvatar}>{initials(name)}</div>
+      <div className={styles.memberCardName}>{name}</div>
+      <div className={styles.memberCardStats}>
+        <span>{total} tarefas</span>
+        {overdue > 0 && <span className={`badge badge-alta`}>{overdue} atrasada{overdue > 1 ? 's' : ''}</span>}
+      </div>
+      <div className={styles.progressWrap}>
+        <div className={styles.progressBar} style={{ width: `${pct}%` }} />
+      </div>
+      <div className={styles.progressLabels}>
+        <span>{active} ativas</span>
+        <span className={styles.progressPct}>{pct}% concluídas</span>
+      </div>
+    </div>
+  )
+}
+
+/* ── Task row ───────────────────────────────────────────────────────── */
+function TaskRow({ task, showMember, onStatusChange }) {
+  const overdue = isOverdue(task)
+  return (
+    <div className={`${styles.taskRow} ${overdue ? styles.taskRowOverdue : ''}`}>
+      <div className={styles.taskRowMain}>
+        <div className={`${styles.taskRowTitle} ${task.status === 'concluida' ? styles.taskDone : ''}`}>
+          {task.title}
+        </div>
+        {task.cases?.title && (
+          <div className={styles.taskRowCase}>{task.cases.title}</div>
+        )}
+      </div>
+      <div className={styles.taskRowMeta}>
+        {showMember && task.assigned_to && (
+          <span className="badge st-teal">{task.assigned_to}</span>
+        )}
+        <span className={`badge ${PRI_CSS[task.priority]}`}>{PRI_LABELS[task.priority]}</span>
+        <select
+          className={styles.statusSelect}
+          value={task.status}
+          onChange={e => onStatusChange(task.id, e.target.value)}
+          onClick={e => e.stopPropagation()}
+        >
+          {Object.entries(ST_LABELS).map(([v, l]) => (
+            <option key={v} value={v}>{l}</option>
+          ))}
+        </select>
+        <span className={`${styles.taskRowDate} ${overdue ? styles.taskRowDateOverdue : ''}`}>
+          {fmtDate(task.due_date)}
+          {overdue && <span className={styles.overdueTag}>Atrasada</span>}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+/* ── Page ───────────────────────────────────────────────────────────── */
+export default function Interns() {
+  const { lawyer } = useAuth()
+  const responsaveis = lawyer?.preferences?.responsaveis ?? []
+
+  const [member,       setMember]       = useState('todos')
+  const [filterStatus, setFilterStatus] = useState('todos')
+
+  const { data: rawTasks, loading, refetch } = useAllTasks()
+  const tasks = useMemo(() => rawTasks ?? [], [rawTasks])
+
+  const memberTasks = useMemo(() => {
+    if (member === 'todos') return tasks
+    if (member === 'sem_atribuicao') return tasks.filter(t => !t.assigned_to)
+    return tasks.filter(t => t.assigned_to === member)
+  }, [tasks, member])
+
+  const filtered = useMemo(() => {
+    if (filterStatus === 'todos') return memberTasks
+    return memberTasks.filter(t => t.status === filterStatus)
+  }, [memberTasks, filterStatus])
+
+  const stats = useMemo(() => ({
+    total:        memberTasks.length,
+    pendente:     memberTasks.filter(t => t.status === 'pendente').length,
+    em_andamento: memberTasks.filter(t => t.status === 'em_andamento').length,
+    concluida:    memberTasks.filter(t => t.status === 'concluida').length,
+    atrasada:     memberTasks.filter(t => isOverdue(t)).length,
+  }), [memberTasks])
+
+  async function handleStatusChange(taskId, newStatus) {
+    await updateTaskStatus(taskId, newStatus)
+    refetch()
+  }
+
+  const unassigned = tasks.filter(t => !t.assigned_to).length
+
+  /* ── Empty setup state ── */
+  if (responsaveis.length === 0) {
+    return (
+      <PageShell title="Equipe" subtitle="Gestão de tarefas por responsável">
+        <div className={styles.emptySetup}>
+          <div className={styles.emptySetupIcon}>👥</div>
+          <h3 className={styles.emptySetupTitle}>Nenhum membro cadastrado</h3>
+          <p className={styles.emptySetupText}>
+            Adicione os nomes da sua equipe em{' '}
+            <strong>Configurações → Responsáveis</strong> para começar a atribuir tarefas e visualizar a produtividade de cada membro.
+          </p>
+        </div>
+      </PageShell>
+    )
+  }
+
+  return (
+    <PageShell
+      title="Equipe"
+      subtitle={loading ? 'Carregando…' : `${tasks.length} tarefas · ${responsaveis.length} membros`}
+    >
+      {/* ── Member selector ── */}
+      <div className={styles.memberBar}>
+        <button
+          className={`${styles.memberPill} ${member === 'todos' ? styles.memberPillActive : ''}`}
+          onClick={() => setMember('todos')}
+        >
+          Todos
+        </button>
+        {responsaveis.map(r => (
+          <button
+            key={r}
+            className={`${styles.memberPill} ${member === r ? styles.memberPillActive : ''}`}
+            onClick={() => setMember(r)}
+          >
+            <span className={styles.pillAvatar}>{initials(r)}</span>
+            {r}
+          </button>
+        ))}
+        {unassigned > 0 && (
+          <button
+            className={`${styles.memberPill} ${member === 'sem_atribuicao' ? styles.memberPillActive : ''}`}
+            onClick={() => setMember('sem_atribuicao')}
+          >
+            Sem atribuição
+            <span className={styles.pillCount}>{unassigned}</span>
+          </button>
+        )}
+      </div>
+
+      {/* ── Overview grid (Todos) or Stats row (member) ── */}
+      {member === 'todos' ? (
+        <div className={styles.overviewGrid}>
+          {responsaveis.map(r => (
+            <MemberCard
+              key={r}
+              name={r}
+              tasks={tasks.filter(t => t.assigned_to === r)}
+              onClick={() => setMember(r)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className={styles.statsRow}>
+          {[
+            { label: 'Total',         value: stats.total,        accent: false },
+            { label: 'Pendente',      value: stats.pendente,     accent: false },
+            { label: 'Em andamento',  value: stats.em_andamento, accent: false },
+            { label: 'Concluída',     value: stats.concluida,    accent: false },
+            { label: 'Atrasada',      value: stats.atrasada,     accent: stats.atrasada > 0 },
+          ].map(s => (
+            <div key={s.label} className={`${styles.statCard} ${s.accent ? styles.statCardDanger : ''}`}>
+              <div className={styles.statValue}>{s.value}</div>
+              <div className={styles.statLabel}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Task list section ── */}
+      <div className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <span className={styles.sectionTitle}>
+            {member === 'todos'
+              ? 'Todas as tarefas'
+              : member === 'sem_atribuicao'
+                ? 'Sem atribuição'
+                : `Tarefas — ${member}`}
+          </span>
+          <div className={styles.filterGroup}>
+            {[
+              { v: 'todos',        l: 'Todas' },
+              { v: 'pendente',     l: 'Pendente' },
+              { v: 'em_andamento', l: 'Em andamento' },
+              { v: 'concluida',    l: 'Concluída' },
+            ].map(({ v, l }) => (
+              <button
+                key={v}
+                className={`${styles.filterBtn} ${filterStatus === v ? styles.filterActive : ''}`}
+                onClick={() => setFilterStatus(v)}
+              >{l}</button>
+            ))}
+          </div>
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className={styles.emptyState}>
+            <p>Nenhuma tarefa encontrada</p>
+          </div>
+        ) : (
+          <div className={styles.taskList}>
+            {filtered.map(t => (
+              <TaskRow
+                key={t.id}
+                task={t}
+                showMember={member === 'todos' || member === 'sem_atribuicao'}
+                onStatusChange={handleStatusChange}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </PageShell>
+  )
+}

@@ -4,7 +4,8 @@ import { useAuth } from '@/context/AuthContext'
 import s from './Form.module.css'
 
 export default function TaskForm({ initial, onSave, onClose }) {
-  const { session } = useAuth()
+  const { session, lawyer } = useAuth()
+  const responsaveis = lawyer?.preferences?.responsaveis ?? []
   const [f, setF] = useState({
     title:       initial?.title       ?? '',
     case_id:     initial?.case_id     ?? '',
@@ -12,6 +13,7 @@ export default function TaskForm({ initial, onSave, onClose }) {
     status:      initial?.status      ?? 'pendente',
     due_date:    initial?.due_date    ? initial.due_date.split('T')[0] : '',
     description: initial?.description ?? '',
+    assigned_to: initial?.assigned_to ?? '',
   })
   const [cases,  setCases]  = useState([])
   const [saving, setSaving] = useState(false)
@@ -34,6 +36,7 @@ export default function TaskForm({ initial, onSave, onClose }) {
       status:      f.status,
       due_date:    f.due_date ? f.due_date + 'T12:00:00' : null,
       description: f.description.trim() || null,
+      assigned_to: f.assigned_to.trim() || null,
     }
     const { error } = initial
       ? await supabase.from('tasks').update(payload).eq('id', initial.id)
@@ -66,6 +69,20 @@ export default function TaskForm({ initial, onSave, onClose }) {
             <option value="">— Sem caso —</option>
             {cases.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
           </select>
+        </div>
+
+        <div className={s.field}>
+          <label className={s.label}>Responsável</label>
+          {responsaveis.length > 0 ? (
+            <select className={s.select} value={f.assigned_to} onChange={e => set('assigned_to', e.target.value)}>
+              <option value="">— Não atribuído —</option>
+              {responsaveis.map(r => <option key={r} value={r}>{r}</option>)}
+            </select>
+          ) : (
+            <input className={s.input} value={f.assigned_to}
+              onChange={e => set('assigned_to', e.target.value)}
+              placeholder="Nome do responsável" />
+          )}
         </div>
 
         <div className={s.field}>

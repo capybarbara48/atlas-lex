@@ -1,20 +1,25 @@
+import { lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import Onboarding from '@/components/onboarding/Onboarding'
 import Login from '@/pages/Login'
-import Dashboard from '@/pages/Dashboard'
-import Cases from '@/pages/Cases'
-import Clients from '@/pages/Clients'
-import Proposals from '@/pages/Proposals'
-import Tasks from '@/pages/Tasks'
-import Financials from '@/pages/Financials'
-import Settings from '@/pages/Settings'
-import Notes from '@/pages/Notes'
-import ClientDetail from '@/pages/ClientDetail'
-import Vitrine from '@/pages/Vitrine'
-import DevSeed from '@/pages/DevSeed'
 import AppLayout from '@/components/layout/AppLayout'
 
+/* ── Lazy page chunks ───────────────────────────────────────────────── */
+const Dashboard    = lazy(() => import('@/pages/Dashboard'))
+const Cases        = lazy(() => import('@/pages/Cases'))
+const Clients      = lazy(() => import('@/pages/Clients'))
+const ClientDetail = lazy(() => import('@/pages/ClientDetail'))
+const Proposals    = lazy(() => import('@/pages/Proposals'))
+const Tasks        = lazy(() => import('@/pages/Tasks'))
+const Financials   = lazy(() => import('@/pages/Financials'))
+const Settings     = lazy(() => import('@/pages/Settings'))
+const Notes        = lazy(() => import('@/pages/Notes'))
+const Interns      = lazy(() => import('@/pages/Interns'))
+const Vitrine      = lazy(() => import('@/pages/Vitrine'))
+const DevSeed      = lazy(() => import('@/pages/DevSeed'))
+
+/* ── Auth guard ─────────────────────────────────────────────────────── */
 function PrivateRoute({ children }) {
   const { session, lawyer, loading } = useAuth()
 
@@ -37,14 +42,12 @@ function PrivateRoute({ children }) {
           borderTopColor: 'var(--accent)',
           animation: 'spin 0.8s linear infinite',
         }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     )
   }
 
   if (!session) return <Navigate to="/login" replace />
 
-  // No lawyer row yet, or onboarding not completed → show wizard
   if (!lawyer || !lawyer.onboarding_completed) {
     return <Onboarding />
   }
@@ -52,6 +55,7 @@ function PrivateRoute({ children }) {
   return children
 }
 
+/* ── Routes ─────────────────────────────────────────────────────────── */
 export default function App() {
   return (
     <Routes>
@@ -73,6 +77,7 @@ export default function App() {
         <Route path="financeiro"    element={<Financials />} />
         <Route path="configuracoes" element={<Settings />} />
         <Route path="notas"         element={<Notes />} />
+        <Route path="estagiarios"   element={<Interns />} />
         <Route path="vitrine"       element={<Vitrine />} />
         <Route path="dev/seed"      element={<DevSeed />} />
       </Route>

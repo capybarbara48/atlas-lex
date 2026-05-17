@@ -10,7 +10,8 @@ const AREAS = ['Cível','Trabalhista','Família','Criminal','Tributário','Banc�
                'Consumidor','Outro']
 
 export default function CaseForm({ initial, onSave, onClose }) {
-  const { session } = useAuth()
+  const { session, lawyer } = useAuth()
+  const tribunaisList = lawyer?.preferences?.tribunais ?? []
   const [f, setF] = useState({
     title:            initial?.title            ?? '',
     case_number:      initial?.case_number      ?? '',
@@ -185,7 +186,12 @@ export default function CaseForm({ initial, onSave, onClose }) {
         <div className={s.field}>
           <label className={s.label}>Tribunal / Vara</label>
           <input className={s.input} value={f.court} onChange={e => set('court', e.target.value)}
-            placeholder="TJSP, TRT-2, STJ…" />
+            placeholder="TJSP, TRT-2, STJ…" list="caseFormTribunais" autoComplete="off" />
+          {tribunaisList.length > 0 && (
+            <datalist id="caseFormTribunais">
+              {tribunaisList.map(t => <option key={t} value={t} />)}
+            </datalist>
+          )}
         </div>
 
         <div className={s.field}>

@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
 import styles from './AppLayout.module.css'
@@ -63,6 +64,14 @@ const NAV_ITEMS = [
     ),
   },
   {
+    to: '/estagiarios', label: 'Equipe', end: false,
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor">
+        <path d="M10 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM6 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM1.49 15.326a.78.78 0 0 1-.358-.442 3 3 0 0 1 4.308-3.516 6.484 6.484 0 0 0-1.905 3.959c-.023.222-.014.442.025.654a4.97 4.97 0 0 1-2.07-.655ZM16.44 15.98a4.97 4.97 0 0 0 2.07-.654.78.78 0 0 0 .357-.442 3 3 0 0 0-4.308-3.517 6.484 6.484 0 0 1 1.907 3.96 2.32 2.32 0 0 1-.026.654ZM18 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM5.304 16.19a.844.844 0 0 1-.277-.71 5 5 0 0 1 9.947 0 .843.843 0 0 1-.277.71A6.975 6.975 0 0 1 10 18a6.974 6.974 0 0 1-4.696-1.81Z"/>
+      </svg>
+    ),
+  },
+  {
     to: '/vitrine', label: 'Vitrine', end: false,
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor">
@@ -90,6 +99,7 @@ const PAGE_TITLES = {
   '/notas':          'Notas',
   '/financeiro':     'Financeiro',
   '/configuracoes':  'Configurações',
+  '/estagiarios':    'Equipe',
   '/vitrine':        'Vitrine',
 }
 
@@ -112,10 +122,30 @@ function Clock() {
   )
 }
 
+/* ── Page loader (Suspense fallback) ────────────────────────────────── */
+function PageLoader() {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      height: '100%', minHeight: '240px',
+    }}>
+      <div style={{
+        width: 32, height: 32, borderRadius: '50%',
+        border: '3px solid rgba(4,59,97,0.12)',
+        borderTopColor: 'var(--accent)',
+        animation: 'spin 0.75s linear infinite',
+      }} />
+    </div>
+  )
+}
+
 /* ── Layout ─────────────────────────────────────────────────────────── */
 export default function AppLayout() {
   const { lawyer, session } = useAuth()
   const location = useLocation()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  useEffect(() => { setSidebarOpen(false) }, [location.pathname])
 
   const initials = lawyer?.full_name
     ? lawyer.full_name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
@@ -129,8 +159,13 @@ export default function AppLayout() {
   return (
     <div className={styles.shell}>
 
+      {/* ── Backdrop (mobile overlay) ── */}
+      {sidebarOpen && (
+        <div className={styles.backdrop} onClick={() => setSidebarOpen(false)} />
+      )}
+
       {/* ── Sidebar ── */}
-      <aside className={styles.sidebar}>
+      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
 
         {/* Brand */}
         <div className={styles.sidebarBrand}>
@@ -159,7 +194,7 @@ export default function AppLayout() {
               }
             >
               <span className={styles.navIcon}>{icon}</span>
-              {label}
+              <span className={styles.navLabel}>{label}</span>
             </NavLink>
           ))}
         </nav>
@@ -182,7 +217,7 @@ export default function AppLayout() {
             <svg viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M3 4.25A2.25 2.25 0 0 1 5.25 2h5.5A2.25 2.25 0 0 1 13 4.25v2a.75.75 0 0 1-1.5 0v-2a.75.75 0 0 0-.75-.75h-5.5a.75.75 0 0 0-.75.75v11.5c0 .414.336.75.75.75h5.5a.75.75 0 0 0 .75-.75v-2a.75.75 0 0 1 1.5 0v2A2.25 2.25 0 0 1 10.75 18h-5.5A2.25 2.25 0 0 1 3 15.75V4.25Zm9.47 4.22a.75.75 0 0 1 1.06 0l2.25 2.25a.75.75 0 0 1 0 1.06l-2.25 2.25a.75.75 0 1 1-1.06-1.06l.97-.97H8a.75.75 0 0 1 0-1.5h5.44l-.97-.97a.75.75 0 0 1 0-1.06Z" clipRule="evenodd"/>
             </svg>
-            Sair
+            <span className={styles.signOutLabel}>Sair</span>
           </button>
         </div>
       </aside>
@@ -193,12 +228,22 @@ export default function AppLayout() {
         {/* Topbar */}
         <header className={styles.topbar}>
           <div className={styles.topbarLeft}>
+            <button
+              className={styles.hamburger}
+              onClick={() => setSidebarOpen(v => !v)}
+              aria-label={sidebarOpen ? 'Fechar menu' : 'Abrir menu'}
+            >
+              {sidebarOpen
+                ? <svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"/></svg>
+                : <svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20"><path fillRule="evenodd" d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75ZM2 10a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 10Zm0 5.25a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Z" clipRule="evenodd"/></svg>
+              }
+            </button>
             <span className={styles.pageTitle}>{pageTitle}</span>
           </div>
           <div className={styles.topbarRight}>
             <div className={styles.livePill}>
               <span className={styles.liveDot} />
-              Online
+              <span className={styles.liveLabel}>Online</span>
             </div>
             <Clock />
           </div>
@@ -206,7 +251,11 @@ export default function AppLayout() {
 
         {/* Page content */}
         <main className={styles.main}>
-          <Outlet />
+          <ErrorBoundary key={location.pathname}>
+            <Suspense fallback={<PageLoader />}>
+              <Outlet />
+            </Suspense>
+          </ErrorBoundary>
         </main>
 
         {/* Footer */}

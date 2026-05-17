@@ -1,9 +1,17 @@
 import { useState, useMemo } from 'react'
+import { useAuth } from '@/context/AuthContext'
 import { useProposals } from '@/hooks/useProposals'
+import { generateProposalPDF } from '@/lib/proposalPDF'
 import PageShell from '@/components/ui/PageShell'
 import Modal from '@/components/ui/Modal'
 import ProposalForm from '@/components/forms/ProposalForm'
 import styles from './Proposals.module.css'
+
+const PdfIcon = () => (
+  <svg viewBox="0 0 20 20" fill="currentColor" width="13" height="13">
+    <path fillRule="evenodd" d="M4 4a2 2 0 0 1 2-2h4.586A2 2 0 0 1 12 2.586L15.414 6A2 2 0 0 1 16 7.414V16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4Zm2 9a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 0 1.5h-4.5A.75.75 0 0 1 6 13Zm.75-3.25a.75.75 0 0 0 0 1.5h2.5a.75.75 0 0 0 0-1.5h-2.5Z" clipRule="evenodd"/>
+  </svg>
+)
 
 /* ── data mapper ────────────────────────────────────────────────────── */
 const STATUS_MAP  = { aceita: 'aprovado', recusada: 'recusado', expirada: 'recusado', rascunho: 'pendente', enviada: 'pendente' }
@@ -31,7 +39,7 @@ function brl(v) {
 }
 
 /* ── sub-components ─────────────────────────────────────────────────── */
-function PipelineView({ proposals, onEdit }) {
+function PipelineView({ proposals, onEdit, onPDF }) {
   const cols = [
     { key: 'pendente',  label: 'Em Avaliação', color: 'st-gold' },
     { key: 'aprovado',  label: 'Aprovadas',    color: 'st-green' },
@@ -61,11 +69,21 @@ function PipelineView({ proposals, onEdit }) {
                           <span className="badge st-teal">{TIPO_LABELS[p.tipo_honorario] ?? p.tipo_honorario}</span>
                           <span className={styles.pipelineCardVal}>{brl(p.valor)}</span>
                         </div>
-                        {p.validade && (
-                          <div className={styles.pipelineCardValidade}>
-                            Válida até {new Date(p.validade + 'T12:00:00').toLocaleDateString('pt-BR')}
-                          </div>
-                        )}
+                        <div className={styles.pipelineCardFooter}>
+                          {p.validade && (
+                            <div className={styles.pipelineCardValidade}>
+                              Válida até {new Date(p.validade + 'T12:00:00').toLocaleDateString('pt-BR')}
+                            </div>
+                          )}
+                          <button
+                            className={styles.pdfIconBtn}
+                            title="Gerar PDF"
+                            onClick={e => { e.stopPropagation(); onPDF(p.id) }}
+                          >
+                            <PdfIcon />
+                            PDF
+                          </button>
+                        </div>
                       </div>
                     ))
                 }
@@ -78,7 +96,7 @@ function PipelineView({ proposals, onEdit }) {
   )
 }
 
-function ListView({ proposals, onEdit }) {
+function ListView({ proposals, onEdit, onPDF }) {
   if (proposals.length === 0) return (
     <div className={styles.emptyState}>
       <div className={styles.emptyIcon}>📄</div>
@@ -89,7 +107,7 @@ function ListView({ proposals, onEdit }) {
     <div className={styles.tableCard}>
       <table className={styles.table}>
         <thead>
-          <tr><th>Proposta</th><th>Cliente</th><th>Honorário</th><th>Valor</th><th>Status</th><th>Criada</th><th>Validade</th></tr>
+          <tr><th>Proposta</th><th>Cliente</th><th>Honorário</th><th>Valor</th><th>Status</th><th>Criada</th><th>Validade</th><th></th></tr>
         </thead>
         <tbody>
           {proposals.map(p => (
@@ -101,6 +119,11 @@ function ListView({ proposals, onEdit }) {
               <td><span className={`badge ${STATUS_CSS[p.status]}`}>{STATUS_LABELS[p.status]}</span></td>
               <td className={styles.dateCell}>{p.criado ? new Date(p.criado).toLocaleDateString('pt-BR') : '—'}</td>
               <td className={styles.dateCell}>{p.validade ? new Date(p.validade + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}</td>
+              <td onClick={e => e.stopPropagation()}>
+                <button className={styles.pdfIconBtn} title="Gerar PDF" onClick={() => onPDF(p.id)}>
+                  <PdfIcon />
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -111,6 +134,7 @@ function ListView({ proposals, onEdit }) {
 
 /* ── page ───────────────────────────────────────────────────────────── */
 export default function Proposals() {
+  const { lawyer } = useAuth()
   const [view, setView]               = useState('pipeline')
   const [search, setSearch]           = useState('')
   const [filterStatus, setFilterStatus] = useState('todos')
@@ -127,6 +151,7 @@ export default function Proposals() {
   function openNew()    { setEditing(null); setFormOpen(true) }
   function openEdit(id) { setEditing(rawById[id] ?? null); setFormOpen(true) }
   function handleSave() { refetch(); setFormOpen(false) }
+  function handlePDF(id) { generateProposalPDF(rawById[id], lawyer) }
 
   const filtered = useMemo(() => {
     let list = proposals
@@ -188,8 +213,8 @@ export default function Proposals() {
       {error
         ? <div className={styles.emptyState}><p>Erro ao carregar propostas.</p></div>
         : view === 'pipeline'
-          ? <PipelineView proposals={filtered} onEdit={openEdit} />
-          : <ListView proposals={filtered} onEdit={openEdit} />
+          ? <PipelineView proposals={filtered} onEdit={openEdit} onPDF={handlePDF} />
+          : <ListView proposals={filtered} onEdit={openEdit} onPDF={handlePDF} />
       }
 
       {formOpen && (

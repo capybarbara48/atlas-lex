@@ -17,6 +17,13 @@ const DEFAULT_SERVICE_TYPES = [
 
 const DEFAULT_QUOTA_LITIS = ['5%','10%','15%','20%','25%','30%','35%']
 
+const DEFAULT_TRIBUNAIS = [
+  'Vara Cível','Vara do Trabalho','Vara de Família e Sucessões',
+  'Juizado Especial Cível','Juizado Especial Criminal',
+  'Vara Criminal','Vara Federal','Tribunal de Justiça',
+  'Tribunal Regional do Trabalho','Tribunal Regional Federal',
+]
+
 const PRESET_COLORS = [
   { hex: '#043b61', name: 'Navy (padrão)' },
   { hex: '#1a1a2e', name: 'Azul-marinho escuro' },
@@ -100,8 +107,12 @@ export default function Settings() {
   /* Editable lists (saved to lawyers.preferences in Supabase) */
   const [serviceTypes,    setServiceTypes]    = useState(DEFAULT_SERVICE_TYPES)
   const [quotaLitis,      setQuotaLitis]      = useState(DEFAULT_QUOTA_LITIS)
+  const [tribunais,       setTribunais]       = useState(DEFAULT_TRIBUNAIS)
+  const [responsaveis,    setResponsaveis]    = useState([])
   const [newServiceType,  setNewServiceType]  = useState('')
   const [newQuotaLitis,   setNewQuotaLitis]   = useState('')
+  const [newTribunal,     setNewTribunal]     = useState('')
+  const [newResponsavel,  setNewResponsavel]  = useState('')
   const [listSaving,      setListSaving]      = useState(false)
 
   const [saving,  setSaving]  = useState(false)
@@ -118,8 +129,10 @@ export default function Settings() {
     setAccent(lawyer.theme_accent  ?? '#043b61')
     setPrefs(loadPreferences(lawyer.id))
     const prefs = lawyer.preferences ?? {}
-    if (prefs.service_types?.length)    setServiceTypes(prefs.service_types)
+    if (prefs.service_types?.length)       setServiceTypes(prefs.service_types)
     if (prefs.quota_litis_options?.length) setQuotaLitis(prefs.quota_litis_options)
+    if (prefs.tribunais?.length)           setTribunais(prefs.tribunais)
+    if (prefs.responsaveis?.length)        setResponsaveis(prefs.responsaveis)
   }, [lawyer])
 
   /* Apply accent preview in real time */
@@ -180,7 +193,12 @@ export default function Settings() {
     setListSaving(true); setError(''); setSuccess('')
     const { error } = await supabase
       .from('lawyers')
-      .update({ preferences: { service_types: serviceTypes, quota_litis_options: quotaLitis } })
+      .update({ preferences: {
+        service_types:       serviceTypes,
+        quota_litis_options: quotaLitis,
+        tribunais,
+        responsaveis,
+      }})
       .eq('id', session.user.id)
     setListSaving(false)
     if (error) { setError('Erro ao salvar listas: ' + error.message); return }
@@ -201,6 +219,20 @@ export default function Settings() {
     if (!v || quotaLitis.includes(v)) return
     setQuotaLitis(prev => [...prev, v])
     setNewQuotaLitis('')
+  }
+
+  function addTribunal() {
+    const v = newTribunal.trim()
+    if (!v || tribunais.includes(v)) return
+    setTribunais(prev => [...prev, v])
+    setNewTribunal('')
+  }
+
+  function addResponsavel() {
+    const v = newResponsavel.trim()
+    if (!v || responsaveis.includes(v)) return
+    setResponsaveis(prev => [...prev, v])
+    setNewResponsavel('')
   }
 
   return (
@@ -333,7 +365,7 @@ export default function Settings() {
             {[
               { key: 'casos_view',      label: 'Casos',      options: [{ v: 'kanban', l: 'Kanban' }, { v: 'lista', l: 'Lista' }] },
               { key: 'clientes_view',   label: 'Clientes',   options: [{ v: 'grid',   l: 'Cards' }, { v: 'lista', l: 'Lista' }] },
-              { key: 'tarefas_view',    label: 'Tarefas',    options: [{ v: 'kanban', l: 'Kanban' }, { v: 'lista', l: 'Lista' }] },
+              { key: 'tarefas_view',    label: 'Tarefas',    options: [{ v: 'kanban', l: 'Kanban' }, { v: 'lista', l: 'Lista' }, { v: 'calendario', l: 'Calendário' }] },
               { key: 'financeiro_view', label: 'Financeiro', options: [{ v: 'lista',  l: 'Lista' }, { v: 'grafico', l: 'Gráfico (em breve)' }] },
             ].map(({ key, label, options }) => (
               <div key={key} className={styles.prefRow}>
@@ -424,6 +456,69 @@ export default function Settings() {
                   placeholder="Ex: 40%"
                 />
                 <button type="button" className={styles.btnListAdd} onClick={addQuotaLitis}>
+                  Adicionar
+                </button>
+              </div>
+            </div>
+
+            {/* Tribunais */}
+            <div className={styles.listBlock}>
+              <span className={styles.listBlockTitle}>Tribunais e Varas (Processos)</span>
+              <div className={styles.listItems}>
+                {tribunais.map(item => (
+                  <span key={item} className={styles.listTag}>
+                    {item}
+                    <button
+                      type="button"
+                      className={styles.listTagDel}
+                      onClick={() => setTribunais(prev => prev.filter(i => i !== item))}
+                      title="Remover"
+                    >×</button>
+                  </span>
+                ))}
+              </div>
+              <div className={styles.listAddRow}>
+                <input
+                  className={styles.listInput}
+                  value={newTribunal}
+                  onChange={e => setNewTribunal(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addTribunal())}
+                  placeholder="Ex: Vara de Execuções Penais"
+                />
+                <button type="button" className={styles.btnListAdd} onClick={addTribunal}>
+                  Adicionar
+                </button>
+              </div>
+            </div>
+
+            {/* Responsáveis */}
+            <div className={styles.listBlock}>
+              <span className={styles.listBlockTitle}>Responsáveis (Advogados / Estagiários)</span>
+              <div className={styles.listItems}>
+                {responsaveis.length === 0
+                  ? <span style={{ fontSize: '0.78rem', color: 'var(--text-3)' }}>Nenhum cadastrado ainda.</span>
+                  : responsaveis.map(item => (
+                    <span key={item} className={styles.listTag}>
+                      {item}
+                      <button
+                        type="button"
+                        className={styles.listTagDel}
+                        onClick={() => setResponsaveis(prev => prev.filter(i => i !== item))}
+                        title="Remover"
+                      >×</button>
+                    </span>
+                  ))
+                }
+              </div>
+              <div className={styles.listAddRow}>
+                <input
+                  className={styles.listInput}
+                  value={newResponsavel}
+                  onChange={e => setNewResponsavel(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addResponsavel())}
+                  placeholder="Ex: Dr. Elcimar Reis"
+                />
+                <button type="button" className={styles.btnListAdd} onClick={addResponsavel}>
                   Adicionar
                 </button>
               </div>

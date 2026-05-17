@@ -39,3 +39,185 @@
 .vencidaTag { font-size: 0.6rem; background: rgba(224,60,60,0.12); color: var(--red); padding: 0.1rem 0.4rem; border-radius: 999px; font-weight: 700; }
 .emptyState { text-align: center; padding: 3rem 1rem; color: var(--text-2); background: var(--card); border: var(--border); border-radius: var(--radius); }
 .emptyIcon { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.35; }
+
+/* ── Calendar ───────────────────────────────────────────────────────── */
+.calendarWrap {
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.calToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 1rem;
+  border-bottom: var(--border);
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.calNav { display: flex; align-items: center; gap: 0.25rem; }
+
+.calNavBtn {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg); border: var(--border); border-radius: var(--radius-sm);
+  font-size: 1.1rem; line-height: 1; color: var(--text-2); cursor: pointer;
+  transition: all 0.15s;
+}
+.calNavBtn:hover { background: var(--card-hover); color: var(--text); }
+
+.calTodayBtn {
+  padding: 0.28rem 0.7rem;
+  background: var(--bg); border: var(--border); border-radius: var(--radius-sm);
+  font-size: 0.72rem; font-weight: 600; color: var(--text-2);
+  cursor: pointer; transition: all 0.15s;
+}
+.calTodayBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+.calPeriod {
+  flex: 1; text-align: center;
+  font-size: 0.875rem; font-weight: 700; color: var(--text); text-transform: capitalize;
+}
+
+.calModeToggle {
+  display: flex; gap: 2px;
+  background: var(--bg); border: var(--border); border-radius: var(--radius-sm); padding: 2px;
+}
+.calModeBtn {
+  padding: 0.25rem 0.65rem; border-radius: 8px;
+  font-size: 0.7rem; font-weight: 500; color: var(--text-2);
+  border: none; background: transparent; cursor: pointer; transition: all 0.12s;
+}
+.calModeBtnActive {
+  background: var(--card); color: var(--text); font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Month grid */
+.calGridHeader {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  background: var(--bg); border-bottom: var(--border);
+}
+.calWeekday {
+  padding: 0.45rem 0; text-align: center;
+  font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.07em; color: var(--text-3);
+}
+.calMonthBody {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 1px; background: rgba(4,59,97,0.08);
+}
+.calCell {
+  min-height: 88px;
+  background: var(--card);
+  padding: 0.3rem 0.35rem;
+  cursor: pointer; transition: background 0.1s;
+  display: flex; flex-direction: column; gap: 0.18rem;
+}
+.calCell:hover { background: var(--bg); }
+.calCellOther { opacity: 0.35; }
+.calCellToday { background: rgba(4,59,97,0.04); }
+.calCellToday:hover { background: rgba(4,59,97,0.07); }
+.calCellNum {
+  font-size: 0.7rem; font-weight: 600; color: var(--text-2); line-height: 1;
+}
+.calCellToday .calCellNum {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+}
+.calCellTasks { display: flex; flex-direction: column; gap: 0.12rem; overflow: hidden; }
+.calChip {
+  font-size: 0.62rem; font-weight: 500; line-height: 1.3;
+  padding: 0.08rem 0.3rem 0.08rem 0.42rem;
+  background: var(--accent-dim); border-left: 2.5px solid;
+  border-radius: 2px; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  cursor: pointer; transition: filter 0.1s;
+}
+.calChip:hover { filter: brightness(0.92); }
+.calChipMore { font-size: 0.58rem; color: var(--text-3); padding-left: 0.35rem; }
+
+/* Week view */
+.calWeek {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  min-height: 280px;
+  gap: 1px; background: rgba(4,59,97,0.08);
+}
+.calWeekCol {
+  background: var(--card);
+  display: flex; flex-direction: column;
+}
+.calWeekColToday { background: rgba(4,59,97,0.03); }
+
+.calWeekColHeader {
+  padding: 0.6rem 0.4rem 0.5rem;
+  border-bottom: var(--border);
+  text-align: center; cursor: pointer; transition: background 0.1s;
+}
+.calWeekColHeader:hover { background: var(--bg); }
+
+.calWeekWkd {
+  display: block; font-size: 0.58rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-3); margin-bottom: 0.2rem;
+}
+.calWeekNum {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 50%;
+  font-size: 0.8rem; font-weight: 600; color: var(--text-2);
+}
+.calWeekNumToday { background: var(--accent); color: #fff; }
+
+.calWeekItems {
+  flex: 1; padding: 0.35rem 0.3rem;
+  display: flex; flex-direction: column; gap: 0.22rem; overflow-y: auto;
+}
+.calWeekTask {
+  border-left: 2.5px solid;
+  background: var(--bg); border-radius: 3px;
+  padding: 0.22rem 0.35rem 0.22rem 0.42rem;
+  cursor: pointer; transition: background 0.1s;
+}
+.calWeekTask:hover { background: rgba(4,59,97,0.06); }
+.calWeekTaskTitle {
+  display: block; font-size: 0.65rem; font-weight: 600;
+  color: var(--text); line-height: 1.3;
+}
+.calWeekTaskCase {
+  display: block; font-size: 0.58rem; color: var(--text-3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Day view */
+.calDay {
+  padding: 1rem; display: flex; flex-direction: column;
+  gap: 0.5rem; min-height: 200px;
+}
+.calDayEmpty {
+  text-align: center; color: var(--text-3);
+  font-size: 0.82rem; padding: 2rem 0;
+}
+.calDayTask {
+  display: flex; align-items: center; gap: 1rem;
+  background: var(--bg); border: var(--border); border-left-width: 3px;
+  border-radius: var(--radius-sm); padding: 0.75rem 1rem 0.75rem 0.875rem;
+  cursor: pointer; transition: all 0.15s;
+}
+.calDayTask:hover { background: rgba(4,59,97,0.04); box-shadow: var(--shadow); }
+.calDayTaskMain { flex: 1; min-width: 0; }
+.calDayTaskTitle {
+  display: block; font-size: 0.875rem; font-weight: 600;
+  color: var(--text); margin-bottom: 0.2rem;
+}
+.calDayTaskCase { display: block; font-size: 0.72rem; color: var(--text-3); }
+.calDayTaskMeta { display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0; flex-wrap: wrap; }
+
+/* Done state */
+.calTaskDone .calWeekTaskTitle,
+.calTaskDone .calDayTaskTitle { text-decoration: line-through; opacity: 0.45; }
