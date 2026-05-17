@@ -43,8 +43,10 @@ export function AuthProvider({ children }) {
     await fetchLawyer(session.user.id)
   }
 
+  const isAdmin = lawyer?.role === 'admin'
+
   return (
-    <AuthContext.Provider value={{ session, lawyer, loading, refreshLawyer }}>
+    <AuthContext.Provider value={{ session, lawyer, loading, refreshLawyer, isAdmin }}>
       {children}
     </AuthContext.Provider>
   )

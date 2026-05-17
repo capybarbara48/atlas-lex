@@ -1,0 +1,216 @@
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.unreadBadge {
+  font-size: 0.67rem;
+  font-weight: 700;
+  background: rgba(var(--accent-rgb), 0.1);
+  color: var(--accent);
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  letter-spacing: 0.03em;
+}
+
+.sub {
+  font-size: 0.8rem;
+  color: var(--text-2);
+  margin-top: 0.2rem;
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────────────── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.filterSelect {
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 2rem 0.55rem 0.875rem;
+  font-size: 0.8rem;
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1.1rem;
+  transition: border-color 0.15s;
+}
+.filterSelect:focus { outline: none; border-color: var(--accent); }
+
+/* ── States ──────────────────────────────────────────────────────────── */
+.loadWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid rgba(var(--accent-rgb), 0.12);
+  border-top-color: var(--accent);
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty {
+  text-align: center;
+  color: var(--text-3);
+  font-size: 0.85rem;
+  padding: 3rem;
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--radius);
+}
+
+/* ── List ────────────────────────────────────────────────────────────── */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.item {
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  transition: box-shadow 0.15s;
+}
+.item:hover { box-shadow: var(--shadow); }
+
+.unread {
+  border-left: 3px solid var(--accent);
+}
+
+.itemHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.itemMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+}
+
+.tipoBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.67rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.tipoSugestao {
+  background: rgba(var(--accent-rgb), 0.1);
+  color: var(--accent);
+}
+
+.tipoBug {
+  background: rgba(224,60,60,0.1);
+  color: #e03c3c;
+}
+
+.tipoElogio {
+  background: rgba(34,168,74,0.1);
+  color: #22a84a;
+}
+
+.itemUser {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.itemFirm {
+  font-weight: 400;
+  color: var(--text-2);
+}
+
+.itemActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.itemDate {
+  font-size: 0.72rem;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.lidaBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-2);
+  background: var(--bg);
+  border: var(--border);
+  border-radius: 7px;
+  padding: 0.3rem 0.625rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.lidaBtn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.lidaBtn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.lidaBtnLida {
+  background: rgba(34,168,74,0.08);
+  border-color: rgba(34,168,74,0.3);
+  color: #22a84a;
+}
+.lidaBtnLida:hover:not(:disabled) {
+  background: rgba(34,168,74,0.12);
+  border-color: #22a84a;
+}
+
+.itemTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.itemBody {
+  font-size: 0.82rem;
+  color: var(--text-2);
+  line-height: 1.55;
+  white-space: pre-wrap;
+}

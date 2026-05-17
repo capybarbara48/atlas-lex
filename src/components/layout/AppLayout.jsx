@@ -1,6 +1,7 @@
-import { Outlet, NavLink, useLocation } from 'react-router-dom'
+import { Outlet, NavLink, useLocation, Link } from 'react-router-dom'
 import { useState, useEffect, Suspense } from 'react'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
+import FeedbackButton from '@/components/ui/FeedbackButton'
 import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
 import styles from './AppLayout.module.css'
@@ -141,7 +142,7 @@ function PageLoader() {
 
 /* ── Layout ─────────────────────────────────────────────────────────── */
 export default function AppLayout() {
-  const { lawyer, session } = useAuth()
+  const { lawyer, session, isAdmin } = useAuth()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -155,6 +156,7 @@ export default function AppLayout() {
   const firmShort = firmName.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
   const pageTitle = PAGE_TITLES[location.pathname]
     ?? (location.pathname.startsWith('/clientes/') ? 'Cliente' : 'Atlas Lex')
+
 
   return (
     <div className={styles.shell}>
@@ -201,6 +203,14 @@ export default function AppLayout() {
 
         {/* User footer */}
         <div className={styles.sidebarFooter}>
+          {isAdmin && (
+            <Link to="/admin" className={styles.adminLink}>
+              <svg viewBox="0 0 20 20" fill="currentColor" width="13" height="13">
+                <path fillRule="evenodd" d="M8.34 1.804A1 1 0 0 1 9.32 1h1.36a1 1 0 0 1 .98.804l.295 1.473c.497.144.971.342 1.416.587l1.25-.834a1 1 0 0 1 1.262.125l.962.962.707.707a1 1 0 0 1 .125 1.263l-.834 1.25c.245.444.443.919.587 1.416l1.472.294a1 1 0 0 1 .804.98v1.361a1 1 0 0 1-.804.98l-1.472.295a6.95 6.95 0 0 1-.587 1.416l.834 1.25a1 1 0 0 1-.125 1.262l-.707.707-.962.962a1 1 0 0 1-1.263.125l-1.25-.834a6.953 6.953 0 0 1-1.416.587l-.294 1.472a1 1 0 0 1-.98.804H9.32a1 1 0 0 1-.98-.804l-.295-1.472a6.957 6.957 0 0 1-1.416-.587l-1.25.834a1 1 0 0 1-1.262-.125l-.962-.962-.707-.707a1 1 0 0 1-.125-1.263l.834-1.25a6.957 6.957 0 0 1-.587-1.416l-1.472-.294A1 1 0 0 1 1 10.68V9.32a1 1 0 0 1 .804-.98l1.472-.295c.144-.497.342-.971.587-1.416l-.834-1.25a1 1 0 0 1 .125-1.262l.707-.707.962-.962a1 1 0 0 1 1.263-.125l1.25.834a6.957 6.957 0 0 1 1.416-.587L8.34 1.804ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clipRule="evenodd"/>
+              </svg>
+              <span className={styles.adminLinkLabel}>Painel Admin</span>
+            </Link>
+          )}
           <div className={styles.userRow}>
             <div className={styles.userAvatar}>{initials}</div>
             <div className={styles.userInfo}>
@@ -265,6 +275,10 @@ export default function AppLayout() {
         </footer>
 
       </div>
+
+      {/* Floating feedback button */}
+      <FeedbackButton />
+
     </div>
   )
 }

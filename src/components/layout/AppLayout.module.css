@@ -193,6 +193,30 @@
   margin-top: 0.1rem;
 }
 
+.adminLink {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 7px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  text-decoration: none;
+  transition: all 0.15s;
+  letter-spacing: 0.01em;
+}
+.adminLink:hover {
+  border-color: rgba(255,255,255,0.35);
+  color: #fff;
+  background: rgba(255,255,255,0.12);
+}
+
+.adminLinkLabel { min-width: 0; }
+
 .signOut {
   display: flex;
   align-items: center;
@@ -370,7 +394,8 @@
   .navSection,
   .navLabel,
   .userInfo,
-  .signOutLabel { display: none; }
+  .signOutLabel,
+  .adminLinkLabel { display: none; }
 
   .sidebarBrand { justify-content: center; padding: 1.25rem 0.75rem; }
 
@@ -383,6 +408,14 @@
 
   .userRow { justify-content: center; }
   .sidebarFooter { align-items: center; padding: 0.875rem 0.75rem; }
+
+  .adminLink {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 10px;
+  }
 
   .signOut {
     width: 40px;

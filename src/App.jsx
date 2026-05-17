@@ -19,6 +19,12 @@ const Interns      = lazy(() => import('@/pages/Interns'))
 const Vitrine      = lazy(() => import('@/pages/Vitrine'))
 const DevSeed      = lazy(() => import('@/pages/DevSeed'))
 
+/* ── Admin chunks ───────────────────────────────────────────────────── */
+const AdminLayout   = lazy(() => import('@/pages/admin/AdminLayout'))
+const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'))
+const AdminUsers    = lazy(() => import('@/pages/admin/AdminUsers'))
+const AdminFeedback = lazy(() => import('@/pages/admin/AdminFeedback'))
+
 /* ── Auth guard ─────────────────────────────────────────────────────── */
 function PrivateRoute({ children }) {
   const { session, lawyer, loading } = useAuth()
@@ -55,11 +61,36 @@ function PrivateRoute({ children }) {
   return children
 }
 
+/* ── Admin guard ────────────────────────────────────────────────────── */
+function AdminRoute({ children }) {
+  const { session, lawyer, loading, isAdmin } = useAuth()
+  if (loading) return null
+  if (!session || !lawyer) return <Navigate to="/login" replace />
+  if (!isAdmin) return <Navigate to="/" replace />
+  return children
+}
+
 /* ── Routes ─────────────────────────────────────────────────────────── */
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+
+      {/* ── Admin panel ── */}
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <AdminLayout />
+          </AdminRoute>
+        }
+      >
+        <Route index              element={<AdminDashboard />} />
+        <Route path="usuarios"    element={<AdminUsers />} />
+        <Route path="feedback"    element={<AdminFeedback />} />
+      </Route>
+
+      {/* ── Main app ── */}
       <Route
         path="/"
         element={
