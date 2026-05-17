@@ -3,6 +3,7 @@ import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { loadPreferences, savePreferences, resetPreferences } from '@/hooks/usePreferences'
 import PageShell from '@/components/ui/PageShell'
+import SuporteSection from '@/components/support/SuporteSection'
 import styles from './Settings.module.css'
 
 /* Cores predefinidas para seleção rápida */
@@ -564,6 +565,14 @@ export default function Settings() {
               Encerrar sessão
             </button>
           </div>
+        </Section>
+
+        {/* ── Suporte ── */}
+        <Section
+          title="Suporte"
+          subtitle="Abra chamados, acompanhe respostas e obtenha ajuda da nossa equipe."
+        >
+          <SuporteSection />
         </Section>
 
         {/* ── Desenvolvimento / Teste ── */}

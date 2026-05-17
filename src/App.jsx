@@ -25,6 +25,7 @@ const AdminLayout   = lazy(() => import('@/pages/admin/AdminLayout'))
 const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'))
 const AdminUsers    = lazy(() => import('@/pages/admin/AdminUsers'))
 const AdminFeedback = lazy(() => import('@/pages/admin/AdminFeedback'))
+const AdminTickets  = lazy(() => import('@/pages/admin/AdminTickets'))
 
 /* ── Auth guard ─────────────────────────────────────────────────────── */
 function PrivateRoute({ children }) {
@@ -89,6 +90,7 @@ export default function App() {
         <Route index              element={<AdminDashboard />} />
         <Route path="usuarios"    element={<AdminUsers />} />
         <Route path="feedback"    element={<AdminFeedback />} />
+        <Route path="suporte"     element={<AdminTickets />} />
       </Route>
 
       {/* ── Landing (public) ── */}

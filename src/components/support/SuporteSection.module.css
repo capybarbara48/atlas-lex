@@ -1,0 +1,383 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.topRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.hint {
+  font-size: 0.82rem;
+  color: var(--text-2);
+  line-height: 1.55;
+  max-width: 480px;
+}
+
+.btnNew {
+  flex-shrink: 0;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 1.1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.btnNew:hover { background: var(--accent-dark); }
+
+/* ── New ticket form ─────────────────────────────────────────────────── */
+.newForm {
+  background: var(--bg);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.formLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-2);
+}
+
+.formInput,
+.formTextarea {
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.875rem;
+  font-size: 0.875rem;
+  color: var(--text);
+  width: 100%;
+  font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.formInput:focus,
+.formTextarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
+}
+.formInput::placeholder,
+.formTextarea::placeholder { color: var(--text-3); }
+
+.formTextarea {
+  resize: vertical;
+  min-height: 90px;
+  line-height: 1.5;
+}
+
+.formActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.625rem;
+}
+
+.btnCancel {
+  background: transparent;
+  color: var(--text-2);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.btnCancel:hover { background: var(--bg); color: var(--text); }
+
+.btnSubmit {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 1.25rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.btnSubmit:hover:not(:disabled) { background: var(--accent-dark); }
+.btnSubmit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Load / empty ────────────────────────────────────────────────────── */
+.loadWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80px;
+}
+
+.spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid rgba(var(--accent-rgb), 0.15);
+  border-top-color: var(--accent);
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty {
+  font-size: 0.82rem;
+  color: var(--text-3);
+  text-align: center;
+  padding: 1.5rem;
+  background: var(--bg);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+}
+
+/* ── Ticket list ─────────────────────────────────────────────────────── */
+.ticketList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ticket {
+  background: var(--bg);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  transition: box-shadow 0.15s;
+}
+.ticketOpen { box-shadow: var(--shadow); }
+
+.ticketHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  gap: 0.75rem;
+  transition: background 0.1s;
+}
+.ticketHeader:hover { background: rgba(var(--accent-rgb), 0.03); }
+
+.ticketLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
+.ticketRight {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.ticketSubject {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ticketDate {
+  font-size: 0.72rem;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.chevron {
+  font-size: 0.6rem;
+  color: var(--text-3);
+}
+
+/* Status badges */
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.statusAberto    { background: rgba(var(--accent-rgb), 0.1); color: var(--accent); }
+.statusAndamento { background: rgba(217,119,6,0.1); color: #b45309; }
+.statusResolvido { background: rgba(34,168,74,0.1); color: #22a84a; }
+
+/* Ticket body (expanded) */
+.ticketBody {
+  border-top: var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.originalBody {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: var(--card);
+  border-bottom: var(--border);
+}
+
+.originalLabel {
+  font-size: 0.67rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-3);
+}
+
+.originalBody p {
+  font-size: 0.85rem;
+  color: var(--text-2);
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+/* ── Reply thread ────────────────────────────────────────────────────── */
+.thread {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: var(--card);
+}
+
+.replyLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.noReplies {
+  font-size: 0.8rem;
+  color: var(--text-3);
+  font-style: italic;
+}
+
+.bubble {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-width: 85%;
+}
+
+.bubbleUser { align-self: flex-end; }
+.bubbleAdmin { align-self: flex-start; }
+
+.bubbleMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bubbleUser .bubbleMeta { flex-direction: row-reverse; }
+
+.bubbleAuthor {
+  font-size: 0.67rem;
+  font-weight: 700;
+  color: var(--text-2);
+}
+
+.bubbleDate {
+  font-size: 0.62rem;
+  color: var(--text-3);
+}
+
+.bubbleBody {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  padding: 0.625rem 0.875rem;
+  border-radius: 10px;
+  white-space: pre-wrap;
+}
+
+.bubbleUser .bubbleBody {
+  background: rgba(var(--accent-rgb), 0.08);
+  color: var(--text);
+  border-bottom-right-radius: 3px;
+}
+
+.bubbleAdmin .bubbleBody {
+  background: var(--bg);
+  color: var(--text);
+  border: var(--border);
+  border-bottom-left-radius: 3px;
+}
+
+.replyForm {
+  display: flex;
+  gap: 0.625rem;
+  align-items: flex-end;
+  margin-top: 0.25rem;
+  padding-top: 0.75rem;
+  border-top: var(--border);
+}
+
+.replyInput {
+  flex: 1;
+  background: var(--bg);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.75rem;
+  font-size: 0.82rem;
+  color: var(--text);
+  font-family: inherit;
+  resize: none;
+  line-height: 1.4;
+  transition: border-color 0.15s;
+}
+.replyInput:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.replyInput::placeholder { color: var(--text-3); }
+
+.replyBtn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.875rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.replyBtn:hover:not(:disabled) { background: var(--accent-dark); }
+.replyBtn:disabled { opacity: 0.5; cursor: not-allowed; }
