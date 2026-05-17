@@ -221,6 +221,89 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ── Differentiators ── */}
+      <section className={styles.diff}>
+        <div className={styles.sectionInner}>
+          <p className={styles.sectionEye}>Por que Atlas Lex?</p>
+          <h2 className={styles.sectionTitle}>Quatro razões que fazem a diferença</h2>
+
+          <div className={styles.diffGrid}>
+
+            <div className={styles.diffCard}>
+              <div className={styles.diffNum}>01</div>
+              <h3 className={styles.diffTitle}>Abriu, entendeu.</h3>
+              <p className={styles.diffSub}>Pronto em 2 minutos, não em 2 semanas.</p>
+              <p className={styles.diffBody}>
+                Não existe botão de dúvida no Atlas Lex. A interface fala por si —
+                você foca no direito, não em aprender software.
+              </p>
+            </div>
+
+            <div className={styles.diffCard}>
+              <div className={styles.diffNum}>02</div>
+              <h3 className={styles.diffTitle}>Feito para advogados. Não para engenheiros.</h3>
+              <p className={styles.diffBody}>
+                Chega de menus com 40 opções. De relatórios que ninguém lê.
+                De integrações que ninguém configurou.
+                Só o que você usa, todo dia.
+              </p>
+            </div>
+
+            <div className={styles.diffCard}>
+              <div className={styles.diffNum}>03</div>
+              <h3 className={styles.diffTitle}>Sua marca. Sua cor. Sua identidade.</h3>
+              <p className={styles.diffBody}>
+                Logo, cor de marca, nome do escritório em cada proposta e cada tela.
+                Atlas Lex fica nos bastidores. Você fica na frente.
+              </p>
+            </div>
+
+            <div className={`${styles.diffCard} ${styles.diffCardWide}`}>
+              <div className={styles.diffNum}>04</div>
+              <div className={styles.diffPriceHeader}>
+                <div>
+                  <h3 className={styles.diffTitle}>Metade do preço. O dobro de foco.</h3>
+                  <p className={styles.diffBody}>
+                    Por que pagar R$2.000/ano por funcionalidades que você nunca abre?
+                  </p>
+                </div>
+              </div>
+              <table className={styles.priceTable}>
+                <thead>
+                  <tr>
+                    <th className={styles.ptHead}>Sistema</th>
+                    <th className={styles.ptHead}>Mensalidade</th>
+                    <th className={styles.ptHead}>Por ano</th>
+                    <th className={styles.ptHead}>Economia</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { name: 'Advbox',    mes: 'R$199', ano: 'R$2.388', eco: 'R$1.224/ano' },
+                    { name: 'Projuris',  mes: 'R$249', ano: 'R$2.988', eco: 'R$1.824/ano' },
+                    { name: 'Astrea',    mes: 'R$169', ano: 'R$2.028', eco: 'R$864/ano'   },
+                  ].map(r => (
+                    <tr key={r.name} className={styles.ptRow}>
+                      <td className={styles.ptCell}>{r.name}</td>
+                      <td className={styles.ptCell}>{r.mes}/mês</td>
+                      <td className={styles.ptCell}>{r.ano}</td>
+                      <td className={`${styles.ptCell} ${styles.ptEco}`}>você economiza {r.eco}</td>
+                    </tr>
+                  ))}
+                  <tr className={styles.ptRowAtlas}>
+                    <td className={styles.ptCellAtlas}>Atlas Lex Pro</td>
+                    <td className={styles.ptCellAtlas}>R$97/mês</td>
+                    <td className={styles.ptCellAtlas}>R$1.164/ano</td>
+                    <td className={styles.ptCellAtlas}>—</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
       {/* ── Stats strip ── */}
       <div className={styles.statsStrip}>
         {[
