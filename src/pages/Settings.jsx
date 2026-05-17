@@ -217,8 +217,15 @@ export default function Settings() {
   }
 
   function addQuotaLitis() {
-    const v = newQuotaLitis.trim()
-    if (!v || quotaLitis.includes(v)) return
+    const raw = newQuotaLitis.trim().replace('%', '')
+    const num = parseFloat(raw)
+    if (isNaN(num) || num < 0 || num > 100) {
+      setError('Percentual inválido. Digite um número entre 0 e 100 (ex: 30).')
+      setTimeout(() => setError(''), 3000)
+      return
+    }
+    const v = num + '%'
+    if (quotaLitis.includes(v)) return
     setQuotaLitis(prev => [...prev, v])
     setNewQuotaLitis('')
   }
@@ -336,7 +343,22 @@ export default function Settings() {
                     onChange={e => setAccent(e.target.value)}
                     title="Cor personalizada"
                   />
-                  <span className={styles.colorHex}>{accent}</span>
+                  <input
+                    type="text"
+                    className={styles.colorHexInput}
+                    value={accent}
+                    maxLength={7}
+                    placeholder="#043b61"
+                    onChange={e => {
+                      const v = e.target.value.startsWith('#') ? e.target.value : '#' + e.target.value
+                      if (/^#[0-9a-fA-F]{6}$/.test(v)) setAccent(v)
+                      else if (v.length <= 7) setAccent(v)
+                    }}
+                    onBlur={e => {
+                      const v = e.target.value
+                      if (!/^#[0-9a-fA-F]{6}$/.test(v)) setAccent(accent)
+                    }}
+                  />
                   <span className={styles.colorDarkPreview} style={{ background: darken(accent) }}>
                     Variante escura
                   </span>
@@ -352,35 +374,69 @@ export default function Settings() {
           </form>
         </Section>
 
-        {/* ── Preferências de visualização ── */}
+        {/* ── Preferências ── */}
         <Section
-          title="Preferências por Seção"
-          subtitle="Escolha a visualização padrão de cada página. Cada advogado tem suas próprias preferências."
+          title="Preferências de Exibição"
+          subtitle="Personalize como o conteúdo é apresentado. Salvo localmente neste dispositivo."
         >
           <div className={styles.prefGrid}>
-            {[
-              { key: 'casos_view',      label: 'Casos',      options: [{ v: 'kanban', l: 'Kanban' }, { v: 'lista', l: 'Lista' }] },
-              { key: 'clientes_view',   label: 'Clientes',   options: [{ v: 'grid',   l: 'Cards' }, { v: 'lista', l: 'Lista' }] },
-              { key: 'tarefas_view',    label: 'Tarefas',    options: [{ v: 'kanban', l: 'Kanban' }, { v: 'lista', l: 'Lista' }, { v: 'calendario', l: 'Calendário' }] },
-              { key: 'financeiro_view', label: 'Financeiro', options: [{ v: 'lista',  l: 'Lista' }, { v: 'grafico', l: 'Gráfico (em breve)' }] },
-            ].map(({ key, label, options }) => (
-              <div key={key} className={styles.prefRow}>
-                <span className={styles.prefLabel}>{label}</span>
-                <div className={styles.prefOptions}>
-                  {options.map(({ v, l }) => (
-                    <button
-                      key={v}
-                      type="button"
-                      className={`${styles.prefBtn} ${prefs[key] === v ? styles.prefBtnActive : ''}`}
-                      onClick={() => handlePrefChange(key, v)}
-                      disabled={l.includes('em breve')}
-                    >
-                      {l}
-                    </button>
-                  ))}
-                </div>
+
+            {/* Density */}
+            <div className={styles.prefRow}>
+              <div className={styles.prefRowLabel}>
+                <span className={styles.prefLabel}>Densidade das listas</span>
+                <span className={styles.prefSub}>Controla o espaçamento em tabelas e listas</span>
               </div>
-            ))}
+              <div className={styles.prefOptions}>
+                {[{ v: 'compacto', l: 'Compacto' }, { v: 'normal', l: 'Normal' }, { v: 'espaçoso', l: 'Espaçoso' }].map(({ v, l }) => (
+                  <button key={v} type="button"
+                    className={`${styles.prefBtn} ${(prefs.density ?? 'normal') === v ? styles.prefBtnActive : ''}`}
+                    onClick={() => handlePrefChange('density', v)}
+                  >{l}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Task sort */}
+            <div className={styles.prefRow}>
+              <div className={styles.prefRowLabel}>
+                <span className={styles.prefLabel}>Ordenação padrão de tarefas</span>
+                <span className={styles.prefSub}>Aplicado ao abrir a página de Tarefas</span>
+              </div>
+              <div className={styles.prefOptions}>
+                {[{ v: 'due_date', l: 'Por vencimento' }, { v: 'priority', l: 'Por prioridade' }].map(({ v, l }) => (
+                  <button key={v} type="button"
+                    className={`${styles.prefBtn} ${(prefs.task_sort ?? 'due_date') === v ? styles.prefBtnActive : ''}`}
+                    onClick={() => handlePrefChange('task_sort', v)}
+                  >{l}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Dashboard cards */}
+            <div className={styles.prefRow}>
+              <div className={styles.prefRowLabel}>
+                <span className={styles.prefLabel}>Cards do Painel</span>
+                <span className={styles.prefSub}>Escolha quais cards aparecem no dashboard</span>
+              </div>
+              <div className={styles.prefOptions} style={{ flexWrap: 'wrap', gap: '0.4rem' }}>
+                {[
+                  { v: 'show_casos',      l: 'Casos' },
+                  { v: 'show_tarefas',    l: 'Tarefas' },
+                  { v: 'show_financeiro', l: 'Financeiro' },
+                  { v: 'show_atrasadas',  l: 'Atrasadas' },
+                ].map(({ v, l }) => {
+                  const on = prefs[v] !== false
+                  return (
+                    <button key={v} type="button"
+                      className={`${styles.prefBtn} ${on ? styles.prefBtnActive : ''}`}
+                      onClick={() => handlePrefChange(v, !on)}
+                    >{on ? '✓ ' : ''}{l}</button>
+                  )
+                })}
+              </div>
+            </div>
+
           </div>
           <div className={styles.formFooter}>
             <button type="button" className={styles.btnReset} onClick={handleResetPrefs}>

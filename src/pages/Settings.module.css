@@ -256,6 +256,22 @@
   border-radius: 6px;
   border: var(--border);
 }
+.colorHexInput {
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: var(--text);
+  background: var(--bg);
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  border: var(--border);
+  width: 90px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.colorHexInput:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.12);
+}
 .colorDarkPreview {
   font-size: 0.72rem;
   color: #fff;
@@ -280,10 +296,19 @@
   border-radius: var(--radius-sm);
   border: var(--border);
 }
+.prefRowLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
 .prefLabel {
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--text);
+}
+.prefSub {
+  font-size: 0.7rem;
+  color: var(--text-3);
 }
 .prefOptions {
   display: flex;
