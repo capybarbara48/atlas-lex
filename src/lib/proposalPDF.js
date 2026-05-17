@@ -319,11 +319,9 @@ tbody td:last-child{padding-right:1.5rem}
 </html>`
 
   const win = window.open('', '_blank')
-  if (!win) {
-    alert('Permita pop-ups para gerar o PDF.')
-    return
-  }
+  if (!win) return false
   win.document.write(html)
   win.document.close()
   win.focus()
+  return true
 }

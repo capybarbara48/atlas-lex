@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
 import { useClients } from '@/hooks/useClients'
+import { useToast } from '@/context/ToastContext'
 import PageShell from '@/components/ui/PageShell'
 import ViewToggle from '@/components/ui/ViewToggle'
 import Modal from '@/components/ui/Modal'
@@ -133,6 +134,7 @@ function ListView({ clients, onNavigate, onEdit }) {
 /* ── page ───────────────────────────────────────────────────────────── */
 export default function Clients() {
   const { lawyer } = useAuth()
+  const toast = useToast()
   const navigate = useNavigate()
   const prefs = loadPreferences(lawyer?.id)
 
@@ -152,7 +154,11 @@ export default function Clients() {
   function openNew()       { setEditing(null); setFormOpen(true) }
   function openEdit(id)    { setEditing(rawById[id] ?? null); setFormOpen(true) }
   function handleNavigate(id) { navigate('/clientes/' + id) }
-  function handleSave()    { refetch(); setFormOpen(false) }
+  function handleSave() {
+    refetch()
+    setFormOpen(false)
+    toast.success(editing ? 'Cliente atualizado.' : 'Cliente criado.')
+  }
 
   function handleViewChange(v) {
     const mapped = v === 'kanban' ? 'grid' : 'lista'

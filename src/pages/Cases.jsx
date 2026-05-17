@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
 import { useCases } from '@/hooks/useCases'
+import { useToast } from '@/context/ToastContext'
 import PageShell from '@/components/ui/PageShell'
 import ViewToggle from '@/components/ui/ViewToggle'
 import Modal from '@/components/ui/Modal'
@@ -133,6 +134,7 @@ function ListView({ cases, onEdit }) {
 /* ── page ───────────────────────────────────────────────────────────── */
 export default function Cases() {
   const { lawyer } = useAuth()
+  const toast = useToast()
   const prefs = loadPreferences(lawyer?.id)
 
   const [view, setView]               = useState(prefs.casos_view ?? 'kanban')
@@ -150,7 +152,11 @@ export default function Cases() {
 
   function openNew()    { setEditing(null); setFormOpen(true) }
   function openEdit(id) { setEditing(rawById[id] ?? null); setFormOpen(true) }
-  function handleSave() { refetch(); setFormOpen(false) }
+  function handleSave() {
+    refetch()
+    setFormOpen(false)
+    toast.success(editing ? 'Processo atualizado.' : 'Processo criado.')
+  }
 
   function handleViewChange(v) {
     setView(v)

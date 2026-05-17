@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useProposals } from '@/hooks/useProposals'
 import { generateProposalPDF } from '@/lib/proposalPDF'
+import { useToast } from '@/context/ToastContext'
 import PageShell from '@/components/ui/PageShell'
 import Modal from '@/components/ui/Modal'
 import ProposalForm from '@/components/forms/ProposalForm'
@@ -135,6 +136,7 @@ function ListView({ proposals, onEdit, onPDF }) {
 /* ── page ───────────────────────────────────────────────────────────── */
 export default function Proposals() {
   const { lawyer } = useAuth()
+  const toast = useToast()
   const [view, setView]               = useState('pipeline')
   const [search, setSearch]           = useState('')
   const [filterStatus, setFilterStatus] = useState('todos')
@@ -150,8 +152,16 @@ export default function Proposals() {
 
   function openNew()    { setEditing(null); setFormOpen(true) }
   function openEdit(id) { setEditing(rawById[id] ?? null); setFormOpen(true) }
-  function handleSave() { refetch(); setFormOpen(false) }
-  function handlePDF(id) { generateProposalPDF(rawById[id], lawyer) }
+  function handleSave() {
+    refetch()
+    setFormOpen(false)
+    toast.success(editing ? 'Proposta atualizada.' : 'Proposta criada.')
+  }
+  function handlePDF(id) {
+    const ok = generateProposalPDF(rawById[id], lawyer)
+    if (ok === false) toast.error('Permita pop-ups no navegador para gerar o PDF.')
+    else toast.info('PDF aberto em nova aba.')
+  }
 
   const filtered = useMemo(() => {
     let list = proposals

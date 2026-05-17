@@ -1,0 +1,89 @@
+.container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: 10px;
+  min-width: 280px;
+  max-width: 360px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.08);
+  font-size: 0.845rem;
+  font-family: inherit;
+  line-height: 1.4;
+  pointer-events: all;
+  animation: toastIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.leaving {
+  animation: toastOut 0.22s ease forwards;
+}
+
+.success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
+.error   { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
+.info    { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f; }
+
+.icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.success .icon { background: #22c55e; color: #fff; }
+.error   .icon { background: #ef4444; color: #fff; }
+.info    .icon { background: #3b82f6; color: #fff; }
+
+.message { flex: 1; }
+
+.close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: currentColor;
+  opacity: 0.45;
+  border-radius: 5px;
+  padding: 0;
+  font-family: inherit;
+  transition: opacity 0.15s, background 0.15s;
+}
+.close:hover { opacity: 1; background: rgba(0,0,0,0.06); }
+
+@keyframes toastIn {
+  from { transform: translateX(calc(100% + 1.5rem)); opacity: 0; }
+  to   { transform: translateX(0);                   opacity: 1; }
+}
+@keyframes toastOut {
+  from { transform: translateX(0);                   opacity: 1; max-height: 80px; margin-bottom: 0; }
+  to   { transform: translateX(calc(100% + 1.5rem)); opacity: 0; max-height: 0;   margin-bottom: -0.5rem; }
+}
+
+@media (max-width: 767px) {
+  .container { bottom: 1rem; right: 1rem; left: 1rem; }
+  .toast { min-width: unset; max-width: unset; width: 100%; }
+  @keyframes toastIn {
+    from { transform: translateY(120%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  @keyframes toastOut {
+    from { transform: translateY(0);    opacity: 1; }
+    to   { transform: translateY(120%); opacity: 0; }
+  }
+}

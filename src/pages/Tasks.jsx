@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
 import { useAllTasks } from '@/hooks/useTasks'
+import { useToast } from '@/context/ToastContext'
 import PageShell from '@/components/ui/PageShell'
 import ViewToggle from '@/components/ui/ViewToggle'
 import Modal from '@/components/ui/Modal'
@@ -323,6 +324,7 @@ function CalendarView({ tasks, onEdit }) {
 /* ── page ───────────────────────────────────────────────────────────── */
 export default function Tasks() {
   const { lawyer } = useAuth()
+  const toast = useToast()
   const prefs = loadPreferences(lawyer?.id)
 
   const [view, setView]         = useState(prefs.tarefas_view ?? 'kanban')
@@ -340,7 +342,11 @@ export default function Tasks() {
 
   function openNew()    { setEditing(null); setFormOpen(true) }
   function openEdit(id) { setEditing(rawById[id] ?? null); setFormOpen(true) }
-  function handleSave() { refetch(); setFormOpen(false) }
+  function handleSave() {
+    refetch()
+    setFormOpen(false)
+    toast.success(editing ? 'Tarefa atualizada.' : 'Tarefa criada.')
+  }
 
   function handleViewChange(v) {
     setView(v)
