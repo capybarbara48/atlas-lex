@@ -1,0 +1,99 @@
+.wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.uploadBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 8px;
+  border: 1px dashed rgba(var(--accent-rgb), 0.35);
+  background: var(--bg);
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.uploadBtn:hover:not(:disabled) {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+}
+.uploadBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.hint {
+  font-size: 0.65rem;
+  color: var(--text-3);
+}
+
+.error {
+  font-size: 0.72rem;
+  color: var(--red);
+  width: 100%;
+}
+
+/* ── Uploaded state ── */
+.uploaded {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(var(--accent-rgb), 0.06);
+  border: 1px solid rgba(var(--accent-rgb), 0.18);
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.uploadedLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.uploadedName {
+  font-size: 0.9rem;
+  color: var(--text);
+  font-weight: 500;
+  flex: 1;
+}
+
+.uploadedActions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.changeBtn {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent);
+  font-family: inherit;
+  padding: 0.2rem 0.55rem;
+  border-radius: 5px;
+  border: 1px solid rgba(var(--accent-rgb), 0.25);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.changeBtn:hover { background: var(--accent-dim); }
+
+.removeBtn {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--red);
+  font-family: inherit;
+  padding: 0.2rem 0.55rem;
+  border-radius: 5px;
+  border: 1px solid rgba(224,60,60,0.25);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.removeBtn:hover { background: rgba(224,60,60,0.08); }

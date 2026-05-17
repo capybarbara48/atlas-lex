@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { loadPreferences, savePreferences, resetPreferences } from '@/hooks/usePreferences'
+import { loadGoogleFont, loadCustomFont, applyFonts } from '@/lib/fonts'
 import PageShell from '@/components/ui/PageShell'
 import SuporteSection from '@/components/support/SuporteSection'
 import LogoUpload from '@/components/ui/LogoUpload'
+import FontUpload from '@/components/ui/FontUpload'
 import styles from './Settings.module.css'
 
 /* Cores predefinidas para seleção rápida */
@@ -24,6 +26,27 @@ const DEFAULT_TRIBUNAIS = [
   'Juizado Especial Cível','Juizado Especial Criminal',
   'Vara Criminal','Vara Federal','Tribunal de Justiça',
   'Tribunal Regional do Trabalho','Tribunal Regional Federal',
+]
+
+const HEADING_FONTS = [
+  { family: null,                label: 'Padrão Atlas' },
+  { family: 'Playfair Display',  label: 'Playfair Display' },
+  { family: 'Merriweather',      label: 'Merriweather' },
+  { family: 'EB Garamond',       label: 'EB Garamond' },
+  { family: 'Lora',              label: 'Lora' },
+  { family: 'Raleway',           label: 'Raleway' },
+]
+const BODY_FONTS = [
+  { family: null,            label: 'Padrão (sistema)' },
+  { family: 'Inter',         label: 'Inter' },
+  { family: 'Poppins',       label: 'Poppins' },
+  { family: 'Lato',          label: 'Lato' },
+  { family: 'Source Sans 3', label: 'Source Sans 3' },
+]
+const MONO_FONTS = [
+  { family: null,             label: 'Padrão (mono)'  },
+  { family: 'IBM Plex Mono',  label: 'IBM Plex Mono'  },
+  { family: 'JetBrains Mono', label: 'JetBrains Mono' },
 ]
 
 const PRESET_COLORS = [
@@ -117,6 +140,14 @@ export default function Settings() {
   const [newResponsavel,  setNewResponsavel]  = useState('')
   const [listSaving,      setListSaving]      = useState(false)
 
+  /* Font state */
+  const [fontHeading,  setFontHeading]  = useState(null)
+  const [fontBody,     setFontBody]     = useState(null)
+  const [fontMono,     setFontMono]     = useState(null)
+  const [fontScope,    setFontScope]    = useState('all')
+  const [customFont,   setCustomFont]   = useState(null)
+  const [fontSaving,   setFontSaving]   = useState(false)
+
   const [saving,  setSaving]  = useState(false)
   const [success, setSuccess] = useState('')
   const [error,   setError]   = useState('')
@@ -135,7 +166,20 @@ export default function Settings() {
     if (prefs.quota_litis_options?.length) setQuotaLitis(prefs.quota_litis_options)
     if (prefs.tribunais?.length)           setTribunais(prefs.tribunais)
     if (prefs.responsaveis?.length)        setResponsaveis(prefs.responsaveis)
+    if (prefs.font_heading)    setFontHeading(prefs.font_heading)
+    if (prefs.font_body)       setFontBody(prefs.font_body)
+    if (prefs.font_mono)       setFontMono(prefs.font_mono)
+    if (prefs.font_scope)      setFontScope(prefs.font_scope)
+    if (prefs.custom_font_url) {
+      loadCustomFont(prefs.custom_font_url)
+      setCustomFont({ displayName: prefs.custom_font_name ?? 'Fonte Personalizada', url: prefs.custom_font_url })
+    }
   }, [lawyer])
+
+  /* Apply font preview live in Settings */
+  useEffect(() => {
+    applyFonts({ font_heading: fontHeading, font_body: fontBody, font_mono: fontMono, font_scope: fontScope, custom_font_url: customFont?.url })
+  }, [fontHeading, fontBody, fontMono, fontScope, customFont])
 
   /* Apply accent preview in real time */
   useEffect(() => {
@@ -193,9 +237,11 @@ export default function Settings() {
 
   async function handleSaveLists() {
     setListSaving(true); setError(''); setSuccess('')
+    const existing = lawyer?.preferences ?? {}
     const { error } = await supabase
       .from('lawyers')
       .update({ preferences: {
+        ...existing,
         service_types:       serviceTypes,
         quota_litis_options: quotaLitis,
         tribunais,
@@ -206,6 +252,28 @@ export default function Settings() {
     if (error) { setError('Erro ao salvar listas: ' + error.message); return }
     await refreshLawyer()
     setSuccess('Listas atualizadas com sucesso!')
+    setTimeout(() => setSuccess(''), 3000)
+  }
+
+  async function handleSaveFonts() {
+    setFontSaving(true); setError(''); setSuccess('')
+    const existing = lawyer?.preferences ?? {}
+    const { error } = await supabase
+      .from('lawyers')
+      .update({ preferences: {
+        ...existing,
+        font_heading:     fontHeading     ?? null,
+        font_body:        fontBody        ?? null,
+        font_mono:        fontMono        ?? null,
+        font_scope:       fontScope,
+        custom_font_url:  customFont?.url     ?? null,
+        custom_font_name: customFont?.displayName ?? null,
+      }})
+      .eq('id', session.user.id)
+    setFontSaving(false)
+    if (error) { setError('Erro ao salvar tipografia: ' + error.message); return }
+    await refreshLawyer()
+    setSuccess('Tipografia salva!')
     setTimeout(() => setSuccess(''), 3000)
   }
 
@@ -446,6 +514,108 @@ export default function Settings() {
               Redefinir preferências
             </button>
             <span className={styles.prefNote}>Preferências salvas localmente neste dispositivo</span>
+          </div>
+        </Section>
+
+        {/* ── Tipografia ── */}
+        <Section
+          title="Tipografia"
+          subtitle="Escolha as fontes do seu escritório. Alterações aplicadas em tempo real."
+        >
+          <div className={styles.prefGrid}>
+
+            {/* Custom font upload */}
+            <div style={{ marginBottom: '0.5rem' }}>
+              <div className={styles.listBlockTitle} style={{ marginBottom: '0.5rem' }}>Sua fonte personalizada</div>
+              <FontUpload
+                customFont={customFont}
+                onFont={f => setCustomFont(f)}
+                onRemove={() => {
+                  setCustomFont(null)
+                  if (fontHeading === 'CustomFont') setFontHeading(null)
+                  if (fontBody    === 'CustomFont') setFontBody(null)
+                  if (fontMono    === 'CustomFont') setFontMono(null)
+                }}
+              />
+            </div>
+
+            {/* Font scope */}
+            <div className={styles.prefRow}>
+              <div className={styles.prefRowLabel}>
+                <span className={styles.prefLabel}>Aplicar em</span>
+                <span className={styles.prefSub}>Todo o sistema ou somente em documentos PDF</span>
+              </div>
+              <div className={styles.prefOptions}>
+                {[{ v: 'all', l: 'Todo o sistema' }, { v: 'pdf_only', l: 'Só em PDF' }].map(({ v, l }) => (
+                  <button key={v} type="button"
+                    className={`${styles.prefBtn} ${fontScope === v ? styles.prefBtnActive : ''}`}
+                    onClick={() => setFontScope(v)}
+                  >{l}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Heading font */}
+            <div className={styles.prefRow} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '0.5rem' }}>
+              <span className={styles.prefLabel}>Fonte principal (títulos)</span>
+              <div className={styles.prefOptions} style={{ flexWrap: 'wrap' }}>
+                {[...HEADING_FONTS, ...(customFont ? [{ family: 'CustomFont', label: customFont.displayName }] : [])].map(f => (
+                  <button key={f.label} type="button"
+                    className={`${styles.prefBtn} ${fontHeading === f.family ? styles.prefBtnActive : ''}`}
+                    style={{ fontFamily: f.family && f.family !== 'CustomFont' ? `'${f.family}', serif` : f.family === 'CustomFont' ? "'CustomFont', serif" : 'inherit' }}
+                    onClick={() => setFontHeading(f.family)}
+                  >{f.label}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Body font */}
+            <div className={styles.prefRow} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '0.5rem' }}>
+              <span className={styles.prefLabel}>Fonte secundária (texto)</span>
+              <div className={styles.prefOptions} style={{ flexWrap: 'wrap' }}>
+                {[...BODY_FONTS, ...(customFont ? [{ family: 'CustomFont', label: customFont.displayName }] : [])].map(f => (
+                  <button key={f.label} type="button"
+                    className={`${styles.prefBtn} ${fontBody === f.family ? styles.prefBtnActive : ''}`}
+                    style={{ fontFamily: f.family && f.family !== 'CustomFont' ? `'${f.family}', sans-serif` : f.family === 'CustomFont' ? "'CustomFont', sans-serif" : 'inherit' }}
+                    onClick={() => setFontBody(f.family)}
+                  >{f.label}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Mono font */}
+            <div className={styles.prefRow} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '0.5rem' }}>
+              <span className={styles.prefLabel}>Fonte terciária (números, processos)</span>
+              <div className={styles.prefOptions} style={{ flexWrap: 'wrap' }}>
+                {[...MONO_FONTS, ...(customFont ? [{ family: 'CustomFont', label: customFont.displayName }] : [])].map(f => (
+                  <button key={f.label} type="button"
+                    className={`${styles.prefBtn} ${fontMono === f.family ? styles.prefBtnActive : ''}`}
+                    style={{ fontFamily: f.family && f.family !== 'CustomFont' ? `'${f.family}', monospace` : f.family === 'CustomFont' ? "'CustomFont', monospace" : 'monospace' }}
+                    onClick={() => setFontMono(f.family)}
+                  >{f.label}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Preview */}
+            <div style={{ background: 'var(--bg)', border: 'var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.875rem 1rem' }}>
+              <div style={{ fontFamily: fontHeading && fontHeading !== 'CustomFont' ? `'${fontHeading}', serif` : fontHeading === 'CustomFont' ? "'CustomFont', serif" : 'inherit', fontSize: '1rem', fontWeight: 700, marginBottom: '0.3rem' }}>
+                Assessoria Jurídica Especializada
+              </div>
+              <div style={{ fontFamily: fontBody && fontBody !== 'CustomFont' ? `'${fontBody}', sans-serif` : fontBody === 'CustomFont' ? "'CustomFont', sans-serif" : 'inherit', fontSize: '0.78rem', color: 'var(--text-2)', marginBottom: '0.4rem' }}>
+                Atendemos famílias e empresas com comprometimento, ética e excelência jurídica.
+              </div>
+              <div style={{ fontFamily: fontMono && fontMono !== 'CustomFont' ? `'${fontMono}', monospace` : fontMono === 'CustomFont' ? "'CustomFont', monospace" : 'monospace', fontSize: '0.7rem', color: 'var(--text-3)', borderTop: 'var(--border)', paddingTop: '0.35rem' }}>
+                Proc. nº 1234.567.2024.8.00
+              </div>
+            </div>
+
+          </div>
+
+          <div className={styles.formFooter}>
+            <button type="button" className={styles.btnSave} onClick={handleSaveFonts} disabled={fontSaving}>
+              {fontSaving ? 'Salvando…' : 'Salvar tipografia'}
+            </button>
           </div>
         </Section>
 

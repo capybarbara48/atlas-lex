@@ -3,6 +3,7 @@ import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { loadGoogleFont, applyFonts } from '@/lib/fonts'
 import LogoUpload from '@/components/ui/LogoUpload'
+import FontUpload from '@/components/ui/FontUpload'
 import styles from './Onboarding.module.css'
 
 /* ── Font options ─────────────────────────────────────────────────── */
@@ -98,10 +99,11 @@ export default function Onboarding() {
   const [error, setError]       = useState('')
 
   /* Font state */
-  const [fontHeading, setFontHeading] = useState(null)
-  const [fontBody,    setFontBody]    = useState(null)
-  const [fontMono,    setFontMono]    = useState(null)
-  const [fontScope,   setFontScope]   = useState('all')
+  const [fontHeading,  setFontHeading]  = useState(null)
+  const [fontBody,     setFontBody]     = useState(null)
+  const [fontMono,     setFontMono]     = useState(null)
+  const [fontScope,    setFontScope]    = useState('all')
+  const [customFont,   setCustomFont]   = useState(null) // { displayName, url }
 
   /* Form state — pre-filled from lawyer row */
   const [fullName,  setFullName]  = useState(lawyer?.full_name  ?? '')
@@ -131,8 +133,8 @@ export default function Onboarding() {
 
   /* Apply font choices live (only when scope = all) */
   useEffect(() => {
-    applyFonts({ font_heading: fontHeading, font_body: fontBody, font_mono: fontMono, font_scope: fontScope })
-  }, [fontHeading, fontBody, fontMono, fontScope])
+    applyFonts({ font_heading: fontHeading, font_body: fontBody, font_mono: fontMono, font_scope: fontScope, custom_font_url: customFont?.url })
+  }, [fontHeading, fontBody, fontMono, fontScope, customFont])
 
   function goNext() {
     setDirection('forward')
@@ -165,10 +167,12 @@ export default function Onboarding() {
         theme_accent_dark:    darken(accent),
         onboarding_completed: true,
         preferences: {
-          font_heading: fontHeading ?? null,
-          font_body:    fontBody    ?? null,
-          font_mono:    fontMono    ?? null,
-          font_scope:   fontScope,
+          font_heading:       fontHeading          ?? null,
+          font_body:          fontBody             ?? null,
+          font_mono:          fontMono             ?? null,
+          font_scope:         fontScope,
+          custom_font_url:    customFont?.url      ?? null,
+          custom_font_name:   customFont?.displayName ?? null,
         },
       }, { onConflict: 'id' })
 
@@ -319,6 +323,21 @@ export default function Onboarding() {
         </div>
       </div>
 
+      {/* Custom font upload — appears first so the option shows up in grids below */}
+      <div className={styles.fontSection}>
+        <span className={styles.fontSectionLabel}>Sua fonte personalizada</span>
+        <FontUpload
+          customFont={customFont}
+          onFont={f => setCustomFont(f)}
+          onRemove={() => {
+            setCustomFont(null)
+            if (fontHeading === 'CustomFont') setFontHeading(null)
+            if (fontBody    === 'CustomFont') setFontBody(null)
+            if (fontMono    === 'CustomFont') setFontMono(null)
+          }}
+        />
+      </div>
+
       {/* Heading font */}
       <div className={styles.fontSection}>
         <span className={styles.fontSectionLabel}>Fonte principal (títulos)</span>
@@ -333,6 +352,16 @@ export default function Onboarding() {
               <span className={styles.fontOptionLabel}>{f.label}</span>
             </button>
           ))}
+          {customFont && (
+            <button key="custom-h" type="button"
+              className={`${styles.fontOption} ${fontHeading === 'CustomFont' ? styles.fontOptionActive : ''}`}
+              style={{ fontFamily: "'CustomFont', serif" }}
+              onClick={() => setFontHeading('CustomFont')}
+            >
+              <span className={styles.fontSample}>Aa</span>
+              <span className={styles.fontOptionLabel}>{customFont.displayName}</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -350,6 +379,16 @@ export default function Onboarding() {
               <span className={styles.fontOptionLabel}>{f.label}</span>
             </button>
           ))}
+          {customFont && (
+            <button key="custom-b" type="button"
+              className={`${styles.fontOption} ${fontBody === 'CustomFont' ? styles.fontOptionActive : ''}`}
+              style={{ fontFamily: "'CustomFont', sans-serif" }}
+              onClick={() => setFontBody('CustomFont')}
+            >
+              <span className={styles.fontSample}>Aa</span>
+              <span className={styles.fontOptionLabel}>{customFont.displayName}</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -367,6 +406,16 @@ export default function Onboarding() {
               <span className={styles.fontOptionLabel}>{f.label}</span>
             </button>
           ))}
+          {customFont && (
+            <button key="custom-m" type="button"
+              className={`${styles.fontOption} ${fontMono === 'CustomFont' ? styles.fontOptionActive : ''}`}
+              style={{ fontFamily: "'CustomFont', monospace" }}
+              onClick={() => setFontMono('CustomFont')}
+            >
+              <span className={styles.fontSample}>01</span>
+              <span className={styles.fontOptionLabel}>{customFont.displayName}</span>
+            </button>
+          )}
         </div>
       </div>
 

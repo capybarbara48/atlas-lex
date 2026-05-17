@@ -47,8 +47,9 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!lawyer?.preferences) return
     const { font_heading, font_body, font_mono, font_scope } = lawyer.preferences
-    if (font_heading || font_body || font_mono) {
-      applyFonts({ font_heading, font_body, font_mono, font_scope })
+    const { custom_font_url } = lawyer.preferences
+    if (font_heading || font_body || font_mono || custom_font_url) {
+      applyFonts({ font_heading, font_body, font_mono, font_scope, custom_font_url })
     }
   }, [lawyer])
 
