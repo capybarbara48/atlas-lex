@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
-import { useCases } from '@/hooks/useCases'
+import { useCases, updateCaseSituation } from '@/hooks/useCases'
+import { useKanbanSituations } from '@/hooks/useKanbanSituations'
 import { useToast } from '@/context/ToastContext'
 import PageShell from '@/components/ui/PageShell'
 import ViewToggle from '@/components/ui/ViewToggle'
@@ -11,7 +12,7 @@ import CaseForm from '@/components/forms/CaseForm'
 import { SkeletonTable, SkeletonKanbanCard } from '@/components/ui/Skeleton'
 import styles from './Cases.module.css'
 
-/* ── data mapper ────────────────────────────────────────────────────── */
+/* ── helpers ────────────────────────────────────────────────────────── */
 function tribColor(court) {
   if (!court) return 'st-teal'
   const c = court.toUpperCase()
@@ -30,6 +31,7 @@ function mapCase(c) {
     cliente:    c.clients?.full_name ?? '—',
     clienteId:  c.clients?.id ?? c.client_id ?? null,
     status:     c.status,
+    situation:  c.situation ?? null,
     tipo:       c.area ?? '—',
     tribunal:   c.court ?? '—',
     valor:      Number(c.valor) || 0,
@@ -39,7 +41,7 @@ function mapCase(c) {
   }
 }
 
-/* ── constants ─────────────────────────────────────────────────────── */
+/* ── constants ──────────────────────────────────────────────────────── */
 const STATUS_COLS = [
   { key: 'ativo',     label: 'Ativo',     color: 'st-green' },
   { key: 'suspenso',  label: 'Suspenso',  color: 'st-gold' },
@@ -54,45 +56,273 @@ function brl(v) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 }
 
-/* ── sub-components ─────────────────────────────────────────────────── */
-function KanbanView({ cases, onEdit }) {
-  return (
-    <div className={styles.kanbanWrapper}>
-      <div className={styles.kanbanBoard}>
-        {STATUS_COLS.map(col => {
-          const items = cases.filter(c => c.status === col.key)
-          return (
-            <div key={col.key} className={styles.kanbanCol}>
-              <div className={styles.kanbanColHeader}>
-                <span className={`${styles.kanbanColTitle} ${col.color}`}>{col.label}</span>
-                <span className={styles.kanbanColCount}>{items.length}</span>
-              </div>
-              <div className={styles.kanbanItems}>
-                {items.length === 0
-                  ? <div className={styles.kanbanEmpty}>Nenhum processo</div>
-                  : items.map(c => (
-                      <div key={c.id} className={styles.kanbanCard} onClick={() => onEdit(c.id)} style={{ cursor: 'pointer' }}>
-                        <div className={styles.kanbanCardTitle}>{c.titulo}</div>
-                        {c.clienteId
-                          ? <Link to={`/painel/clientes/${c.clienteId}`} className={styles.kanbanCardClient} onClick={e => e.stopPropagation()}>{c.cliente}</Link>
-                          : <div className={styles.kanbanCardClient}>{c.cliente}</div>}
+/* ── EditColumnsModal ───────────────────────────────────────────────── */
+function EditColumnsModal({ situations, onAdd, onUpdate, onDelete, onReorder, onClose }) {
+  const toast = useToast()
+  const [newName, setNewName]   = useState('')
+  const [newColor, setNewColor] = useState('#4361ee')
+  const [editing, setEditing]   = useState(null)
+  const [localList, setLocalList] = useState([...situations])
 
-                        <div className={styles.kanbanCardMeta}>
-                          <span className={`badge ${c.trib_color}`}>{c.tribunal}</span>
-                          {c.valor > 0 && <span className={styles.kanbanCardValor}>{brl(c.valor)}</span>}
-                        </div>
-                      </div>
-                    ))
-                }
-              </div>
-            </div>
-          )
-        })}
+  async function handleAdd() {
+    const name = newName.trim()
+    if (!name) return
+    if (localList.some(s => s.value.toLowerCase() === name.toLowerCase())) {
+      toast.error('Já existe uma coluna com esse nome.')
+      return
+    }
+    const { data, error } = await onAdd(name, newColor)
+    if (error) { toast.error('Erro ao adicionar coluna.'); return }
+    if (data) {
+      setLocalList(prev => [...prev, data])
+      setNewName('')
+      setNewColor('#4361ee')
+    }
+  }
+
+  async function handleSaveEdit() {
+    const name = editing?.value.trim()
+    if (!name) return
+    const { error } = await onUpdate(editing.id, { value: name, color: editing.color })
+    if (error) { toast.error('Erro ao salvar.'); return }
+    setLocalList(prev => prev.map(s => s.id === editing.id ? { ...s, value: name, color: editing.color } : s))
+    setEditing(null)
+  }
+
+  async function handleDelete(id) {
+    if (localList.length <= 1) { toast.error('É necessário pelo menos uma coluna.'); return }
+    const { error } = await onDelete(id)
+    if (error) { toast.error('Erro ao excluir coluna.'); return }
+    setLocalList(prev => prev.filter(s => s.id !== id))
+  }
+
+  function move(idx, dir) {
+    const next = [...localList]
+    const target = idx + dir
+    if (target < 0 || target >= next.length) return
+    ;[next[idx], next[target]] = [next[target], next[idx]]
+    setLocalList(next)
+    onReorder(next)
+  }
+
+  return (
+    <div className={styles.editColsBody}>
+      <p className={styles.editColsHint}>
+        As colunas representam as situações do processo. Arraste para reordenar.
+      </p>
+
+      <div className={styles.editColsList}>
+        {localList.map((sit, idx) => (
+          <div key={sit.id} className={styles.editColRow}>
+            <span className={styles.editColDot} style={{ background: sit.color ?? '#888' }} />
+
+            {editing?.id === sit.id ? (
+              <>
+                <input
+                  className={styles.editColInput}
+                  value={editing.value}
+                  onChange={e => setEditing(p => ({ ...p, value: e.target.value }))}
+                  onKeyDown={e => e.key === 'Enter' && handleSaveEdit()}
+                  autoFocus
+                />
+                <input
+                  type="color"
+                  className={styles.colorPicker}
+                  value={editing.color ?? '#4361ee'}
+                  onChange={e => setEditing(p => ({ ...p, color: e.target.value }))}
+                  title="Escolher cor"
+                />
+                <button className={styles.editColBtnSave}   onClick={handleSaveEdit}>✓</button>
+                <button className={styles.editColBtnCancel} onClick={() => setEditing(null)}>✕</button>
+              </>
+            ) : (
+              <>
+                <span className={styles.editColName}>{sit.value}</span>
+                <div className={styles.editColActions}>
+                  <button className={styles.editColBtn} onClick={() => move(idx, -1)} disabled={idx === 0} title="Mover para cima">↑</button>
+                  <button className={styles.editColBtn} onClick={() => move(idx, 1)} disabled={idx === localList.length - 1} title="Mover para baixo">↓</button>
+                  <button className={styles.editColBtn} onClick={() => setEditing({ id: sit.id, value: sit.value, color: sit.color ?? '#4361ee' })} title="Editar">✎</button>
+                  <button className={`${styles.editColBtn} ${styles.editColBtnDel}`} onClick={() => handleDelete(sit.id)} title="Excluir">✕</button>
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className={styles.editColAdd}>
+        <span className={styles.editColDot} style={{ background: newColor }} />
+        <input
+          className={styles.editColInput}
+          placeholder="Nome da nova coluna..."
+          value={newName}
+          onChange={e => setNewName(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleAdd()}
+        />
+        <input
+          type="color"
+          className={styles.colorPicker}
+          value={newColor}
+          onChange={e => setNewColor(e.target.value)}
+          title="Escolher cor"
+        />
+        <button className={styles.editColBtnAdd} onClick={handleAdd}>+ Adicionar</button>
+      </div>
+
+      <div className={styles.editColsFooter}>
+        <button className={styles.btnSalvar} onClick={onClose}>Salvar</button>
       </div>
     </div>
   )
 }
 
+/* ── KanbanView ─────────────────────────────────────────────────────── */
+function KanbanView({ cases, situations, sitLoading, onMoveSituation, onEditColumns }) {
+  const navigate = useNavigate()
+  const [draggingId, setDraggingId] = useState(null)
+  const [dragOver,   setDragOver]   = useState(null)
+
+  const bySituation = useMemo(() => {
+    const map = {}
+    situations.forEach(s => { map[s.id] = [] })
+    map['__none__'] = []
+    cases.forEach(c => {
+      if (c.situation && map[c.situation] !== undefined) {
+        map[c.situation].push(c)
+      } else {
+        map['__none__'].push(c)
+      }
+    })
+    return map
+  }, [cases, situations])
+
+  const hasNone = (bySituation['__none__'] ?? []).length > 0
+  const cols = [
+    ...situations,
+    ...(hasNone ? [{ id: '__none__', value: 'Não categorizado', color: '#94a3b8' }] : []),
+  ]
+
+  function handleDragStart(e, id) {
+    setDraggingId(id)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+  function handleDragOver(e, sitId) {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOver(sitId)
+  }
+  function handleDrop(e, sitId) {
+    e.preventDefault()
+    if (draggingId) onMoveSituation(draggingId, sitId === '__none__' ? null : sitId)
+    setDraggingId(null)
+    setDragOver(null)
+  }
+  function handleDragLeave(e) {
+    if (!e.currentTarget.contains(e.relatedTarget)) setDragOver(null)
+  }
+  function handleDragEnd() {
+    setDraggingId(null)
+    setDragOver(null)
+  }
+
+  return (
+    <div className={styles.kanbanWrapper}>
+      <div className={styles.kanbanToolbar}>
+        <button className={styles.btnEditCols} onClick={onEditColumns}>
+          <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12">
+            <path d="M11.013 1.427a1.75 1.75 0 0 1 2.474 0l.975.98a1.75 1.75 0 0 1 0 2.474L9.168 10.17a1.75 1.75 0 0 1-.619.41l-2.972 1.09a.75.75 0 0 1-.966-.966l1.09-2.972a1.75 1.75 0 0 1 .41-.619l5.902-5.676Z"/>
+          </svg>
+          Editar Colunas
+        </button>
+      </div>
+
+      <div className={styles.kanbanBoard}>
+        {sitLoading
+          ? STATUS_COLS.map(col => (
+              <div key={col.key} className={styles.kanbanCol}>
+                <div className={styles.kanbanColHeader}>
+                  <span className={`${styles.kanbanColTitle} ${col.color}`}>{col.label}</span>
+                </div>
+                <div className={styles.kanbanItems}>
+                  {[1, 2, 3].map(i => <SkeletonKanbanCard key={i} />)}
+                </div>
+              </div>
+            ))
+          : cols.map(sit => {
+              const items = bySituation[sit.id] ?? []
+              const isOver = dragOver === sit.id
+              const col = sit.color ?? '#888'
+              return (
+                <div
+                  key={sit.id}
+                  className={`${styles.kanbanCol} ${isOver ? styles.kanbanColOver : ''}`}
+                  onDragOver={e => handleDragOver(e, sit.id)}
+                  onDrop={e => handleDrop(e, sit.id)}
+                  onDragLeave={handleDragLeave}
+                >
+                  <div className={styles.kanbanColHeader}>
+                    <span
+                      className={styles.kanbanColTitle}
+                      style={{ background: col + '28', color: col }}
+                    >
+                      {sit.value}
+                    </span>
+                    <span className={styles.kanbanColCount}>{items.length}</span>
+                  </div>
+                  <div className={styles.kanbanItems}>
+                    {items.length === 0
+                      ? <div className={styles.kanbanEmpty}>—</div>
+                      : items.map(c => (
+                          <div
+                            key={c.id}
+                            className={`${styles.kanbanCard} ${draggingId === c.id ? styles.kanbanCardDragging : ''}`}
+                            draggable
+                            onDragStart={e => handleDragStart(e, c.id)}
+                            onDragEnd={handleDragEnd}
+                            onClick={() => navigate('/painel/casos/' + c.id)}
+                          >
+                            <div className={styles.kanbanCardTitle}>{c.titulo}</div>
+                            {c.clienteId
+                              ? <Link to={`/painel/clientes/${c.clienteId}`} className={styles.kanbanCardClient} onClick={e => e.stopPropagation()}>{c.cliente}</Link>
+                              : <div className={styles.kanbanCardClient}>{c.cliente}</div>}
+                            <div className={styles.kanbanCardMeta}>
+                              <span className={`badge ${c.trib_color}`}>{c.tribunal}</span>
+                              {c.valor > 0 && <span className={styles.kanbanCardValor}>{brl(c.valor)}</span>}
+                            </div>
+                          </div>
+                        ))
+                    }
+                  </div>
+                </div>
+              )
+            })
+        }
+      </div>
+    </div>
+  )
+}
+
+/* ── SkeletonKanban ─────────────────────────────────────────────────── */
+function SkeletonKanban() {
+  return (
+    <div className={styles.kanbanWrapper}>
+      <div className={styles.kanbanBoard}>
+        {STATUS_COLS.map(col => (
+          <div key={col.key} className={styles.kanbanCol}>
+            <div className={styles.kanbanColHeader}>
+              <span className={`${styles.kanbanColTitle} ${col.color}`}>{col.label}</span>
+            </div>
+            <div className={styles.kanbanItems}>
+              {[1, 2, 3].map(i => <SkeletonKanbanCard key={i} />)}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ── ListView ───────────────────────────────────────────────────────── */
 function ListView({ cases, onEdit }) {
   if (cases.length === 0) return (
     <div className={styles.emptyState}>
@@ -141,56 +371,40 @@ function ListView({ cases, onEdit }) {
   )
 }
 
-function SkeletonKanban() {
-  return (
-    <div className={styles.kanbanWrapper}>
-      <div className={styles.kanbanBoard}>
-        {STATUS_COLS.map(col => (
-          <div key={col.key} className={styles.kanbanCol}>
-            <div className={styles.kanbanColHeader}>
-              <span className={`${styles.kanbanColTitle} ${col.color}`}>{col.label}</span>
-            </div>
-            <div className={styles.kanbanItems}>
-              {[1, 2, 3].map(i => <SkeletonKanbanCard key={i} />)}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 /* ── page ───────────────────────────────────────────────────────────── */
 export default function Cases() {
   const { lawyer } = useAuth()
-  const toast = useToast()
-  const navigate = useNavigate()
-  const prefs = loadPreferences(lawyer?.id)
+  const toast      = useToast()
+  const navigate   = useNavigate()
+  const prefs      = loadPreferences(lawyer?.id)
 
   const [view, setView]               = useState(prefs.casos_view ?? 'kanban')
   const [search, setSearch]           = useState('')
   const [filterStatus, setFilterStatus] = useState('todos')
   const [formOpen, setFormOpen]       = useState(false)
   const [editing,  setEditing]        = useState(null)
+  const [editColsOpen, setEditColsOpen] = useState(false)
 
   const { data: rawCases, loading, error, refetch } = useCases()
+  const { situations, loading: sitLoading, addSituation, updateSituation, deleteSituation, reorderSituations } = useKanbanSituations()
+
   const cases = useMemo(() => (rawCases ?? []).map(mapCase), [rawCases])
 
-  const rawById = useMemo(() =>
-    Object.fromEntries((rawCases ?? []).map(r => [r.id, r]))
-  , [rawCases])
-
-  function openNew()      { setEditing(null); setFormOpen(true) }
   function openDetail(id) { navigate('/painel/casos/' + id) }
   function handleSave() {
     refetch()
     setFormOpen(false)
     toast.success(editing ? 'Processo atualizado.' : 'Processo criado.')
   }
-
   function handleViewChange(v) {
     setView(v)
     savePreferences(lawyer?.id, { casos_view: v })
+  }
+
+  async function handleMoveSituation(caseId, situationId) {
+    const { error: err } = await updateCaseSituation(caseId, situationId)
+    if (err) toast.error('Erro ao mover processo.')
+    else refetch()
   }
 
   const filtered = useMemo(() => {
@@ -217,7 +431,7 @@ export default function Cases() {
       subtitle={loading ? 'Carregando…' : `${cases.length} processos · ${counts.ativo ?? 0} ativos`}
       viewToggle={<ViewToggle value={view} onChange={handleViewChange} />}
       action={
-        <button className={styles.btnNovo} onClick={openNew}>
+        <button className={styles.btnNovo} onClick={() => { setEditing(null); setFormOpen(true) }}>
           <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.75.75 0 0 1 .75.75v5.5h5.5a.75.75 0 0 1 0 1.5h-5.5v5.5a.75.75 0 0 1-1.5 0v-5.5H1.75a.75.75 0 0 1 0-1.5h5.5v-5.5A.75.75 0 0 1 8 1Z"/></svg>
           Novo caso
         </button>
@@ -257,13 +471,32 @@ export default function Cases() {
             ? <SkeletonKanban />
             : <div className={styles.tableCard}><SkeletonTable rows={6} cols={7} /></div>
           : view === 'kanban'
-            ? <KanbanView cases={filtered} onEdit={openDetail} />
+            ? <KanbanView
+                cases={filtered}
+                situations={situations}
+                sitLoading={sitLoading}
+                onMoveSituation={handleMoveSituation}
+                onEditColumns={() => setEditColsOpen(true)}
+              />
             : <ListView cases={filtered} onEdit={openDetail} />
       }
 
       {formOpen && (
         <Modal title={editing ? 'Editar processo' : 'Novo processo'} onClose={() => setFormOpen(false)} size="lg">
           <CaseForm initial={editing} onSave={handleSave} onClose={() => setFormOpen(false)} />
+        </Modal>
+      )}
+
+      {editColsOpen && (
+        <Modal title="Editar Colunas do Kanban" onClose={() => setEditColsOpen(false)}>
+          <EditColumnsModal
+            situations={situations}
+            onAdd={addSituation}
+            onUpdate={updateSituation}
+            onDelete={deleteSituation}
+            onReorder={reorderSituations}
+            onClose={() => setEditColsOpen(false)}
+          />
         </Modal>
       )}
     </PageShell>

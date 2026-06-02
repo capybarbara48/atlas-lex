@@ -79,6 +79,20 @@
 .kanbanWrapper { overflow-x: auto; padding-bottom: 0.5rem; }
 .kanbanWrapper::-webkit-scrollbar { height: 4px; }
 .kanbanWrapper::-webkit-scrollbar-thumb { background: rgba(var(--accent-rgb),0.2); border-radius: 4px; }
+
+.kanbanToolbar {
+  display: flex; justify-content: flex-end;
+  margin-bottom: 0.5rem;
+}
+.btnEditCols {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  background: var(--card); border: var(--border); border-radius: var(--radius-sm);
+  font-size: 0.75rem; font-weight: 600; color: var(--text-2);
+  transition: all 0.15s; font-family: inherit; cursor: pointer;
+}
+.btnEditCols:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
 .kanbanBoard { display: flex; gap: 0.75rem; align-items: flex-start; min-width: max-content; }
 .kanbanCol {
   background: var(--bg);
@@ -88,6 +102,11 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+.kanbanColOver {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.15);
 }
 .kanbanColHeader {
   display: flex; align-items: center; justify-content: space-between;
@@ -108,21 +127,91 @@
   max-height: 520px; overflow-y: auto;
   padding: 0 0.5rem 0.5rem;
   display: flex; flex-direction: column; gap: 0.3rem;
+  min-height: 48px;
 }
 .kanbanItems::-webkit-scrollbar { width: 3px; }
 .kanbanItems::-webkit-scrollbar-thumb { background: rgba(var(--accent-rgb),0.2); border-radius: 4px; }
 .kanbanEmpty { text-align: center; color: var(--text-3); font-size: 0.72rem; padding: 0.75rem 0; }
 .kanbanCard {
   background: var(--card); border: var(--border); border-radius: 8px;
-  padding: 0.55rem 0.7rem; cursor: pointer;
+  padding: 0.55rem 0.7rem; cursor: grab;
   transition: all 0.15s;
+  user-select: none;
 }
 .kanbanCard:hover { background: var(--card-hover); box-shadow: var(--shadow); }
+.kanbanCard:active { cursor: grabbing; }
+.kanbanCardDragging { opacity: 0.4; cursor: grabbing; }
 .kanbanCardTitle { font-size: 0.78rem; font-weight: 600; color: var(--text); line-height: 1.3; margin-bottom: 0.2rem; }
 .kanbanCardClient { font-size: 0.68rem; color: var(--text-2); margin-bottom: 0.3rem; text-decoration: none; display: block; transition: color 0.15s; }
 .kanbanCardClient:hover { color: var(--accent); }
 .kanbanCardMeta { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; flex-wrap: wrap; }
 .kanbanCardValor { font-size: 0.65rem; color: var(--text-2); font-weight: 600; }
+
+/* Edit Columns Modal */
+.editColsBody { display: flex; flex-direction: column; gap: 1rem; }
+.editColsHint { font-size: 0.78rem; color: var(--text-2); margin: 0; }
+.editColsList { display: flex; flex-direction: column; gap: 0.35rem; }
+.editColRow {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  background: var(--bg); border: var(--border); border-radius: var(--radius-sm);
+}
+.editColDot {
+  width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+  display: inline-block;
+}
+.editColName { flex: 1; font-size: 0.82rem; font-weight: 500; color: var(--text); }
+.editColInput {
+  flex: 1; padding: 0.3rem 0.5rem;
+  background: var(--card); border: var(--border); border-radius: var(--radius-sm);
+  font-size: 0.82rem; font-family: inherit; color: var(--text); outline: none;
+}
+.editColInput:focus { border-color: var(--accent); }
+.editColActions { display: flex; gap: 0.2rem; flex-shrink: 0; }
+.editColBtn {
+  width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 4px; font-size: 0.8rem; color: var(--text-2);
+  background: transparent; border: none; cursor: pointer; transition: all 0.12s;
+  font-family: inherit;
+}
+.editColBtn:hover:not(:disabled) { background: var(--accent-dim); color: var(--accent); }
+.editColBtn:disabled { opacity: 0.3; cursor: default; }
+.editColBtnDel:hover { background: #fee2e2 !important; color: #dc2626 !important; }
+.editColBtnSave {
+  padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.78rem; font-weight: 600;
+  background: var(--accent); color: #fff; border: none; cursor: pointer; font-family: inherit;
+}
+.editColBtnCancel {
+  padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.78rem;
+  background: var(--bg); border: var(--border); color: var(--text-2); cursor: pointer; font-family: inherit;
+}
+.editColBtnSave:hover { opacity: 0.85; }
+.editColBtnCancel:hover { border-color: var(--accent); color: var(--accent); }
+
+.colorPicker {
+  width: 28px; height: 28px; border: var(--border); border-radius: 4px;
+  padding: 2px; cursor: pointer; background: var(--card); flex-shrink: 0;
+}
+
+.editColAdd {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  background: var(--bg); border: 1px dashed rgba(var(--accent-rgb),0.3); border-radius: var(--radius-sm);
+}
+.editColBtnAdd {
+  padding: 0.3rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.78rem; font-weight: 600;
+  background: var(--accent); color: #fff; border: none; cursor: pointer; font-family: inherit;
+  flex-shrink: 0; transition: opacity 0.15s;
+}
+.editColBtnAdd:hover { opacity: 0.85; }
+
+.editColsFooter { display: flex; justify-content: flex-end; padding-top: 0.25rem; }
+.btnSalvar {
+  padding: 0.5rem 1.5rem; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600;
+  background: var(--accent); color: #fff; border: none; cursor: pointer; font-family: inherit;
+  transition: opacity 0.15s;
+}
+.btnSalvar:hover { opacity: 0.85; }
 
 /* Table */
 .tableCard {
