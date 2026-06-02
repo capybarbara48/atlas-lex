@@ -16,10 +16,14 @@ export function AuthProvider({ children }) {
       else setLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
-      if (session) fetchLawyer(session.user.id)
-      else {
+      if (session) {
+        fetchLawyer(session.user.id)
+        if (event === 'SIGNED_IN' && session.provider_token) {
+          storeGoogleTokens(session)
+        }
+      } else {
         setLawyer(null)
         setLoading(false)
       }
@@ -27,6 +31,18 @@ export function AuthProvider({ children }) {
 
     return () => subscription.unsubscribe()
   }, [])
+
+  async function storeGoogleTokens(session) {
+    try {
+      await supabase.from('google_tokens').upsert({
+        lawyer_id:     session.user.id,
+        access_token:  session.provider_token,
+        refresh_token: session.provider_refresh_token ?? null,
+        expires_at:    new Date(Date.now() + 3500 * 1000).toISOString(),
+        updated_at:    new Date().toISOString(),
+      }, { onConflict: 'lawyer_id' })
+    } catch { /* table may not exist yet */ }
+  }
 
   async function fetchLawyer(userId) {
     const { data, error } = await supabase

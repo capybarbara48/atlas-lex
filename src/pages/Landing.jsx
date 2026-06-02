@@ -127,7 +127,15 @@ export default function Landing() {
   async function handleLogin() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + '/painel' },
+      options: {
+        redirectTo: window.location.origin + '/painel',
+        scopes: [
+          'email', 'profile',
+          'https://www.googleapis.com/auth/calendar.readonly',
+          'https://www.googleapis.com/auth/tasks.readonly',
+        ].join(' '),
+        queryParams: { access_type: 'offline', prompt: 'consent' },
+      },
     })
   }
 
