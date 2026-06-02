@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
-import { useCaseStats, useCases } from '@/hooks/useCases'
+import { useCaseStats, useCases, updateCaseSituation } from '@/hooks/useCases'
 import { useKanbanSituations } from '@/hooks/useKanbanSituations'
 import { useClientCount } from '@/hooks/useClients'
 import { useTodayTasks, updateTaskStatus } from '@/hooks/useTasks'
@@ -75,8 +75,10 @@ function StatBox({ num, label }) {
   )
 }
 
-function KanbanBoard({ cases, situations }) {
+function KanbanBoard({ cases, situations, onMove }) {
   const navigate = useNavigate()
+  const [draggingId, setDraggingId] = useState(null)
+  const [dragOver,   setDragOver]   = useState(null)
 
   const bySituation = useMemo(() => {
     const map = {}
@@ -98,14 +100,44 @@ function KanbanBoard({ cases, situations }) {
     ...(hasNone ? [{ id: '__none__', value: 'Não categorizado', color: '#94a3b8' }] : []),
   ]
 
+  function handleDragStart(e, id) {
+    setDraggingId(id)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+  function handleDragOver(e, sitId) {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOver(sitId)
+  }
+  function handleDrop(e, sitId) {
+    e.preventDefault()
+    if (draggingId) onMove(draggingId, sitId === '__none__' ? null : sitId)
+    setDraggingId(null)
+    setDragOver(null)
+  }
+  function handleDragLeave(e) {
+    if (!e.currentTarget.contains(e.relatedTarget)) setDragOver(null)
+  }
+  function handleDragEnd() {
+    setDraggingId(null)
+    setDragOver(null)
+  }
+
   return (
     <div className={styles.kanbanWrapper}>
       <div className={styles.kanbanBoard}>
         {cols.map(sit => {
           const items = bySituation[sit.id] ?? []
           const col = sit.color ?? '#888'
+          const isOver = dragOver === sit.id
           return (
-            <div key={sit.id} className={styles.kanbanCol}>
+            <div
+              key={sit.id}
+              className={`${styles.kanbanCol} ${isOver ? styles.kanbanColOver : ''}`}
+              onDragOver={e => handleDragOver(e, sit.id)}
+              onDrop={e => handleDrop(e, sit.id)}
+              onDragLeave={handleDragLeave}
+            >
               <div className={styles.kanbanColHeader}>
                 <span
                   className={styles.kanbanColTitle}
@@ -121,9 +153,11 @@ function KanbanBoard({ cases, situations }) {
                   : items.map(item => (
                       <div
                         key={item.id}
-                        className={styles.kanbanItem}
-                        onClick={() => navigate('/painel/casos')}
-                        style={{ cursor: 'pointer' }}
+                        className={`${styles.kanbanItem} ${draggingId === item.id ? styles.kanbanItemDragging : ''}`}
+                        draggable
+                        onDragStart={e => handleDragStart(e, item.id)}
+                        onDragEnd={handleDragEnd}
+                        onClick={() => navigate('/painel/casos/' + item.id)}
                       >
                         {item.titulo}
                         <span className={`${styles.kanbanTribunal} ${item.trib_color}`}>
@@ -222,6 +256,11 @@ export default function Dashboard() {
     refetchTasks()
   }
 
+  async function handleMoveCase(caseId, situationId) {
+    await updateCaseSituation(caseId, situationId)
+    refetchCases()
+  }
+
   return (
     <div className={styles.page}>
 
@@ -262,7 +301,7 @@ export default function Dashboard() {
             </div>
             <Link to="/painel/casos" className={styles.cardLink}>Ver todos →</Link>
           </div>
-          <KanbanBoard cases={cases} situations={situations} />
+          <KanbanBoard cases={cases} situations={situations} onMove={handleMoveCase} />
         </div>
 
         {/* ── Card: Tarefas atrasadas ── */}

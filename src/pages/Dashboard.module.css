@@ -206,6 +206,11 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+.kanbanColOver {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.15);
 }
 
 .kanbanColHeader {
@@ -244,6 +249,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
+  min-height: 40px;
 }
 .kanbanItems::-webkit-scrollbar { width: 3px; }
 .kanbanItems::-webkit-scrollbar-thumb { background: rgba(var(--accent-rgb),0.2); border-radius: 4px; }
@@ -255,16 +261,19 @@
   padding: 0.45rem 0.65rem;
   font-size: 0.76rem;
   font-weight: 500;
-  cursor: pointer;
+  cursor: grab;
   transition: all 0.15s;
   color: var(--text);
   line-height: 1.35;
+  user-select: none;
 }
 .kanbanItem:hover {
   background: var(--card-hover);
   box-shadow: var(--shadow);
   color: var(--accent);
 }
+.kanbanItem:active { cursor: grabbing; }
+.kanbanItemDragging { opacity: 0.4; cursor: grabbing; }
 
 .kanbanEmpty {
   text-align: center;
