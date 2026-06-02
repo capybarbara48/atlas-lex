@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
-import { useAllTasks } from '@/hooks/useTasks'
+import { useAllTasks, updateTaskStatus, updateTaskOrder } from '@/hooks/useTasks'
 import { useToast } from '@/context/ToastContext'
 import { supabase } from '@/lib/supabase'
 import PageShell from '@/components/ui/PageShell'
@@ -94,16 +94,30 @@ function RespPills({ responsaveis, value, onChange }) {
   )
 }
 
-function AgendaTaskRow({ t, todayISO, responsaveis, onClick }) {
+function AgendaTaskRow({ t, todayISO, responsaveis, onClick, onCheck, onOrderChange }) {
   const overdue = t.due_date && t.due_date.split('T')[0] < todayISO && !['concluida','cancelada'].includes(t.status)
   const done    = t.status === 'concluida'
   return (
-    <div
-      className={`${styles.agendaTaskRow} ${overdue ? styles.agendaTaskOverdue : ''} ${done ? styles.agendaTaskDone : ''}`}
-      onClick={() => onClick(t.id)}
-    >
+    <div className={`${styles.agendaTaskRow} ${overdue ? styles.agendaTaskOverdue : ''} ${done ? styles.agendaTaskDone : ''}`}>
+      <input
+        type="number"
+        min="1"
+        max="99"
+        className={styles.agendaOrderInput}
+        defaultValue={t.sort_order ?? ''}
+        placeholder="–"
+        title="Ordem (1 = primeira)"
+        onClick={e => e.stopPropagation()}
+        onBlur={e => onOrderChange(t.id, e.target.value)}
+        onKeyDown={e => { if (e.key === 'Enter') { e.target.blur() } }}
+      />
+      <button
+        className={`${styles.agendaCheckBtn} ${done ? styles.agendaCheckBtnDone : ''}`}
+        onClick={e => { e.stopPropagation(); onCheck(t.id) }}
+        title={done ? 'Desmarcar' : 'Marcar como concluída'}
+      />
       <span className={styles.agendaTaskDot} style={{ background: PRI_DOT_HEX[t.priority] ?? '#888' }} />
-      <span className={styles.agendaTaskTitle}>{t.title}</span>
+      <span className={styles.agendaTaskTitle} onClick={() => onClick(t.id)}>{t.title}</span>
       {t.assigned_to && (
         <span
           className={styles.agendaTaskResp}
@@ -135,16 +149,35 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
 
   const selectedISO = toISO(addDays(today, dayOffset))
 
+  async function handleCheck(taskId) {
+    await updateTaskStatus(taskId, 'concluida')
+    refetch()
+  }
+
+  async function handleOrderChange(taskId, value) {
+    await updateTaskOrder(taskId, value)
+    refetch()
+  }
+
   function byResp(tasks, filter) {
     if (filter === 'todos') return tasks
     return tasks.filter(t => t.assigned_to === filter)
   }
 
+  function byOrder(tasks) {
+    return [...tasks].sort((a, b) => {
+      if (a.sort_order == null && b.sort_order == null) return 0
+      if (a.sort_order == null) return 1
+      if (b.sort_order == null) return -1
+      return a.sort_order - b.sort_order
+    })
+  }
+
   const active = rawTasks.filter(t => !['concluida','cancelada'].includes(t.status))
 
-  const todayTasks    = byResp(active.filter(t => t.due_date?.split('T')[0] === selectedISO), filterDay)
-  const noDateTasks   = byResp(active.filter(t => !t.due_date), filterNDL)
-  const tomorrowTasks = byResp(active.filter(t => t.due_date?.split('T')[0] === tomorrowISO), filterTmr)
+  const todayTasks    = byOrder(byResp(active.filter(t => t.due_date?.split('T')[0] === selectedISO), filterDay))
+  const noDateTasks   = byOrder(byResp(active.filter(t => !t.due_date), filterNDL))
+  const tomorrowTasks = byOrder(byResp(active.filter(t => t.due_date?.split('T')[0] === tomorrowISO), filterTmr))
 
   const weekDays = useMemo(() =>
     Array.from({ length: 14 }, (_, i) => {
@@ -211,7 +244,7 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
           {todayTasks.length === 0
             ? <div className={styles.agendaEmpty}>Nenhuma tarefa neste dia</div>
             : todayTasks.map(t => (
-                <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} />
+                <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} />
               ))
           }
         </div>
@@ -239,7 +272,7 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
           {noDateTasks.length === 0
             ? <div className={styles.agendaEmpty}>Nenhuma tarefa sem prazo</div>
             : noDateTasks.map(t => (
-                <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} />
+                <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} />
               ))
           }
         </div>
@@ -263,7 +296,7 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
           {tomorrowTasks.length === 0
             ? <div className={styles.agendaEmpty}>Nenhuma tarefa para amanhã</div>
             : tomorrowTasks.map(t => (
-                <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} />
+                <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} />
               ))
           }
         </div>

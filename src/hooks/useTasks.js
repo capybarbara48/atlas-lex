@@ -20,9 +20,15 @@ export function useAllTasks() {
   return useSupabaseQuery(async () => {
     return supabase
       .from('tasks')
-      .select('id, title, status, priority, due_date, description, assigned_to, cases ( title )')
+      .select('id, title, status, priority, due_date, description, assigned_to, sort_order, cases ( title )')
       .order('due_date', { ascending: true, nullsFirst: false })
   }, [])
+}
+
+export async function updateTaskOrder(taskId, order) {
+  const val = order !== '' && order !== null ? parseInt(order, 10) : null
+  const { error } = await supabase.from('tasks').update({ sort_order: isNaN(val) ? null : val }).eq('id', taskId)
+  return { error }
 }
 
 export function useTaskStats() {

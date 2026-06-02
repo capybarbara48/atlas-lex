@@ -200,13 +200,67 @@
   padding: 1.5rem 1rem;
 }
 
+/* Order number input */
+.agendaOrderInput {
+  width: 24px;
+  height: 20px;
+  border: 1px solid rgba(var(--accent-rgb), 0.2);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-family: inherit;
+  text-align: center;
+  padding: 0;
+  outline: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  -moz-appearance: textfield;
+}
+.agendaOrderInput::-webkit-outer-spin-button,
+.agendaOrderInput::-webkit-inner-spin-button { -webkit-appearance: none; }
+.agendaOrderInput:focus { border-color: var(--accent); background: var(--accent-dim); }
+.agendaOrderInput::placeholder { color: var(--text-3); font-weight: 400; }
+
+/* Check button */
+.agendaCheckBtn {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(var(--accent-rgb), 0.28);
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  position: relative;
+  padding: 0;
+}
+.agendaCheckBtn:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.agendaCheckBtnDone {
+  border-color: var(--green) !important;
+  background: var(--green) !important;
+}
+.agendaCheckBtnDone::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 4px; height: 7px;
+  border: 2px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: translate(-50%, -60%) rotate(45deg);
+}
+
 /* Task rows */
 .agendaTaskRow {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.45rem 1rem;
-  cursor: pointer;
   border-left: 3px solid transparent;
   transition: background 0.1s;
 }
@@ -231,7 +285,9 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  cursor: pointer;
 }
+.agendaTaskTitle:hover { color: var(--accent); }
 
 .agendaTaskResp {
   font-size: 0.62rem;
