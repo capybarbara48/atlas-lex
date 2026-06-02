@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
+import { useKanbanSituations } from '@/hooks/useKanbanSituations'
 import Modal from '@/components/ui/Modal'
 import ClientForm from './ClientForm'
 import s from './Form.module.css'
@@ -11,6 +12,7 @@ const AREAS = ['Cível','Trabalhista','Família','Criminal','Tributário','Banc�
 
 export default function CaseForm({ initial, onSave, onClose }) {
   const { session, lawyer } = useAuth()
+  const { situations } = useKanbanSituations()
   const tribunaisList = lawyer?.preferences?.tribunais ?? []
   const [f, setF] = useState({
     title:            initial?.title            ?? '',
@@ -19,6 +21,7 @@ export default function CaseForm({ initial, onSave, onClose }) {
     court:            initial?.court            ?? '',
     area:             initial?.area             ?? '',
     status:           initial?.status           ?? 'ativo',
+    situation:        initial?.situation        ?? '',
     valor:            initial?.valor       != null ? String(initial.valor)            : '',
     opened_at:        initial?.opened_at        ?? '',
     description:      initial?.description      ?? '',
@@ -54,6 +57,7 @@ export default function CaseForm({ initial, onSave, onClose }) {
       court:            f.court.trim() || null,
       area:             f.area        || null,
       status:           f.status,
+      situation:        f.situation   || null,
       valor:            parseFloat(f.valor) || 0,
       opened_at:        f.opened_at   || null,
       description:      f.description.trim() || null,
@@ -209,6 +213,16 @@ export default function CaseForm({ initial, onSave, onClose }) {
             <option value="suspenso">Suspenso</option>
             <option value="encerrado">Encerrado</option>
             <option value="arquivado">Arquivado</option>
+          </select>
+        </div>
+
+        <div className={s.field}>
+          <label className={s.label}>Situação no Kanban</label>
+          <select className={s.select} value={f.situation} onChange={e => set('situation', e.target.value)}>
+            <option value="">— Não categorizado —</option>
+            {situations.map(sit => (
+              <option key={sit.id} value={sit.id}>{sit.value}</option>
+            ))}
           </select>
         </div>
 

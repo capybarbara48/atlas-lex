@@ -160,6 +160,20 @@
 }
 .clientLink:hover { opacity: 0.75; text-decoration: underline; }
 
+.situationSelect {
+  background: var(--bg);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.82rem;
+  font-family: inherit;
+  color: var(--text);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.situationSelect:focus { border-color: var(--accent); }
+
 /* ── Section ── */
 .section {
   background: var(--card);

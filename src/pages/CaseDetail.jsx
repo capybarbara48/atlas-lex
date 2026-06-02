@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import { useKanbanSituations } from '@/hooks/useKanbanSituations'
+import { updateCaseSituation } from '@/hooks/useCases'
 import Modal from '@/components/ui/Modal'
 import CaseForm from '@/components/forms/CaseForm'
 import TaskForm from '@/components/forms/TaskForm'
@@ -52,6 +54,14 @@ export default function CaseDetail() {
   const [editing,   setEditing]   = useState(false)
   const [newTask,   setNewTask]   = useState(false)
   const [newEntry,  setNewEntry]  = useState(false)
+
+  const { situations } = useKanbanSituations()
+
+  async function handleSituationChange(e) {
+    const newSit = e.target.value || null
+    await updateCaseSituation(id, newSit)
+    setCaso(prev => ({ ...prev, situation: newSit }))
+  }
 
   async function load() {
     setLoading(true)
@@ -177,6 +187,21 @@ export default function CaseDetail() {
         <InfoRow label="Tribunal"   value={caso.court} />
         <InfoRow label="Abertura"   value={fmt(caso.opened_at)} />
         <InfoRow label="Valor da causa" value={caso.valor > 0 ? brl(caso.valor) : null} />
+        <InfoRow label="Situação" value={
+          situations.length > 0 ? (
+            <select
+              className={styles.situationSelect}
+              value={caso.situation ?? ''}
+              onChange={handleSituationChange}
+            >
+              <option value="">— Não categorizado —</option>
+              {situations.map(sit => {
+                const col = sit.color ?? '#888'
+                return <option key={sit.id} value={sit.id}>{sit.value}</option>
+              })}
+            </select>
+          ) : null
+        } />
         <InfoRow label="Encerramento"   value={fmt(caso.closed_at)} />
         {caso.description && (
           <div className={`${styles.infoRow} ${styles.infoRowFull}`}>
