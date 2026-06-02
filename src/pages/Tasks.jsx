@@ -280,7 +280,7 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
       </div>
 
       {/* ── Card 3: Amanhã ── */}
-      <div className={styles.agendaCard}>
+      <div className={`${styles.agendaCard} ${styles.agendaCardFull}`}>
         <div className={styles.agendaCardHeader}>
           <span className={styles.agendaCardTitle}>Amanhã</span>
           <span className={styles.agendaCardSub}>
@@ -350,20 +350,9 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
                 <span className={`${styles.weekDayNum} ${isToday ? styles.weekDayNumToday : ''}`}>{d.getDate()}</span>
               </div>
               <div className={styles.weekCellTasks}>
-                {tasks.slice(0, 2).map(t => (
-                  <div
-                    key={t.id}
-                    className={styles.weekTaskChip}
-                    style={{ borderLeftColor: PRI_DOT_HEX[t.priority] ?? '#888' }}
-                    onClick={() => onEdit(t.id)}
-                    title={t.title}
-                  >
-                    {t.title}
-                  </div>
+                {tasks.map(t => (
+                  <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} />
                 ))}
-                {tasks.length > 2 && (
-                  <div className={styles.weekTaskMore}>+{tasks.length - 2}</div>
-                )}
               </div>
             </div>
           ))}

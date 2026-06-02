@@ -43,7 +43,7 @@
 /* ── Agenda view ────────────────────────────────────────────────────── */
 .agendaGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 3fr 2fr;
   gap: 1rem;
 }
 
@@ -189,7 +189,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  max-height: 300px;
+  max-height: 490px;
   overflow-y: auto;
 }
 
@@ -216,6 +216,7 @@
   outline: none;
   cursor: pointer;
   flex-shrink: 0;
+  margin-top: 1px;
   -moz-appearance: textfield;
 }
 .agendaOrderInput::-webkit-outer-spin-button,
@@ -235,6 +236,7 @@
   transition: all 0.15s;
   position: relative;
   padding: 0;
+  margin-top: 1px;
 }
 .agendaCheckBtn:hover {
   border-color: var(--accent);
@@ -258,7 +260,7 @@
 /* Task rows */
 .agendaTaskRow {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
   padding: 0.45rem 1rem;
   border-left: 3px solid transparent;
@@ -275,6 +277,7 @@
   height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
+  margin-top: 5px;
 }
 
 .agendaTaskTitle {
@@ -282,9 +285,9 @@
   font-weight: 500;
   color: var(--text);
   flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.4;
   cursor: pointer;
 }
 .agendaTaskTitle:hover { color: var(--accent); }
@@ -349,13 +352,12 @@
 
 .weekCell {
   background: var(--card);
-  padding: 0.4rem 0.35rem 0.35rem;
-  min-height: 72px;
+  min-height: 80px;
+  max-height: 230px;
   display: flex;
   flex-direction: column;
-  gap: 0.18rem;
+  overflow: hidden;
   transition: background 0.1s;
-  cursor: default;
 }
 .weekCell:hover { background: var(--card-hover); }
 
@@ -366,7 +368,8 @@
   flex-direction: column;
   align-items: center;
   gap: 0.06rem;
-  margin-bottom: 0.1rem;
+  padding: 0.4rem 0.35rem 0.2rem;
+  flex-shrink: 0;
 }
 
 .weekDayWkd {
@@ -395,10 +398,17 @@
 }
 
 .weekCellTasks {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
-  overflow: hidden;
+  overflow-y: auto;
+}
+
+.weekCellTasks .agendaTaskRow {
+  padding-left: 0.45rem;
+  padding-right: 0.45rem;
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
 }
 
 .weekTaskChip {
