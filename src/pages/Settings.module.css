@@ -533,3 +533,119 @@
   background: rgba(251,191,36,0.12);
   border-color: rgba(251,191,36,0.6);
 }
+
+/* ── Nav mode selector ───────────────────────────────────────────── */
+.navModeGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.navModeCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1rem 0.75rem 0.875rem;
+  background: var(--bg);
+  border: 1.5px solid rgba(var(--accent-rgb), 0.12);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: inherit;
+  text-align: center;
+}
+.navModeCard:hover {
+  border-color: rgba(var(--accent-rgb), 0.3);
+  background: var(--card-hover);
+}
+.navModeCardActive {
+  border-color: var(--accent) !important;
+  background: var(--accent-dim) !important;
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
+}
+
+.navModeLabel {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.navModeSub {
+  font-size: 0.67rem;
+  color: var(--text-3);
+  line-height: 1.3;
+}
+
+/* Mini layout previews */
+.navPreview {
+  width: 100%;
+  height: 60px;
+  background: var(--bg-2);
+  border-radius: 8px;
+  display: flex;
+  overflow: hidden;
+  border: 1px solid rgba(var(--accent-rgb), 0.1);
+}
+
+.navPreviewSidebar {
+  width: 16px;
+  background: var(--accent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-shrink: 0;
+  border-radius: 4px 0 0 4px;
+}
+
+.navPreviewTop {
+  height: 12px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 0 6px;
+}
+
+.navPreviewBottom {
+  height: 12px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 0 6px;
+}
+
+.navPreviewContent {
+  flex: 1;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+}
+
+.navPreviewBar {
+  height: 5px;
+  background: rgba(var(--accent-rgb), 0.15);
+  border-radius: 3px;
+  width: 100%;
+}
+
+.navPreviewDot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.7);
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .navModeGrid { grid-template-columns: 1fr; }
+}

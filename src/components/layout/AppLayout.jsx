@@ -1,97 +1,124 @@
 import { Outlet, NavLink, useLocation, Link } from 'react-router-dom'
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import FeedbackButton from '@/components/ui/FeedbackButton'
 import SearchPalette from '@/components/ui/SearchPalette'
 import { useAuth } from '@/context/AuthContext'
+import { loadPreferences } from '@/hooks/usePreferences'
 import { supabase } from '@/lib/supabase'
 import styles from './AppLayout.module.css'
 
+/* ── Line icons (stroke, minimalist) ───────────────────────────────── */
+const ICONS = {
+  painel: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2.5" y="2.5" width="6" height="6" rx="1.5"/>
+      <rect x="11.5" y="2.5" width="6" height="6" rx="1.5"/>
+      <rect x="2.5" y="11.5" width="6" height="6" rx="1.5"/>
+      <rect x="11.5" y="11.5" width="6" height="6" rx="1.5"/>
+    </svg>
+  ),
+  casos: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 4a1 1 0 0 1 1-1h6l4 4v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4Z"/>
+      <path d="M11 3v4h4"/>
+      <path d="M7 9h6M7 12h6M7 15h4"/>
+    </svg>
+  ),
+  clientes: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="7.5" cy="6" r="2.5"/>
+      <path d="M2 17c0-3.038 2.462-5.5 5.5-5.5S13 13.962 13 17"/>
+      <path d="M14.5 5a2 2 0 1 1 0 4"/>
+      <path d="M18 17c0-2.21-1.79-4-4-4"/>
+    </svg>
+  ),
+  propostas: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 2h8l4 4v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/>
+      <path d="M12 2v5h5"/>
+      <path d="M7 10h6M7 13.5h4"/>
+    </svg>
+  ),
+  tarefas: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3.5 5.5 5 7l2.5-3"/>
+      <path d="M10 6h7"/>
+      <path d="M3.5 11.5 5 13l2.5-3"/>
+      <path d="M10 12h7"/>
+      <circle cx="5" cy="17" r="1.5" fill="currentColor" stroke="none"/>
+      <path d="M10 17h5"/>
+    </svg>
+  ),
+  notas: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 3.5a2.121 2.121 0 0 1 3 3L7 16.5H4v-3L14 3.5Z"/>
+      <path d="M11.5 6l3 3"/>
+    </svg>
+  ),
+  financeiro: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="5" width="16" height="12" rx="2"/>
+      <path d="M2 9h16"/>
+      <circle cx="14.5" cy="14" r="1.5" fill="currentColor" stroke="none"/>
+    </svg>
+  ),
+  equipe: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="10" cy="6" r="2.5"/>
+      <path d="M4 17c0-3.314 2.686-6 6-6s6 2.686 6 6"/>
+      <path d="M15.5 4.5a2 2 0 1 1 0 4"/>
+      <path d="M18.5 15.5c0-2.071-1.49-3.794-3.5-4.35"/>
+    </svg>
+  ),
+  vitrine: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="4" width="16" height="10" rx="1.5"/>
+      <path d="M7 18h6M10 14v4"/>
+    </svg>
+  ),
+  configs: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <path d="M3 5h14M3 10h14M3 15h14"/>
+      <circle cx="7" cy="5" r="2" fill="currentColor" stroke="none"/>
+      <circle cx="13" cy="10" r="2" fill="currentColor" stroke="none"/>
+      <circle cx="8" cy="15" r="2" fill="currentColor" stroke="none"/>
+    </svg>
+  ),
+  search: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <circle cx="8.5" cy="8.5" r="5.5"/>
+      <path d="m13 13 4 4"/>
+    </svg>
+  ),
+  signout: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M7 3H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h3"/>
+      <path d="M13 14l4-4-4-4M17 10H8"/>
+    </svg>
+  ),
+  admin: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="10" cy="10" r="3"/>
+      <path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.1 4.1l1.4 1.4M14.5 14.5l1.4 1.4M4.1 15.9l1.4-1.4M14.5 5.5l1.4-1.4"/>
+    </svg>
+  ),
+}
+
 /* ── Nav config ────────────────────────────────────────────────────── */
 const NAV_ITEMS = [
-  {
-    to: '/painel', label: 'Painel', end: true,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="currentColor">
-        <path d="M2 4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4Zm10 0a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V4ZM2 14a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4Zm10 0a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-4Z"/>
-      </svg>
-    ),
-  },
-  {
-    to: '/painel/casos', label: 'Casos', end: false,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M6 3a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3V6a3 3 0 0 0-3-3H6Zm1.5 1.5a.75.75 0 0 0 0 1.5h5a.75.75 0 0 0 0-1.5h-5ZM7 9a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 0 1.5h-4.5A.75.75 0 0 1 7 9Zm.75 2.25a.75.75 0 0 0 0 1.5H10a.75.75 0 0 0 0-1.5H7.75Z" clipRule="evenodd"/>
-      </svg>
-    ),
-  },
-  {
-    to: '/painel/clientes', label: 'Clientes', end: false,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="currentColor">
-        <path d="M7 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM14.5 9a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM1.615 16.428a1.224 1.224 0 0 1-.569-1.175 6.002 6.002 0 0 1 11.908 0c.058.467-.172.92-.57 1.174A9.953 9.953 0 0 1 7 17a9.953 9.953 0 0 1-5.385-1.572ZM14.5 16h-.106c.07-.297.088-.611.048-.933a7.47 7.47 0 0 0-1.588-3.755 4.502 4.502 0 0 1 5.874 2.575c.105.346-.151.658-.537.658h-3.69Z"/>
-      </svg>
-    ),
-  },
-  {
-    to: '/painel/propostas', label: 'Propostas', end: false,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M4 4a2 2 0 0 1 2-2h4.586A2 2 0 0 1 12 2.586L15.414 6A2 2 0 0 1 16 7.414V16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4Zm2 6a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H7a1 1 0 0 1-1-1Zm1 3a1 1 0 1 0 0 2h4a1 1 0 1 0 0-2H7Z" clipRule="evenodd"/>
-      </svg>
-    ),
-  },
-  {
-    to: '/painel/tarefas', label: 'Tarefas', end: false,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd"/>
-      </svg>
-    ),
-  },
-  {
-    to: '/painel/notas', label: 'Notas', end: false,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="currentColor">
-        <path d="M13.586 3.586a2 2 0 1 1 2.828 2.828l-.793.793-2.828-2.828.793-.793ZM11.379 5.793 3 14.172V17h2.828l8.38-8.379-2.83-2.828Z"/>
-      </svg>
-    ),
-  },
-  {
-    to: '/painel/financeiro', label: 'Financeiro', end: false,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M1 4a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4Zm12 4a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM4 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Zm13-1a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM1.75 14.5a.75.75 0 0 0 0 1.5c4.417 0 8.693.603 12.749 1.73 1.111.309 2.251-.512 2.251-1.696v-.784a.75.75 0 0 0-1.5 0v.784a.272.272 0 0 1-.35.26A49.43 49.43 0 0 0 1.75 14.5Z" clipRule="evenodd"/>
-      </svg>
-    ),
-  },
-  {
-    to: '/painel/estagiarios', label: 'Equipe', end: false,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="currentColor">
-        <path d="M10 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM6 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM1.49 15.326a.78.78 0 0 1-.358-.442 3 3 0 0 1 4.308-3.516 6.484 6.484 0 0 0-1.905 3.959c-.023.222-.014.442.025.654a4.97 4.97 0 0 1-2.07-.655ZM16.44 15.98a4.97 4.97 0 0 0 2.07-.654.78.78 0 0 0 .357-.442 3 3 0 0 0-4.308-3.517 6.484 6.484 0 0 1 1.907 3.96 2.32 2.32 0 0 1-.026.654ZM18 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0ZM5.304 16.19a.844.844 0 0 1-.277-.71 5 5 0 0 1 9.947 0 .843.843 0 0 1-.277.71A6.975 6.975 0 0 1 10 18a6.974 6.974 0 0 1-4.696-1.81Z"/>
-      </svg>
-    ),
-  },
-  {
-    to: '/painel/vitrine', label: 'Vitrine', end: false,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M1 5.25A2.25 2.25 0 0 1 3.25 3h13.5A2.25 2.25 0 0 1 19 5.25v9.5A2.25 2.25 0 0 1 16.75 17H3.25A2.25 2.25 0 0 1 1 14.75v-9.5Zm1.5 5.81v3.69c0 .414.336.75.75.75h13.5a.75.75 0 0 0 .75-.75v-2.69l-2.22-2.219a.75.75 0 0 0-1.06 0l-1.91 1.909-.47-.47a.75.75 0 0 0-1.06 0L6.53 11.06l-4.03-4.03v4.03Zm13-7.56H3.25a.75.75 0 0 0-.75.75v1.69l3.72-3.72a.75.75 0 0 1 1.06 0l2.69 2.69 1.91-1.909a.75.75 0 0 1 1.06 0L15.5 5.81V3.5h1.25a.75.75 0 0 0 .75-.75V5.25a.75.75 0 0 0-.75-.75ZM6.5 7.25a1.25 1.25 0 1 1-2.5 0 1.25 1.25 0 0 1 2.5 0Z" clipRule="evenodd"/>
-      </svg>
-    ),
-  },
-  {
-    to: '/painel/configuracoes', label: 'Configurações', end: false,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M7.84 1.804A1 1 0 0 1 8.82 1h2.36a1 1 0 0 1 .98.804l.295 1.473c.497.144.971.342 1.416.587l1.25-.834a1 1 0 0 1 1.262.125l1.669 1.667a1 1 0 0 1 .125 1.263l-.834 1.25c.245.444.443.919.587 1.416l1.472.294a1 1 0 0 1 .804.98v2.361a1 1 0 0 1-.804.98l-1.472.295a6.95 6.95 0 0 1-.587 1.416l.834 1.25a1 1 0 0 1-.125 1.262l-1.667 1.669a1 1 0 0 1-1.263.125l-1.25-.834a6.953 6.953 0 0 1-1.416.587l-.294 1.472a1 1 0 0 1-.98.804H8.82a1 1 0 0 1-.98-.804l-.295-1.472a6.957 6.957 0 0 1-1.416-.587l-1.25.834a1 1 0 0 1-1.262-.125l-1.669-1.667a1 1 0 0 1-.125-1.263l.834-1.25a6.957 6.957 0 0 1-.587-1.416l-1.472-.294A1 1 0 0 1 1 11.18V8.82a1 1 0 0 1 .804-.98l1.472-.295c.144-.497.342-.971.587-1.416l-.834-1.25a1 1 0 0 1 .125-1.262L4.82 1.95a1 1 0 0 1 1.263-.125l1.25.834a6.957 6.957 0 0 1 1.416-.587L8.82 1Zm-1.09 8.196a2.75 2.75 0 1 1 5.5 0 2.75 2.75 0 0 1-5.5 0Z" clipRule="evenodd"/>
-      </svg>
-    ),
-  },
+  { to: '/painel',               label: 'Painel',        end: true,  icon: ICONS.painel    },
+  { to: '/painel/casos',         label: 'Casos',         end: false, icon: ICONS.casos     },
+  { to: '/painel/clientes',      label: 'Clientes',      end: false, icon: ICONS.clientes  },
+  { to: '/painel/propostas',     label: 'Propostas',     end: false, icon: ICONS.propostas },
+  { to: '/painel/tarefas',       label: 'Tarefas',       end: false, icon: ICONS.tarefas   },
+  { to: '/painel/notas',         label: 'Notas',         end: false, icon: ICONS.notas     },
+  { to: '/painel/financeiro',    label: 'Financeiro',    end: false, icon: ICONS.financeiro},
+  { to: '/painel/estagiarios',   label: 'Equipe',        end: false, icon: ICONS.equipe    },
+  { to: '/painel/vitrine',       label: 'Vitrine',       end: false, icon: ICONS.vitrine   },
+  { to: '/painel/configuracoes', label: 'Configurações', end: false, icon: ICONS.configs   },
 ]
 
-/* ── Page title map ─────────────────────────────────────────────────── */
 const PAGE_TITLES = {
   '/painel':               'Painel',
   '/painel/casos':         'Casos',
@@ -112,10 +139,8 @@ function Clock() {
     const id = setInterval(() => setNow(new Date()), 1000)
     return () => clearInterval(id)
   }, [])
-
   const time = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
   const date = now.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
-
   return (
     <div className={styles.clock}>
       <span className={styles.clockTime}>{time}</span>
@@ -124,19 +149,10 @@ function Clock() {
   )
 }
 
-/* ── Page loader (Suspense fallback) ────────────────────────────────── */
 function PageLoader() {
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      height: '100%', minHeight: '240px',
-    }}>
-      <div style={{
-        width: 32, height: 32, borderRadius: '50%',
-        border: '3px solid rgba(var(--accent-rgb),0.12)',
-        borderTopColor: 'var(--accent)',
-        animation: 'spin 0.75s linear infinite',
-      }} />
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100%', minHeight:'240px' }}>
+      <div style={{ width:32, height:32, borderRadius:'50%', border:'3px solid rgba(var(--accent-rgb),0.12)', borderTopColor:'var(--accent)', animation:'spin 0.75s linear infinite' }} />
     </div>
   )
 }
@@ -145,9 +161,23 @@ function PageLoader() {
 export default function AppLayout() {
   const { lawyer, session, isAdmin, isBeta } = useAuth()
   const location = useLocation()
-  const [sidebarOpen, setSidebarOpen]   = useState(false)
+  const [sidebarOpen,  setSidebarOpen]  = useState(false)
   const [overdueCount, setOverdueCount] = useState(0)
-  const [searchOpen, setSearchOpen]     = useState(false)
+  const [searchOpen,   setSearchOpen]   = useState(false)
+  const [dockVisible,  setDockVisible]  = useState(false)
+  const dockTimer = useRef(null)
+
+  const [navMode, setNavMode] = useState(() =>
+    loadPreferences(lawyer?.id).nav_mode ?? 'sidebar'
+  )
+
+  useEffect(() => {
+    function onPrefsChange() {
+      setNavMode(loadPreferences(lawyer?.id).nav_mode ?? 'sidebar')
+    }
+    window.addEventListener('atlasPrefsChanged', onPrefsChange)
+    return () => window.removeEventListener('atlasPrefsChanged', onPrefsChange)
+  }, [lawyer?.id])
 
   useEffect(() => {
     function onKey(e) {
@@ -175,7 +205,6 @@ export default function AppLayout() {
   const initials = lawyer?.full_name
     ? lawyer.full_name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
     : 'AL'
-
   const firmName  = lawyer?.firm_name ?? 'Atlas Adv'
   const firmShort = firmName.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
   const pageTitle = PAGE_TITLES[location.pathname]
@@ -183,142 +212,256 @@ export default function AppLayout() {
       : location.pathname.startsWith('/painel/casos/') ? 'Processo'
       : 'Atlas Adv')
 
+  function showDock() {
+    clearTimeout(dockTimer.current)
+    setDockVisible(true)
+  }
+  function hideDock() {
+    dockTimer.current = setTimeout(() => setDockVisible(false), 350)
+  }
 
-  return (
-    <div className={styles.shell}>
-
-      {/* ── Backdrop (mobile overlay) ── */}
-      {sidebarOpen && (
-        <div className={styles.backdrop} onClick={() => setSidebarOpen(false)} />
-      )}
-
-      {/* ── Sidebar ── */}
-      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
-
-        {/* Brand */}
+  /* ── Shared sidebar content ──────────────────────────────────────── */
+  function SidebarContent({ compact }) {
+    return (
+      <>
         <div className={styles.sidebarBrand}>
           {lawyer?.logo_url
             ? <img src={lawyer.logo_url} alt="logo" className={styles.logoImg} />
             : <div className={styles.logoMark}>{firmShort}</div>
           }
-          <div className={styles.firmInfo}>
-            <div className={styles.firmName}>{firmName}</div>
-            {lawyer?.oab_number && (
-              <div className={styles.firmSub}>OAB {lawyer.oab_number}</div>
-            )}
-          </div>
+          {!compact && (
+            <div className={styles.firmInfo}>
+              <div className={styles.firmName}>{firmName}</div>
+              {lawyer?.oab_number && <div className={styles.firmSub}>OAB {lawyer.oab_number}</div>}
+            </div>
+          )}
         </div>
 
-        {/* Nav */}
         <nav className={styles.sidebarNav}>
-          <span className={styles.navSection}>Menu</span>
+          {!compact && <span className={styles.navSection}>Menu</span>}
           {NAV_ITEMS.map(({ to, label, icon, end }) => (
             <NavLink
               key={to}
               to={to}
               end={end}
-              className={({ isActive }) =>
-                `${styles.navItem} ${isActive ? styles.active : ''}`
-              }
+              className={({ isActive }) => `${styles.navItem} ${isActive ? styles.active : ''}`}
             >
               <span className={styles.navIcon}>{icon}</span>
-              <span className={styles.navLabel}>{label}</span>
-              {label === 'Tarefas' && overdueCount > 0 && (
+              {!compact && <span className={styles.navLabel}>{label}</span>}
+              {!compact && label === 'Tarefas' && overdueCount > 0 && (
                 <span className={styles.navBadge}>{overdueCount > 99 ? '99+' : overdueCount}</span>
+              )}
+              {compact && label === 'Tarefas' && overdueCount > 0 && (
+                <span className={styles.navBadgeDot} />
               )}
             </NavLink>
           ))}
         </nav>
 
-        {/* User footer */}
-        <div className={styles.sidebarFooter}>
+        <div className={`${styles.sidebarFooter} ${compact ? styles.sidebarFooterCompact : ''}`}>
           {isAdmin && (
-            <Link to="/admin" className={styles.adminLink}>
-              <svg viewBox="0 0 20 20" fill="currentColor" width="13" height="13">
-                <path fillRule="evenodd" d="M8.34 1.804A1 1 0 0 1 9.32 1h1.36a1 1 0 0 1 .98.804l.295 1.473c.497.144.971.342 1.416.587l1.25-.834a1 1 0 0 1 1.262.125l.962.962.707.707a1 1 0 0 1 .125 1.263l-.834 1.25c.245.444.443.919.587 1.416l1.472.294a1 1 0 0 1 .804.98v1.361a1 1 0 0 1-.804.98l-1.472.295a6.95 6.95 0 0 1-.587 1.416l.834 1.25a1 1 0 0 1-.125 1.262l-.707.707-.962.962a1 1 0 0 1-1.263.125l-1.25-.834a6.953 6.953 0 0 1-1.416.587l-.294 1.472a1 1 0 0 1-.98.804H9.32a1 1 0 0 1-.98-.804l-.295-1.472a6.957 6.957 0 0 1-1.416-.587l-1.25.834a1 1 0 0 1-1.262-.125l-.962-.962-.707-.707a1 1 0 0 1-.125-1.263l.834-1.25a6.957 6.957 0 0 1-.587-1.416l-1.472-.294A1 1 0 0 1 1 10.68V9.32a1 1 0 0 1 .804-.98l1.472-.295c.144-.497.342-.971.587-1.416l-.834-1.25a1 1 0 0 1 .125-1.262l.707-.707.962-.962a1 1 0 0 1 1.263-.125l1.25.834a6.957 6.957 0 0 1 1.416-.587L8.34 1.804ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clipRule="evenodd"/>
-              </svg>
-              <span className={styles.adminLinkLabel}>Painel Admin</span>
+            <Link to="/admin" className={`${styles.adminLink} ${compact ? styles.adminLinkCompact : ''}`}>
+              <span className={styles.navIcon}>{ICONS.admin}</span>
+              {!compact && <span className={styles.adminLinkLabel}>Painel Admin</span>}
             </Link>
           )}
-          <div className={styles.userRow}>
+          <div className={`${styles.userRow} ${compact ? styles.userRowCompact : ''}`}>
             <div className={styles.userAvatar}>{initials}</div>
-            <div className={styles.userInfo}>
-              <span className={styles.userName}>
-                {lawyer?.full_name?.split(' ')[0] ?? session?.user?.email?.split('@')[0] ?? '—'}
-                {isBeta && <span className={styles.betaPill}>Beta</span>}
-              </span>
-              <span className={styles.userEmail}>{session?.user?.email}</span>
-            </div>
+            {!compact && (
+              <div className={styles.userInfo}>
+                <span className={styles.userName}>
+                  {lawyer?.full_name?.split(' ')[0] ?? session?.user?.email?.split('@')[0] ?? '—'}
+                  {isBeta && <span className={styles.betaPill}>Beta</span>}
+                </span>
+                <span className={styles.userEmail}>{session?.user?.email}</span>
+              </div>
+            )}
           </div>
           <button
-            className={styles.signOut}
+            className={`${styles.signOut} ${compact ? styles.signOutCompact : ''}`}
             onClick={() => supabase.auth.signOut()}
           >
-            <svg viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M3 4.25A2.25 2.25 0 0 1 5.25 2h5.5A2.25 2.25 0 0 1 13 4.25v2a.75.75 0 0 1-1.5 0v-2a.75.75 0 0 0-.75-.75h-5.5a.75.75 0 0 0-.75.75v11.5c0 .414.336.75.75.75h5.5a.75.75 0 0 0 .75-.75v-2a.75.75 0 0 1 1.5 0v2A2.25 2.25 0 0 1 10.75 18h-5.5A2.25 2.25 0 0 1 3 15.75V4.25Zm9.47 4.22a.75.75 0 0 1 1.06 0l2.25 2.25a.75.75 0 0 1 0 1.06l-2.25 2.25a.75.75 0 1 1-1.06-1.06l.97-.97H8a.75.75 0 0 1 0-1.5h5.44l-.97-.97a.75.75 0 0 1 0-1.06Z" clipRule="evenodd"/>
-            </svg>
-            <span className={styles.signOutLabel}>Sair</span>
+            <span className={styles.navIcon}>{ICONS.signout}</span>
+            {!compact && <span className={styles.signOutLabel}>Sair</span>}
           </button>
         </div>
-      </aside>
+      </>
+    )
+  }
 
-      {/* ── Content area ── */}
-      <div className={styles.contentArea}>
-
-        {/* Topbar */}
-        <header className={styles.topbar}>
-          <div className={styles.topbarLeft}>
+  /* ── Shared topbar right ─────────────────────────────────────────── */
+  function TopbarRight({ showUser }) {
+    return (
+      <div className={styles.topbarRight}>
+        <button className={styles.searchTrigger} onClick={() => setSearchOpen(true)} title="Busca global (⌘K)">
+          <span className={styles.navIcon} style={{ width:15, height:15 }}>{ICONS.search}</span>
+          <span className={styles.searchTriggerLabel}>Buscar</span>
+          <kbd className={styles.searchKbd}>⌘K</kbd>
+        </button>
+        <div className={styles.livePill}>
+          <span className={styles.liveDot} />
+          <span className={styles.liveLabel}>Online</span>
+        </div>
+        <Clock />
+        {showUser && (
+          <div className={styles.topbarUser}>
+            <div className={styles.userAvatar} style={{ width:30, height:30, fontSize:'0.68rem' }}>{initials}</div>
             <button
-              className={styles.hamburger}
-              onClick={() => setSidebarOpen(v => !v)}
-              aria-label={sidebarOpen ? 'Fechar menu' : 'Abrir menu'}
-            >
-              {sidebarOpen
-                ? <svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"/></svg>
-                : <svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20"><path fillRule="evenodd" d="M2 4.75A.75.75 0 0 1 2.75 4h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4.75ZM2 10a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 10Zm0 5.25a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Z" clipRule="evenodd"/></svg>
-              }
-            </button>
-            <span className={styles.pageTitle}>{pageTitle}</span>
+              className={styles.topbarSignOut}
+              onClick={() => supabase.auth.signOut()}
+              title="Sair"
+            >{ICONS.signout}</button>
           </div>
-          <div className={styles.topbarRight}>
-            <button className={styles.searchTrigger} onClick={() => setSearchOpen(true)} title="Busca global (⌘K)">
-              <svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15">
-                <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clipRule="evenodd"/>
-              </svg>
-              <span className={styles.searchTriggerLabel}>Buscar</span>
-              <kbd className={styles.searchKbd}>⌘K</kbd>
-            </button>
-            <div className={styles.livePill}>
-              <span className={styles.liveDot} />
-              <span className={styles.liveLabel}>Online</span>
+        )}
+      </div>
+    )
+  }
+
+  /* ── SIDEBAR MODE ────────────────────────────────────────────────── */
+  if (navMode === 'sidebar') {
+    return (
+      <div className={`${styles.shell} ${styles.modeSidebar}`}>
+        {sidebarOpen && <div className={styles.backdrop} onClick={() => setSidebarOpen(false)} />}
+
+        <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
+          <SidebarContent compact={false} />
+        </aside>
+
+        <div className={styles.contentArea}>
+          <header className={styles.topbar}>
+            <div className={styles.topbarLeft}>
+              <button
+                className={styles.hamburger}
+                onClick={() => setSidebarOpen(v => !v)}
+                aria-label="Abrir menu"
+              >
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" width="20" height="20">
+                  <path d="M3 5h14M3 10h14M3 15h14"/>
+                </svg>
+              </button>
+              <span className={styles.pageTitle}>{pageTitle}</span>
             </div>
-            <Clock />
+            <TopbarRight showUser={false} />
+          </header>
+          <main className={styles.main}>
+            <ErrorBoundary key={location.pathname}>
+              <Suspense fallback={<PageLoader />}><Outlet /></Suspense>
+            </ErrorBoundary>
+          </main>
+          <footer className={styles.footer}>
+            <span>{firmName} © {new Date().getFullYear()}</span>
+            <span>Atlas Adv v1.0</span>
+          </footer>
+        </div>
+
+        <FeedbackButton />
+        {searchOpen && <SearchPalette onClose={() => setSearchOpen(false)} />}
+      </div>
+    )
+  }
+
+  /* ── TOP MODE ────────────────────────────────────────────────────── */
+  if (navMode === 'top') {
+    return (
+      <div className={`${styles.shell} ${styles.modeTop}`}>
+        <header className={styles.topbarFull}>
+          <div className={styles.topbarFullBrand}>
+            {lawyer?.logo_url
+              ? <img src={lawyer.logo_url} alt="logo" className={styles.topLogoImg} />
+              : <div className={styles.topLogoMark}>{firmShort}</div>
+            }
           </div>
+          <nav className={styles.topNav}>
+            {NAV_ITEMS.map(({ to, label, icon, end }) => (
+              <NavLink
+                key={to}
+                to={to}
+                end={end}
+                className={({ isActive }) => `${styles.topNavItem} ${isActive ? styles.topNavItemActive : ''}`}
+              >
+                <span className={styles.topNavIcon}>{icon}</span>
+                <span className={styles.topNavLabel}>{label}</span>
+                {label === 'Tarefas' && overdueCount > 0 && (
+                  <span className={styles.navBadge}>{overdueCount > 99 ? '99+' : overdueCount}</span>
+                )}
+              </NavLink>
+            ))}
+          </nav>
+          <TopbarRight showUser={true} />
         </header>
 
-        {/* Page content */}
-        <main className={styles.main}>
+        <main className={`${styles.main} ${styles.mainTop}`}>
           <ErrorBoundary key={location.pathname}>
-            <Suspense fallback={<PageLoader />}>
-              <Outlet />
-            </Suspense>
+            <Suspense fallback={<PageLoader />}><Outlet /></Suspense>
           </ErrorBoundary>
         </main>
-
-        {/* Footer */}
-        <footer className={styles.footer}>
+        <footer className={`${styles.footer} ${styles.footerTop}`}>
           <span>{firmName} © {new Date().getFullYear()}</span>
           <span>Atlas Adv v1.0</span>
         </footer>
 
+        <FeedbackButton />
+        {searchOpen && <SearchPalette onClose={() => setSearchOpen(false)} />}
+      </div>
+    )
+  }
+
+  /* ── BOTTOM DOCK MODE ────────────────────────────────────────────── */
+  return (
+    <div className={`${styles.shell} ${styles.modeBottom}`}>
+      <header className={styles.topbarMinimal}>
+        <div className={styles.topbarLeft}>
+          {lawyer?.logo_url
+            ? <img src={lawyer.logo_url} alt="logo" className={styles.topLogoImg} />
+            : <div className={styles.topLogoMark}>{firmShort}</div>
+          }
+          <span className={styles.pageTitle}>{pageTitle}</span>
+        </div>
+        <TopbarRight showUser={true} />
+      </header>
+
+      <main className={`${styles.main} ${styles.mainBottom}`}>
+        <ErrorBoundary key={location.pathname}>
+          <Suspense fallback={<PageLoader />}><Outlet /></Suspense>
+        </ErrorBoundary>
+      </main>
+      <footer className={`${styles.footer} ${styles.footerBottom}`}>
+        <span>{firmName} © {new Date().getFullYear()}</span>
+        <span>Atlas Adv v1.0</span>
+      </footer>
+
+      {/* Bottom dock */}
+      <div
+        className={`${styles.dockWrap} ${dockVisible ? styles.dockWrapVisible : ''}`}
+        onMouseEnter={showDock}
+        onMouseLeave={hideDock}
+      >
+        <div className={styles.dockHandle} />
+        <nav className={`${styles.dock} ${dockVisible ? styles.dockVisible : ''}`}>
+          {NAV_ITEMS.map(({ to, label, icon, end }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={({ isActive }) => `${styles.dockItem} ${isActive ? styles.dockItemActive : ''}`}
+            >
+              <span className={styles.dockTooltip}>{label}</span>
+              <span className={styles.dockIcon}>{icon}</span>
+              {label === 'Tarefas' && overdueCount > 0 && (
+                <span className={styles.navBadgeDot} />
+              )}
+            </NavLink>
+          ))}
+          <div className={styles.dockSep} />
+          <button className={styles.dockItem} onClick={() => supabase.auth.signOut()} title="Sair">
+            <span className={styles.dockTooltip}>Sair</span>
+            <span className={styles.dockIcon}>{ICONS.signout}</span>
+          </button>
+        </nav>
       </div>
 
-      {/* Floating feedback button */}
       <FeedbackButton />
-
-      {/* Global search palette */}
       {searchOpen && <SearchPalette onClose={() => setSearchOpen(false)} />}
-
     </div>
   )
 }

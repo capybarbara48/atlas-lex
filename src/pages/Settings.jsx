@@ -445,6 +445,76 @@ export default function Settings() {
           </form>
         </Section>
 
+        {/* ── Menu de Navegação ── */}
+        <Section
+          title="Menu de Navegação"
+          subtitle="Escolha como o menu principal aparece no sistema. Alterado imediatamente."
+        >
+          <div className={styles.navModeGrid}>
+            {[
+              {
+                value: 'sidebar',
+                label: 'Lateral Esquerdo',
+                sub: 'Recolhe ao afastar o mouse',
+                preview: (
+                  <div className={styles.navPreview}>
+                    <div className={styles.navPreviewSidebar}>
+                      <div className={styles.navPreviewDot} /><div className={styles.navPreviewDot} /><div className={styles.navPreviewDot} />
+                    </div>
+                    <div className={styles.navPreviewContent}>
+                      <div className={styles.navPreviewBar} /><div className={styles.navPreviewBar} style={{ width: '60%' }} />
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                value: 'top',
+                label: 'Barra Superior',
+                sub: 'Estilo abas do Chrome',
+                preview: (
+                  <div className={styles.navPreview} style={{ flexDirection: 'column' }}>
+                    <div className={styles.navPreviewTop}>
+                      <div className={styles.navPreviewDot} /><div className={styles.navPreviewDot} /><div className={styles.navPreviewDot} /><div className={styles.navPreviewDot} />
+                    </div>
+                    <div className={styles.navPreviewContent} style={{ flex: 1 }}>
+                      <div className={styles.navPreviewBar} /><div className={styles.navPreviewBar} style={{ width: '70%' }} />
+                    </div>
+                  </div>
+                ),
+              },
+              {
+                value: 'bottom',
+                label: 'Dock Inferior',
+                sub: 'Reaparece ao aproximar o mouse',
+                preview: (
+                  <div className={styles.navPreview} style={{ flexDirection: 'column' }}>
+                    <div className={styles.navPreviewContent} style={{ flex: 1 }}>
+                      <div className={styles.navPreviewBar} /><div className={styles.navPreviewBar} style={{ width: '65%' }} />
+                    </div>
+                    <div className={styles.navPreviewBottom}>
+                      <div className={styles.navPreviewDot} /><div className={styles.navPreviewDot} /><div className={styles.navPreviewDot} /><div className={styles.navPreviewDot} />
+                    </div>
+                  </div>
+                ),
+              },
+            ].map(({ value, label, sub, preview }) => {
+              const active = (prefs.nav_mode ?? 'sidebar') === value
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  className={`${styles.navModeCard} ${active ? styles.navModeCardActive : ''}`}
+                  onClick={() => handlePrefChange('nav_mode', value)}
+                >
+                  {preview}
+                  <span className={styles.navModeLabel}>{label}</span>
+                  <span className={styles.navModeSub}>{sub}</span>
+                </button>
+              )
+            })}
+          </div>
+        </Section>
+
         {/* ── Preferências ── */}
         <Section
           title="Preferências de Exibição"

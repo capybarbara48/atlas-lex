@@ -12,6 +12,7 @@ const DEFAULTS = {
   clientes_view:    'lista',   // 'lista'  | 'grid'
   tarefas_view:     'kanban',  // 'kanban' | 'lista'
   financeiro_view:  'lista',   // 'lista'  | 'grafico'
+  nav_mode:         'sidebar', // 'sidebar' | 'top' | 'bottom'
 }
 
 function getKey(lawyerId) {
@@ -32,6 +33,7 @@ export function savePreferences(lawyerId, prefs) {
   if (!lawyerId) return
   const current = loadPreferences(lawyerId)
   localStorage.setItem(getKey(lawyerId), JSON.stringify({ ...current, ...prefs }))
+  window.dispatchEvent(new CustomEvent('atlasPrefsChanged'))
 }
 
 export function resetPreferences(lawyerId) {
