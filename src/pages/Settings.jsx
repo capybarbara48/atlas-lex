@@ -315,7 +315,7 @@ export default function Settings() {
   return (
     <PageShell
       title="Configurações"
-      subtitle="Personalize o Atlas Adv para o seu escritório"
+      subtitle="Personalize o Atlas Adv para a identidade visual do seu escritório em apenas 3 minutos."
     >
       <div className={styles.layout}>
 
