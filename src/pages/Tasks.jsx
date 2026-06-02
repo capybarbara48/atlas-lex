@@ -144,6 +144,7 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
   const [filterNDL,  setFilterNDL]  = useState('todos')
   const [filterTmr,  setFilterTmr]  = useState('todos')
   const [filterWk,   setFilterWk]   = useState('todos')
+  const [weekOffset, setWeekOffset] = useState(2)
   const [quickTitle, setQuickTitle] = useState('')
   const [addingQuick, setAddingQuick] = useState(false)
 
@@ -180,8 +181,8 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
   const tomorrowTasks = byOrder(byResp(active.filter(t => t.due_date?.split('T')[0] === tomorrowISO), filterTmr))
 
   const weekDays = useMemo(() =>
-    Array.from({ length: 14 }, (_, i) => {
-      const d   = addDays(today, i)
+    Array.from({ length: 21 }, (_, i) => {
+      const d   = addDays(today, weekOffset + i)
       const iso = toISO(d)
       return {
         d, iso,
@@ -192,7 +193,7 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
         ),
       }
     })
-  , [rawTasks, filterWk, todayISO])
+  , [rawTasks, filterWk, todayISO, weekOffset])
 
   function dayTitle() {
     if (dayOffset === 0) return 'Hoje'
@@ -302,10 +303,38 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
         </div>
       </div>
 
-      {/* ── Card 4: Esta Semana e Próxima ── */}
+      {/* ── Card 4: Próximos 21 Dias ── */}
       <div className={`${styles.agendaCard} ${styles.agendaCardFull}`}>
         <div className={styles.agendaCardHeader}>
-          <span className={styles.agendaCardTitle}>Esta Semana e Próxima</span>
+          <span className={styles.agendaCardTitle}>Próximos Dias</span>
+          <div className={styles.weekOffsetToggle}>
+            <button
+              className={`${styles.weekOffsetBtn} ${weekOffset === 0 ? styles.weekOffsetBtnActive : ''}`}
+              onClick={() => setWeekOffset(0)}
+              title="Iniciar a partir de hoje"
+            >
+              <svg viewBox="0 0 16 14" fill="none" width="14" height="13">
+                <rect x="1" y="2" width="14" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                <path d="M5 1v2.5M11 1v2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                <path d="M1 6h14" stroke="currentColor" strokeWidth="1.2"/>
+                <circle cx="5" cy="9.5" r="2" fill="currentColor"/>
+              </svg>
+            </button>
+            <button
+              className={`${styles.weekOffsetBtn} ${weekOffset === 2 ? styles.weekOffsetBtnActive : ''}`}
+              onClick={() => setWeekOffset(2)}
+              title="Iniciar depois de amanhã"
+            >
+              <svg viewBox="0 0 16 14" fill="none" width="14" height="13">
+                <rect x="1" y="2" width="14" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                <path d="M5 1v2.5M11 1v2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                <path d="M1 6h14" stroke="currentColor" strokeWidth="1.2"/>
+                <circle cx="4" cy="9.5" r="1.5" stroke="currentColor" strokeWidth="0.8" opacity="0.3"/>
+                <circle cx="8" cy="9.5" r="1.5" stroke="currentColor" strokeWidth="0.8" opacity="0.3"/>
+                <circle cx="12" cy="9.5" r="2" fill="currentColor"/>
+              </svg>
+            </button>
+          </div>
           <button
             className={styles.agendaAddBtn}
             onClick={() => onNewWithDate(null, filterWk !== 'todos' ? filterWk : null)}
@@ -313,29 +342,33 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
           >+</button>
         </div>
         <RespPills responsaveis={responsaveis} value={filterWk} onChange={setFilterWk} />
-        <div className={styles.weekGrid}>
-          {weekDays.map(({ d, iso, isToday, tasks }) => (
-            <div key={iso} className={`${styles.weekDayCol} ${isToday ? styles.weekDayColToday : ''}`}>
-              <div className={styles.weekDayLabel}>
-                <span className={styles.weekDayWkd}>{WEEKDAYS_SHORT[d.getDay()]}</span>
-                <span className={`${styles.weekDayNum} ${isToday ? styles.weekDayNumToday : ''}`}>{d.getDate()}</span>
-              </div>
-              <div className={styles.weekDayTasks}>
-                {tasks.slice(0, 3).map(t => (
-                  <div
-                    key={t.id}
-                    className={styles.weekTaskChip}
-                    style={{ borderLeftColor: PRI_DOT_HEX[t.priority] ?? '#888' }}
-                    onClick={() => onEdit(t.id)}
-                    title={t.title}
-                  >
-                    {t.title}
+        <div className={styles.weekColumns}>
+          {[weekDays.slice(0, 7), weekDays.slice(7, 14), weekDays.slice(14, 21)].map((col, ci) => (
+            <div key={ci} className={styles.weekColumn}>
+              {col.map(({ d, iso, isToday, tasks }) => (
+                <div key={iso} className={`${styles.weekDayRow} ${isToday ? styles.weekDayRowToday : ''}`}>
+                  <div className={styles.weekDayRowLabel}>
+                    <span className={styles.weekDayWkd}>{WEEKDAYS_SHORT[d.getDay()]}</span>
+                    <span className={`${styles.weekDayNum} ${isToday ? styles.weekDayNumToday : ''}`}>{d.getDate()}</span>
                   </div>
-                ))}
-                {tasks.length > 3 && (
-                  <div className={styles.weekTaskMore}>+{tasks.length - 3}</div>
-                )}
-              </div>
+                  <div className={styles.weekDayRowTasks}>
+                    {tasks.slice(0, 3).map(t => (
+                      <div
+                        key={t.id}
+                        className={styles.weekTaskChip}
+                        style={{ borderLeftColor: PRI_DOT_HEX[t.priority] ?? '#888' }}
+                        onClick={() => onEdit(t.id)}
+                        title={t.title}
+                      >
+                        {t.title}
+                      </div>
+                    ))}
+                    {tasks.length > 3 && (
+                      <div className={styles.weekTaskMore}>+{tasks.length - 3}</div>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           ))}
         </div>

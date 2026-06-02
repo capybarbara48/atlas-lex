@@ -338,35 +338,42 @@
 .agendaQuickBtn:hover { background: var(--accent-dark); }
 .agendaQuickBtn:disabled { opacity: 0.45; cursor: not-allowed; }
 
-/* 14-day week grid */
-.weekGrid {
-  display: flex;
-  gap: 1px;
-  background: rgba(var(--accent-rgb), 0.07);
-  overflow-x: auto;
-  min-height: 120px;
+/* 21-day 3-column grid */
+.weekColumns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: var(--border);
 }
 
-.weekDayCol {
-  flex: 1;
-  min-width: 70px;
-  background: var(--card);
+.weekColumn {
   display: flex;
   flex-direction: column;
+  border-right: var(--border);
 }
+.weekColumn:last-child { border-right: none; }
 
-.weekDayColToday {
-  background: rgba(var(--accent-rgb), 0.03);
+.weekDayRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.3rem 0.65rem;
+  border-bottom: 1px solid rgba(var(--accent-rgb), 0.06);
+  min-height: 34px;
+  transition: background 0.1s;
 }
+.weekDayRow:last-child { border-bottom: none; }
+.weekDayRow:hover { background: var(--card-hover); }
 
-.weekDayLabel {
+.weekDayRowToday { background: rgba(var(--accent-rgb), 0.04); }
+
+.weekDayRowLabel {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0.45rem 0.2rem 0.3rem;
-  border-bottom: var(--border);
-  gap: 0.15rem;
-  cursor: default;
+  flex-shrink: 0;
+  width: 32px;
+  gap: 0.05rem;
+  padding-top: 0.05rem;
 }
 
 .weekDayWkd {
@@ -384,7 +391,7 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--text-2);
 }
@@ -394,19 +401,20 @@
   color: #fff;
 }
 
-.weekDayTasks {
+.weekDayRowTasks {
   flex: 1;
-  padding: 0.25rem 0.2rem;
   display: flex;
   flex-direction: column;
-  gap: 0.12rem;
+  gap: 0.1rem;
+  min-width: 0;
+  padding-top: 0.1rem;
 }
 
 .weekTaskChip {
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   font-weight: 500;
   line-height: 1.3;
-  padding: 0.1rem 0.2rem 0.1rem 0.3rem;
+  padding: 0.1rem 0.3rem 0.1rem 0.4rem;
   background: var(--accent-dim);
   border-left: 2.5px solid;
   border-radius: 2px;
@@ -420,14 +428,49 @@
 .weekTaskChip:hover { filter: brightness(0.9); }
 
 .weekTaskMore {
-  font-size: 0.55rem;
+  font-size: 0.58rem;
   color: var(--text-3);
   padding-left: 0.15rem;
+}
+
+/* Week offset toggle */
+.weekOffsetToggle {
+  display: flex;
+  gap: 2px;
+  background: var(--bg);
+  border: var(--border);
+  border-radius: 6px;
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.weekOffsetBtn {
+  width: 26px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.weekOffsetBtn:hover { color: var(--text); background: rgba(var(--accent-rgb), 0.06); }
+
+.weekOffsetBtnActive {
+  background: var(--card);
+  color: var(--accent);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 @media (max-width: 768px) {
   .agendaGrid { grid-template-columns: 1fr; }
   .agendaCardFull { grid-column: 1; }
+  .weekColumns { grid-template-columns: 1fr; }
+  .weekColumn { border-right: none; border-bottom: var(--border); }
+  .weekColumn:last-child { border-bottom: none; }
 }
 
 /* ── Calendar ───────────────────────────────────────────────────────── */
