@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, Fragment } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
 import { useAllTasks, updateTaskStatus, updateTaskOrder } from '@/hooks/useTasks'
@@ -459,26 +459,42 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, onEdit, onNew
             title="Nova tarefa"
           >+</button>
         </div>
-        <div className={styles.weekColumns}>
-          {weekDays.map(({ d, iso, isToday, tasks }) => (
-            <div
-              key={iso}
-              className={`${styles.weekCell} ${isToday ? styles.weekCellToday : ''} ${dropTarget === iso ? styles.weekCellDrop : ''}`}
-              onDragOver={e => handleDragOver(iso, e)}
-              onDragLeave={handleDragLeave}
-              onDrop={() => handleDropOnZone(iso + 'T12:00:00')}
-            >
-              <div className={styles.weekCellHeader}>
-                <span className={styles.weekDayWkd}>{WEEKDAYS_SHORT[d.getDay()]}</span>
-                <span className={`${styles.weekDayNum} ${isToday ? styles.weekDayNumToday : ''}`}>{d.getDate()}</span>
-              </div>
-              <div className={styles.weekCellTasks}>
-                {tasks.map(t => (
-                  <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} onDragStart={handleDragStart} onDragEnd={handleDragEnd} isDragging={draggingId === t.id} />
+        <div className={styles.weekGrid}>
+          {[0, 7, 14].map(rowStart => {
+            const rowDays = weekDays.slice(rowStart, rowStart + 7)
+            const f = rowDays[0]?.d, l = rowDays[6]?.d
+            const label = f && l
+              ? f.getMonth() === l.getMonth()
+                ? `${f.getDate()}–${l.getDate()} ${MONTHS_PT[l.getMonth()].slice(0,3)}`
+                : `${f.getDate()} ${MONTHS_PT[f.getMonth()].slice(0,3)} – ${l.getDate()} ${MONTHS_PT[l.getMonth()].slice(0,3)}`
+              : ''
+            return (
+              <Fragment key={rowStart}>
+                <div className={styles.weekRowDivider}>
+                  <span className={styles.weekRowLabel}>{label}</span>
+                </div>
+                {rowDays.map(({ d, iso, isToday, tasks }) => (
+                  <div
+                    key={iso}
+                    className={`${styles.weekCell} ${isToday ? styles.weekCellToday : ''} ${dropTarget === iso ? styles.weekCellDrop : ''}`}
+                    onDragOver={e => handleDragOver(iso, e)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={() => handleDropOnZone(iso + 'T12:00:00')}
+                  >
+                    <div className={styles.weekCellHeader}>
+                      <span className={styles.weekDayWkd}>{WEEKDAYS_SHORT[d.getDay()]}</span>
+                      <span className={`${styles.weekDayNum} ${isToday ? styles.weekDayNumToday : ''}`}>{d.getDate()}</span>
+                    </div>
+                    <div className={styles.weekCellTasks}>
+                      {tasks.map(t => (
+                        <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} onDragStart={handleDragStart} onDragEnd={handleDragEnd} isDragging={draggingId === t.id} />
+                      ))}
+                    </div>
+                  </div>
                 ))}
-              </div>
-            </div>
-          ))}
+              </Fragment>
+            )
+          })}
         </div>
       </div>
 
