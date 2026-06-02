@@ -94,6 +94,24 @@
   flex-shrink: 0;
 }
 
+.pdfBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: transparent;
+  color: var(--text-2);
+  border: var(--border);
+  border-radius: 10px;
+  padding: 0.55rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.pdfBtn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
 .newCaseBtn {
   background: var(--accent-dim);
   color: var(--accent);
