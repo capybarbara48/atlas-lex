@@ -150,7 +150,6 @@ function BrandHeader() {
   const firmName   = lawyer?.firm_name ?? 'Atlas Adv'
   const firmShort  = firmName.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
   const firstName  = lawyer?.full_name?.split(' ')[0] ?? session?.user?.email?.split('@')[0] ?? '—'
-  const fullNameUp = lawyer?.full_name ? lawyer.full_name.toUpperCase() : null
   const firmNameUp = firmName.toUpperCase()
 
   const isDaytime = h >= 5 && h < 18
@@ -173,9 +172,7 @@ function BrandHeader() {
           : <div className={styles.brandLogoMark}>{firmShort}</div>
         }
         <div className={styles.brandIdentity}>
-          <span className={styles.brandFirmName}>
-            {fullNameUp ? `${fullNameUp} | ${firmNameUp}` : firmNameUp}
-          </span>
+          <span className={styles.brandFirmName}>{firmNameUp}</span>
           <span className={styles.brandGreeting}>
             <span className={styles.greetingIcon}>{TimeIcon}</span>
             {greeting}, {firstName}
