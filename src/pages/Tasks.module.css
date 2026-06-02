@@ -40,6 +40,340 @@
 .emptyState { text-align: center; padding: 3rem 1rem; color: var(--text-2); background: var(--card); border: var(--border); border-radius: var(--radius); }
 .emptyIcon { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.35; }
 
+/* ── Agenda view ────────────────────────────────────────────────────── */
+.agendaGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.agendaCardFull {
+  grid-column: 1 / -1;
+}
+
+.agendaCard {
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.agendaCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  border-bottom: var(--border);
+  flex-wrap: wrap;
+}
+
+.agendaCardTitle {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+}
+.agendaCardTitle em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+.agendaCardSub {
+  font-size: 0.7rem;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.agendaNavRow {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  flex-shrink: 0;
+}
+
+.agendaNavBtn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  border: var(--border);
+  border-radius: 6px;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.agendaNavBtn:hover { background: var(--card-hover); color: var(--text); }
+
+.agendaNavBtnToday {
+  padding: 0.15rem 0.5rem;
+  background: var(--bg);
+  border: var(--border);
+  border-radius: 6px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--text-2);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+}
+.agendaNavBtnToday:hover { border-color: var(--accent); color: var(--accent); }
+
+.agendaAddBtn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: none;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s;
+}
+.agendaAddBtn:hover { background: rgba(var(--accent-rgb), 0.22); }
+
+/* Responsible pills */
+.respPills {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.45rem 1rem;
+  background: var(--bg);
+  border-bottom: var(--border);
+  flex-wrap: wrap;
+}
+
+.respPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.18rem 0.6rem;
+  border: var(--border);
+  border-radius: 999px;
+  font-size: 0.67rem;
+  font-weight: 500;
+  color: var(--text-2);
+  background: var(--card);
+  cursor: pointer;
+  transition: all 0.12s;
+  font-family: inherit;
+}
+.respPill:hover { border-color: var(--accent); color: var(--accent); }
+.respPillActiveTodos {
+  background: var(--accent-dim) !important;
+  color: var(--accent) !important;
+  border-color: rgba(var(--accent-rgb), 0.2) !important;
+  font-weight: 700;
+}
+
+.respPillDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Card body */
+.agendaCardBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.agendaEmpty {
+  text-align: center;
+  color: var(--text-3);
+  font-size: 0.75rem;
+  padding: 1.5rem 1rem;
+}
+
+/* Task rows */
+.agendaTaskRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 1rem;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: background 0.1s;
+}
+.agendaTaskRow:hover { background: var(--card-hover); }
+
+.agendaTaskOverdue { border-left-color: #ef4444; }
+.agendaTaskDone { opacity: 0.5; }
+.agendaTaskDone .agendaTaskTitle { text-decoration: line-through; }
+
+.agendaTaskDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.agendaTaskTitle {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agendaTaskResp {
+  font-size: 0.62rem;
+  font-weight: 600;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Quick add */
+.agendaQuickAdd {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: var(--border);
+}
+
+.agendaQuickInput {
+  flex: 1;
+  padding: 0.32rem 0.6rem;
+  background: var(--bg);
+  border: var(--border);
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-family: inherit;
+  color: var(--text);
+  outline: none;
+  min-width: 0;
+}
+.agendaQuickInput:focus { border-color: var(--accent); }
+.agendaQuickInput::placeholder { color: var(--text-3); }
+
+.agendaQuickBtn {
+  padding: 0.32rem 0.65rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.12s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.agendaQuickBtn:hover { background: var(--accent-dark); }
+.agendaQuickBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* 14-day week grid */
+.weekGrid {
+  display: flex;
+  gap: 1px;
+  background: rgba(var(--accent-rgb), 0.07);
+  overflow-x: auto;
+  min-height: 120px;
+}
+
+.weekDayCol {
+  flex: 1;
+  min-width: 70px;
+  background: var(--card);
+  display: flex;
+  flex-direction: column;
+}
+
+.weekDayColToday {
+  background: rgba(var(--accent-rgb), 0.03);
+}
+
+.weekDayLabel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.45rem 0.2rem 0.3rem;
+  border-bottom: var(--border);
+  gap: 0.15rem;
+  cursor: default;
+}
+
+.weekDayWkd {
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+}
+
+.weekDayNum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.weekDayNumToday {
+  background: var(--accent);
+  color: #fff;
+}
+
+.weekDayTasks {
+  flex: 1;
+  padding: 0.25rem 0.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.weekTaskChip {
+  font-size: 0.58rem;
+  font-weight: 500;
+  line-height: 1.3;
+  padding: 0.1rem 0.2rem 0.1rem 0.3rem;
+  background: var(--accent-dim);
+  border-left: 2.5px solid;
+  border-radius: 2px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: filter 0.1s;
+}
+.weekTaskChip:hover { filter: brightness(0.9); }
+
+.weekTaskMore {
+  font-size: 0.55rem;
+  color: var(--text-3);
+  padding-left: 0.15rem;
+}
+
+@media (max-width: 768px) {
+  .agendaGrid { grid-template-columns: 1fr; }
+  .agendaCardFull { grid-column: 1; }
+}
+
 /* ── Calendar ───────────────────────────────────────────────────────── */
 .calendarWrap {
   display: flex;

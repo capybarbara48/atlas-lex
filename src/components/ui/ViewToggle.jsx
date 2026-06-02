@@ -1,12 +1,22 @@
 import styles from './ViewToggle.module.css'
 
-/**
- * ViewToggle — alterna entre 'kanban', 'lista' e opcionalmente 'calendario'.
- * Props: value ('kanban'|'lista'|'calendario'), onChange(value), showCalendar?
- */
-export default function ViewToggle({ value, onChange, showCalendar }) {
+export default function ViewToggle({ value, onChange, showCalendar, showAgenda }) {
   return (
     <div className={styles.wrap}>
+      {showAgenda && (
+        <button
+          className={`${styles.btn} ${value === 'agenda' ? styles.active : ''}`}
+          onClick={() => onChange('agenda')}
+          title="Visão Agenda"
+        >
+          <svg viewBox="0 0 16 16" fill="currentColor">
+            <rect x="1" y="1" width="6.5" height="6.5" rx="1.5"/>
+            <rect x="8.5" y="1" width="6.5" height="6.5" rx="1.5"/>
+            <rect x="1" y="8.5" width="6.5" height="6.5" rx="1.5"/>
+            <rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.5"/>
+          </svg>
+        </button>
+      )}
       <button
         className={`${styles.btn} ${value === 'kanban' ? styles.active : ''}`}
         onClick={() => onChange('kanban')}

@@ -3,6 +3,7 @@ import { useAuth } from '@/context/AuthContext'
 import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
 import { useAllTasks } from '@/hooks/useTasks'
 import { useToast } from '@/context/ToastContext'
+import { supabase } from '@/lib/supabase'
 import PageShell from '@/components/ui/PageShell'
 import ViewToggle from '@/components/ui/ViewToggle'
 import Modal from '@/components/ui/Modal'
@@ -14,6 +15,9 @@ const WEEKDAYS_SHORT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 const MONTHS_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
 
 const PRI_DOT = { urgente: 'var(--red)', alta: 'var(--red)', media: '#f59e0b', baixa: 'var(--accent)' }
+const PRI_DOT_HEX = { urgente: '#ef4444', alta: '#ef4444', media: '#f59e0b', baixa: '#4361ee' }
+
+const RESP_COLORS = ['#4361ee','#7c3aed','#2a9d8f','#e76f51','#f4a261','#264653','#1d3557','#c77dff','#e63946','#06b6d4']
 
 function toISO(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
@@ -28,16 +32,21 @@ function addDays(d, n) {
   nd.setDate(d.getDate() + n)
   return nd
 }
+function respColor(name, responsaveis) {
+  const idx = responsaveis.indexOf(name)
+  return idx >= 0 ? RESP_COLORS[idx % RESP_COLORS.length] : '#888'
+}
 
 /* ── data mapper ────────────────────────────────────────────────────── */
 function mapTask(t) {
   return {
-    id:         t.id,
-    titulo:     t.title,
-    status:     t.status,
-    prioridade: t.priority,
-    vencimento: t.due_date?.split('T')[0] ?? null,
-    caso:       t.cases?.title ?? '—',
+    id:          t.id,
+    titulo:      t.title,
+    status:      t.status,
+    prioridade:  t.priority,
+    vencimento:  t.due_date?.split('T')[0] ?? null,
+    caso:        t.cases?.title ?? '—',
+    responsavel: t.assigned_to ?? null,
   }
 }
 
@@ -57,7 +66,253 @@ function fmtDate(d, opts) {
   return new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', opts)
 }
 
-/* ── sub-components ─────────────────────────────────────────────────── */
+/* ── Agenda: shared sub-components ─────────────────────────────────── */
+function RespPills({ responsaveis, value, onChange }) {
+  if (responsaveis.length === 0) return null
+  return (
+    <div className={styles.respPills}>
+      <button
+        className={`${styles.respPill} ${value === 'todos' ? styles.respPillActiveTodos : ''}`}
+        onClick={() => onChange('todos')}
+      >Todos</button>
+      {responsaveis.map((r, i) => {
+        const col = RESP_COLORS[i % RESP_COLORS.length]
+        const active = value === r
+        return (
+          <button
+            key={r}
+            className={`${styles.respPill} ${active ? styles.respPillActive : ''}`}
+            style={active ? { background: col, color: '#fff', borderColor: col } : {}}
+            onClick={() => onChange(r)}
+          >
+            <span className={styles.respPillDot} style={{ background: col }} />
+            {r}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+function AgendaTaskRow({ t, todayISO, responsaveis, onClick }) {
+  const overdue = t.due_date && t.due_date.split('T')[0] < todayISO && !['concluida','cancelada'].includes(t.status)
+  const done    = t.status === 'concluida'
+  return (
+    <div
+      className={`${styles.agendaTaskRow} ${overdue ? styles.agendaTaskOverdue : ''} ${done ? styles.agendaTaskDone : ''}`}
+      onClick={() => onClick(t.id)}
+    >
+      <span className={styles.agendaTaskDot} style={{ background: PRI_DOT_HEX[t.priority] ?? '#888' }} />
+      <span className={styles.agendaTaskTitle}>{t.title}</span>
+      {t.assigned_to && (
+        <span
+          className={styles.agendaTaskResp}
+          style={{
+            background: respColor(t.assigned_to, responsaveis) + '22',
+            color: respColor(t.assigned_to, responsaveis),
+          }}
+        >
+          {t.assigned_to.split(' ')[0]}
+        </span>
+      )}
+    </div>
+  )
+}
+
+/* ── Agenda view ────────────────────────────────────────────────────── */
+function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, refetch }) {
+  const today    = new Date()
+  const todayISO = toISO(today)
+  const tomorrowISO = toISO(addDays(today, 1))
+
+  const [dayOffset,  setDayOffset]  = useState(0)
+  const [filterDay,  setFilterDay]  = useState('todos')
+  const [filterNDL,  setFilterNDL]  = useState('todos')
+  const [filterTmr,  setFilterTmr]  = useState('todos')
+  const [filterWk,   setFilterWk]   = useState('todos')
+  const [quickTitle, setQuickTitle] = useState('')
+  const [addingQuick, setAddingQuick] = useState(false)
+
+  const selectedISO = toISO(addDays(today, dayOffset))
+
+  function byResp(tasks, filter) {
+    if (filter === 'todos') return tasks
+    return tasks.filter(t => t.assigned_to === filter)
+  }
+
+  const active = rawTasks.filter(t => !['concluida','cancelada'].includes(t.status))
+
+  const todayTasks    = byResp(active.filter(t => t.due_date?.split('T')[0] === selectedISO), filterDay)
+  const noDateTasks   = byResp(active.filter(t => !t.due_date), filterNDL)
+  const tomorrowTasks = byResp(active.filter(t => t.due_date?.split('T')[0] === tomorrowISO), filterTmr)
+
+  const weekDays = useMemo(() =>
+    Array.from({ length: 14 }, (_, i) => {
+      const d   = addDays(today, i)
+      const iso = toISO(d)
+      return {
+        d, iso,
+        isToday: iso === todayISO,
+        tasks: rawTasks.filter(t =>
+          t.due_date?.split('T')[0] === iso &&
+          (filterWk === 'todos' || t.assigned_to === filterWk)
+        ),
+      }
+    })
+  , [rawTasks, filterWk, todayISO])
+
+  function dayTitle() {
+    if (dayOffset === 0) return 'Hoje'
+    if (dayOffset === 1) return 'Amanhã'
+    if (dayOffset === -1) return 'Ontem'
+    return new Date(selectedISO + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })
+  }
+
+  async function handleQuickAdd(e) {
+    e.preventDefault()
+    const title = quickTitle.trim()
+    if (!title) return
+    setAddingQuick(true)
+    await supabase.from('tasks').insert({
+      lawyer_id:   session.user.id,
+      title,
+      priority:    'media',
+      status:      'pendente',
+      due_date:    null,
+      assigned_to: filterNDL !== 'todos' ? filterNDL : null,
+    })
+    setAddingQuick(false)
+    setQuickTitle('')
+    refetch()
+  }
+
+  return (
+    <div className={styles.agendaGrid}>
+
+      {/* ── Card 1: Tarefas do Dia ── */}
+      <div className={styles.agendaCard}>
+        <div className={styles.agendaCardHeader}>
+          <div className={styles.agendaNavRow}>
+            <button className={styles.agendaNavBtn} onClick={() => setDayOffset(d => d - 1)}>‹</button>
+            <button className={styles.agendaNavBtnToday} onClick={() => setDayOffset(0)}>Hoje</button>
+            <button className={styles.agendaNavBtn} onClick={() => setDayOffset(d => d + 1)}>›</button>
+          </div>
+          <span className={styles.agendaCardTitle}>
+            Tarefas e Compromissos — <em>{dayTitle()}</em>
+          </span>
+          <button
+            className={styles.agendaAddBtn}
+            onClick={() => onNewWithDate(selectedISO, filterDay !== 'todos' ? filterDay : null)}
+            title="Nova tarefa"
+          >+</button>
+        </div>
+        <RespPills responsaveis={responsaveis} value={filterDay} onChange={setFilterDay} />
+        <div className={styles.agendaCardBody}>
+          {todayTasks.length === 0
+            ? <div className={styles.agendaEmpty}>Nenhuma tarefa neste dia</div>
+            : todayTasks.map(t => (
+                <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} />
+              ))
+          }
+        </div>
+      </div>
+
+      {/* ── Card 2: Tarefas Sem Prazo ── */}
+      <div className={styles.agendaCard}>
+        <div className={styles.agendaCardHeader}>
+          <span className={styles.agendaCardTitle}>Tarefas Sem Prazo</span>
+        </div>
+        <RespPills responsaveis={responsaveis} value={filterNDL} onChange={setFilterNDL} />
+        <form className={styles.agendaQuickAdd} onSubmit={handleQuickAdd}>
+          <input
+            className={styles.agendaQuickInput}
+            value={quickTitle}
+            onChange={e => setQuickTitle(e.target.value)}
+            placeholder="Nova tarefa sem prazo…"
+            disabled={addingQuick}
+          />
+          <button type="submit" className={styles.agendaQuickBtn} disabled={addingQuick || !quickTitle.trim()}>
+            + Adicionar
+          </button>
+        </form>
+        <div className={styles.agendaCardBody}>
+          {noDateTasks.length === 0
+            ? <div className={styles.agendaEmpty}>Nenhuma tarefa sem prazo</div>
+            : noDateTasks.map(t => (
+                <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} />
+              ))
+          }
+        </div>
+      </div>
+
+      {/* ── Card 3: Amanhã ── */}
+      <div className={styles.agendaCard}>
+        <div className={styles.agendaCardHeader}>
+          <span className={styles.agendaCardTitle}>Amanhã</span>
+          <span className={styles.agendaCardSub}>
+            {new Date(tomorrowISO + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'short' })}
+          </span>
+          <button
+            className={styles.agendaAddBtn}
+            onClick={() => onNewWithDate(tomorrowISO, filterTmr !== 'todos' ? filterTmr : null)}
+            title="Nova tarefa para amanhã"
+          >+</button>
+        </div>
+        <RespPills responsaveis={responsaveis} value={filterTmr} onChange={setFilterTmr} />
+        <div className={styles.agendaCardBody}>
+          {tomorrowTasks.length === 0
+            ? <div className={styles.agendaEmpty}>Nenhuma tarefa para amanhã</div>
+            : tomorrowTasks.map(t => (
+                <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} />
+              ))
+          }
+        </div>
+      </div>
+
+      {/* ── Card 4: Esta Semana e Próxima ── */}
+      <div className={`${styles.agendaCard} ${styles.agendaCardFull}`}>
+        <div className={styles.agendaCardHeader}>
+          <span className={styles.agendaCardTitle}>Esta Semana e Próxima</span>
+          <button
+            className={styles.agendaAddBtn}
+            onClick={() => onNewWithDate(null, filterWk !== 'todos' ? filterWk : null)}
+            title="Nova tarefa"
+          >+</button>
+        </div>
+        <RespPills responsaveis={responsaveis} value={filterWk} onChange={setFilterWk} />
+        <div className={styles.weekGrid}>
+          {weekDays.map(({ d, iso, isToday, tasks }) => (
+            <div key={iso} className={`${styles.weekDayCol} ${isToday ? styles.weekDayColToday : ''}`}>
+              <div className={styles.weekDayLabel}>
+                <span className={styles.weekDayWkd}>{WEEKDAYS_SHORT[d.getDay()]}</span>
+                <span className={`${styles.weekDayNum} ${isToday ? styles.weekDayNumToday : ''}`}>{d.getDate()}</span>
+              </div>
+              <div className={styles.weekDayTasks}>
+                {tasks.slice(0, 3).map(t => (
+                  <div
+                    key={t.id}
+                    className={styles.weekTaskChip}
+                    style={{ borderLeftColor: PRI_DOT_HEX[t.priority] ?? '#888' }}
+                    onClick={() => onEdit(t.id)}
+                    title={t.title}
+                  >
+                    {t.title}
+                  </div>
+                ))}
+                {tasks.length > 3 && (
+                  <div className={styles.weekTaskMore}>+{tasks.length - 3}</div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+    </div>
+  )
+}
+
+/* ── KanbanView ─────────────────────────────────────────────────────── */
 function KanbanView({ tasks, onEdit }) {
   const today = new Date().toISOString().split('T')[0]
   return (
@@ -102,6 +357,7 @@ function KanbanView({ tasks, onEdit }) {
   )
 }
 
+/* ── ListView ───────────────────────────────────────────────────────── */
 function ListView({ tasks, onEdit }) {
   const today = new Date().toISOString().split('T')[0]
   if (tasks.length === 0) return (
@@ -323,11 +579,12 @@ function CalendarView({ tasks, onEdit }) {
 
 /* ── page ───────────────────────────────────────────────────────────── */
 export default function Tasks() {
-  const { lawyer } = useAuth()
+  const { lawyer, session } = useAuth()
   const toast = useToast()
   const prefs = loadPreferences(lawyer?.id)
+  const responsaveis = lawyer?.preferences?.responsaveis ?? []
 
-  const [view, setView]         = useState(prefs.tarefas_view ?? 'kanban')
+  const [view, setView]         = useState(prefs.tarefas_view ?? 'agenda')
   const [search, setSearch]     = useState('')
   const [filterPri, setFilterPri] = useState('todos')
   const [formOpen, setFormOpen] = useState(false)
@@ -353,6 +610,14 @@ export default function Tasks() {
     savePreferences(lawyer?.id, { tarefas_view: v })
   }
 
+  function openNewWithDate(dateISO, assignedTo) {
+    setEditing({
+      due_date:    dateISO ? dateISO + 'T12:00:00' : null,
+      assigned_to: assignedTo ?? '',
+    })
+    setFormOpen(true)
+  }
+
   const filtered = useMemo(() => {
     let list = tasks
     if (filterPri !== 'todos') list = list.filter(t => t.prioridade === filterPri)
@@ -369,50 +634,62 @@ export default function Tasks() {
     <PageShell
       title="Tarefas"
       subtitle={loading ? 'Carregando…' : `${tasks.length} tarefas · ${pendentes} pendentes`}
-      viewToggle={<ViewToggle value={view} onChange={handleViewChange} showCalendar />}
+      viewToggle={<ViewToggle value={view} onChange={handleViewChange} showCalendar showAgenda />}
       action={
         <button className={styles.btnNovo} onClick={openNew}>
           <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.75.75 0 0 1 .75.75v5.5h5.5a.75.75 0 0 1 0 1.5h-5.5v5.5a.75.75 0 0 1-1.5 0v-5.5H1.75a.75.75 0 0 1 0-1.5h5.5v-5.5A.75.75 0 0 1 8 1Z"/></svg>
           Nova tarefa
         </button>
       }
-      filters={
-        <>
-          <div className={styles.searchWrap}>
-            <svg className={styles.searchIcon} viewBox="0 0 16 16" fill="currentColor">
-              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.856a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
-            </svg>
-            <input
-              className={styles.searchInput}
-              type="text"
-              placeholder="Buscar tarefa ou caso..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-          </div>
-          <div className={styles.filterGroup}>
-            {[{ v: 'todos', l: 'Todas' }, { v: 'urgente', l: 'Urgente' }, { v: 'alta', l: 'Alta' }, { v: 'media', l: 'Média' }, { v: 'baixa', l: 'Baixa' }].map(({ v, l }) => (
-              <button
-                key={v}
-                className={`${styles.filterBtn} ${filterPri === v ? styles.filterActive : ''}`}
-                onClick={() => setFilterPri(v)}
-              >{l}</button>
-            ))}
-          </div>
-        </>
+      filters={view !== 'agenda'
+        ? (
+          <>
+            <div className={styles.searchWrap}>
+              <svg className={styles.searchIcon} viewBox="0 0 16 16" fill="currentColor">
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.856a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
+              </svg>
+              <input
+                className={styles.searchInput}
+                type="text"
+                placeholder="Buscar tarefa ou caso..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+            </div>
+            <div className={styles.filterGroup}>
+              {[{ v: 'todos', l: 'Todas' }, { v: 'urgente', l: 'Urgente' }, { v: 'alta', l: 'Alta' }, { v: 'media', l: 'Média' }, { v: 'baixa', l: 'Baixa' }].map(({ v, l }) => (
+                <button
+                  key={v}
+                  className={`${styles.filterBtn} ${filterPri === v ? styles.filterActive : ''}`}
+                  onClick={() => setFilterPri(v)}
+                >{l}</button>
+              ))}
+            </div>
+          </>
+        )
+        : null
       }
     >
       {error
         ? <div className={styles.emptyState}><p>Erro ao carregar tarefas.</p></div>
-        : view === 'kanban'
-          ? <KanbanView tasks={filtered} onEdit={openEdit} />
-          : view === 'calendario'
-            ? <CalendarView tasks={filtered} onEdit={openEdit} />
-            : <ListView tasks={filtered} onEdit={openEdit} />
+        : view === 'agenda'
+          ? <AgendaView
+              rawTasks={rawTasks ?? []}
+              responsaveis={responsaveis}
+              session={session}
+              onEdit={openEdit}
+              onNewWithDate={openNewWithDate}
+              refetch={refetch}
+            />
+          : view === 'kanban'
+            ? <KanbanView tasks={filtered} onEdit={openEdit} />
+            : view === 'calendario'
+              ? <CalendarView tasks={filtered} onEdit={openEdit} />
+              : <ListView tasks={filtered} onEdit={openEdit} />
       }
 
       {formOpen && (
-        <Modal title={editing ? 'Editar tarefa' : 'Nova tarefa'} onClose={() => setFormOpen(false)}>
+        <Modal title={editing?.id ? 'Editar tarefa' : 'Nova tarefa'} onClose={() => setFormOpen(false)}>
           <TaskForm initial={editing} onSave={handleSave} onClose={() => setFormOpen(false)} />
         </Modal>
       )}
