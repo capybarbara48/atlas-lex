@@ -193,6 +193,12 @@
   overflow-y: auto;
 }
 
+.agendaCardBodyDrop {
+  background: rgba(var(--accent-rgb), 0.05);
+  outline: 2px dashed rgba(var(--accent-rgb), 0.3);
+  outline-offset: -3px;
+}
+
 .agendaEmpty {
   text-align: center;
   color: var(--text-3);
@@ -265,8 +271,15 @@
   padding: 0.45rem 1rem;
   border-left: 3px solid transparent;
   transition: background 0.1s;
+  cursor: grab;
 }
 .agendaTaskRow:hover { background: var(--card-hover); }
+.agendaTaskRow:active { cursor: grabbing; }
+
+.agendaTaskDragging {
+  opacity: 0.35;
+  cursor: grabbing;
+}
 
 .agendaTaskOverdue { border-left-color: #ef4444; }
 .agendaTaskDone { opacity: 0.5; }
@@ -362,6 +375,12 @@
 .weekCell:hover { background: var(--card-hover); }
 
 .weekCellToday { background: rgba(var(--accent-rgb), 0.04); }
+
+.weekCellDrop {
+  background: rgba(var(--accent-rgb), 0.08) !important;
+  outline: 2px dashed rgba(var(--accent-rgb), 0.35);
+  outline-offset: -2px;
+}
 
 .weekCellHeader {
   display: flex;

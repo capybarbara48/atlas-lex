@@ -94,11 +94,16 @@ function RespPills({ responsaveis, value, onChange }) {
   )
 }
 
-function AgendaTaskRow({ t, todayISO, responsaveis, onClick, onCheck, onOrderChange }) {
+function AgendaTaskRow({ t, todayISO, responsaveis, onClick, onCheck, onOrderChange, onDragStart, onDragEnd, isDragging }) {
   const overdue = t.due_date && t.due_date.split('T')[0] < todayISO && !['concluida','cancelada'].includes(t.status)
   const done    = t.status === 'concluida'
   return (
-    <div className={`${styles.agendaTaskRow} ${overdue ? styles.agendaTaskOverdue : ''} ${done ? styles.agendaTaskDone : ''}`}>
+    <div
+      className={`${styles.agendaTaskRow} ${overdue ? styles.agendaTaskOverdue : ''} ${done ? styles.agendaTaskDone : ''} ${isDragging ? styles.agendaTaskDragging : ''}`}
+      draggable
+      onDragStart={e => { e.stopPropagation(); onDragStart?.(t.id) }}
+      onDragEnd={e => { e.stopPropagation(); onDragEnd?.() }}
+    >
       <input
         type="number"
         min="1"
@@ -147,8 +152,29 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
   const [weekOffset, setWeekOffset] = useState(2)
   const [quickTitle, setQuickTitle] = useState('')
   const [addingQuick, setAddingQuick] = useState(false)
+  const [draggingId, setDraggingId] = useState(null)
+  const [dropTarget, setDropTarget] = useState(null)
 
   const selectedISO = toISO(addDays(today, dayOffset))
+
+  function handleDragStart(taskId) { setDraggingId(taskId) }
+  function handleDragEnd()          { setDraggingId(null); setDropTarget(null) }
+
+  function handleDragOver(key, e) {
+    e.preventDefault()
+    if (dropTarget !== key) setDropTarget(key)
+  }
+  function handleDragLeave(e) {
+    if (!e.relatedTarget || !e.currentTarget.contains(e.relatedTarget)) setDropTarget(null)
+  }
+
+  async function handleDropOnZone(dueDate) {
+    if (!draggingId) return
+    setDropTarget(null)
+    await supabase.from('tasks').update({ due_date: dueDate }).eq('id', draggingId)
+    setDraggingId(null)
+    refetch()
+  }
 
   async function handleCheck(taskId) {
     await updateTaskStatus(taskId, 'concluida')
@@ -241,11 +267,16 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
           >+</button>
         </div>
         <RespPills responsaveis={responsaveis} value={filterDay} onChange={setFilterDay} />
-        <div className={styles.agendaCardBody}>
+        <div
+          className={`${styles.agendaCardBody} ${dropTarget === 'today' ? styles.agendaCardBodyDrop : ''}`}
+          onDragOver={e => handleDragOver('today', e)}
+          onDragLeave={handleDragLeave}
+          onDrop={() => handleDropOnZone(selectedISO + 'T12:00:00')}
+        >
           {todayTasks.length === 0
             ? <div className={styles.agendaEmpty}>Nenhuma tarefa neste dia</div>
             : todayTasks.map(t => (
-                <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} />
+                <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} onDragStart={handleDragStart} onDragEnd={handleDragEnd} isDragging={draggingId === t.id} />
               ))
           }
         </div>
@@ -269,11 +300,16 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
             + Adicionar
           </button>
         </form>
-        <div className={styles.agendaCardBody}>
+        <div
+          className={`${styles.agendaCardBody} ${dropTarget === 'nodate' ? styles.agendaCardBodyDrop : ''}`}
+          onDragOver={e => handleDragOver('nodate', e)}
+          onDragLeave={handleDragLeave}
+          onDrop={() => handleDropOnZone(null)}
+        >
           {noDateTasks.length === 0
             ? <div className={styles.agendaEmpty}>Nenhuma tarefa sem prazo</div>
             : noDateTasks.map(t => (
-                <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} />
+                <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} onDragStart={handleDragStart} onDragEnd={handleDragEnd} isDragging={draggingId === t.id} />
               ))
           }
         </div>
@@ -293,11 +329,16 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
           >+</button>
         </div>
         <RespPills responsaveis={responsaveis} value={filterTmr} onChange={setFilterTmr} />
-        <div className={styles.agendaCardBody}>
+        <div
+          className={`${styles.agendaCardBody} ${dropTarget === 'tmr' ? styles.agendaCardBodyDrop : ''}`}
+          onDragOver={e => handleDragOver('tmr', e)}
+          onDragLeave={handleDragLeave}
+          onDrop={() => handleDropOnZone(tomorrowISO + 'T12:00:00')}
+        >
           {tomorrowTasks.length === 0
             ? <div className={styles.agendaEmpty}>Nenhuma tarefa para amanhã</div>
             : tomorrowTasks.map(t => (
-                <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} />
+                <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} onDragStart={handleDragStart} onDragEnd={handleDragEnd} isDragging={draggingId === t.id} />
               ))
           }
         </div>
@@ -344,14 +385,20 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
         <RespPills responsaveis={responsaveis} value={filterWk} onChange={setFilterWk} />
         <div className={styles.weekColumns}>
           {weekDays.map(({ d, iso, isToday, tasks }) => (
-            <div key={iso} className={`${styles.weekCell} ${isToday ? styles.weekCellToday : ''}`}>
+            <div
+              key={iso}
+              className={`${styles.weekCell} ${isToday ? styles.weekCellToday : ''} ${dropTarget === iso ? styles.weekCellDrop : ''}`}
+              onDragOver={e => handleDragOver(iso, e)}
+              onDragLeave={handleDragLeave}
+              onDrop={() => handleDropOnZone(iso + 'T12:00:00')}
+            >
               <div className={styles.weekCellHeader}>
                 <span className={styles.weekDayWkd}>{WEEKDAYS_SHORT[d.getDay()]}</span>
                 <span className={`${styles.weekDayNum} ${isToday ? styles.weekDayNumToday : ''}`}>{d.getDate()}</span>
               </div>
               <div className={styles.weekCellTasks}>
                 {tasks.map(t => (
-                  <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} />
+                  <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} onDragStart={handleDragStart} onDragEnd={handleDragEnd} isDragging={draggingId === t.id} />
                 ))}
               </div>
             </div>
