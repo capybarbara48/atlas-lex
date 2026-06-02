@@ -507,6 +507,92 @@
   .weekColumns { grid-template-columns: repeat(4, 1fr); }
 }
 
+/* ── Audiências event list ──────────────────────────────────────────── */
+.eventList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.75rem 1rem;
+}
+
+.eventItem {
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(var(--accent-rgb),0.04);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+.eventItem:hover {
+  background: rgba(var(--accent-rgb),0.08);
+  border-color: rgba(var(--accent-rgb),0.18);
+}
+
+.evDateCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+}
+.evWeekday {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+}
+.evDay {
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.evSep {
+  width: 1px;
+  background: rgba(var(--accent-rgb),0.12);
+  flex-shrink: 0;
+}
+
+.evBody { flex: 1; min-width: 0; }
+.evTitle {
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 0.3rem;
+}
+.evMeta {
+  font-size: 0.7rem;
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.evTag {
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.63rem;
+  font-weight: 600;
+}
+.evTagHoje { background: var(--accent-dim); color: var(--accent); }
+.evTagProx { background: var(--blue-dim);   color: var(--blue); }
+
+.evHora {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  align-self: center;
+}
+
 /* ── Calendar ───────────────────────────────────────────────────────── */
 .calendarWrap {
   display: flex;

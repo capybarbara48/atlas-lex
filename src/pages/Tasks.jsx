@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
 import { useAllTasks, updateTaskStatus, updateTaskOrder } from '@/hooks/useTasks'
+import { useUpcomingHearings } from '@/hooks/useHearings'
 import { useToast } from '@/context/ToastContext'
 import { supabase } from '@/lib/supabase'
 import PageShell from '@/components/ui/PageShell'
@@ -104,8 +105,43 @@ const ICON_UPCOMING = (
   </svg>
 )
 
+const ICON_HEARING = (
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1.5 14.5h13"/>
+    <rect x="2.5" y="10" width="11" height="4" rx="0.5"/>
+    <path d="M4.5 10V8M8 10V8M11.5 10V8"/>
+    <path d="M2.5 8h11"/>
+    <path d="M8 2.5l5.5 5.5H2.5L8 2.5z"/>
+  </svg>
+)
+
 function CardIcon({ icon }) {
   return <span className={styles.agendaCardIcon}>{icon}</span>
+}
+
+function HearingEventItem({ h, todayISO }) {
+  const isToday = h.date === todayISO
+  const d = new Date(h.date + 'T12:00:00')
+  return (
+    <div className={styles.eventItem}>
+      <div className={styles.evDateCol}>
+        <span className={styles.evWeekday}>{WEEKDAYS_SHORT[d.getDay()]}</span>
+        <span className={styles.evDay}>{d.getDate()}</span>
+      </div>
+      <div className={styles.evSep} />
+      <div className={styles.evBody}>
+        <div className={styles.evTitle}>{h.title}</div>
+        <div className={styles.evMeta}>
+          <span className={`${styles.evTag} ${isToday ? styles.evTagHoje : styles.evTagProx}`}>
+            {isToday ? 'Hoje' : d.toLocaleDateString('pt-BR', { month: 'short' })}
+          </span>
+          {h.cases?.title && <span>{h.cases.title}</span>}
+          {h.location && <span>{h.location}</span>}
+        </div>
+      </div>
+      {h.time && <span className={styles.evHora}>{h.time.slice(0, 5)}</span>}
+    </div>
+  )
 }
 
 /* ── Agenda: shared sub-components ─────────────────────────────────── */
@@ -196,6 +232,8 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
   const [addingQuick, setAddingQuick] = useState(false)
   const [draggingId, setDraggingId] = useState(null)
   const [dropTarget, setDropTarget] = useState(null)
+
+  const { data: rawHearings } = useUpcomingHearings()
 
   const selectedISO = toISO(addDays(today, dayOffset))
 
@@ -449,6 +487,27 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* ── Card 5: Audiências ── */}
+      <div className={`${styles.agendaCard} ${styles.agendaCardFull}`}>
+        <div className={styles.agendaCardHeader}>
+          <CardIcon icon={ICON_HEARING} />
+          <span className={styles.agendaCardTitle}>Audiências</span>
+          <span className={styles.agendaCardSub}>
+            {(rawHearings ?? []).length > 0 ? `${(rawHearings ?? []).length} próxima(s)` : 'Nenhuma agendada'}
+          </span>
+        </div>
+        <div className={styles.agendaCardBody}>
+          {(rawHearings ?? []).length === 0
+            ? <div className={styles.agendaEmpty}>Nenhuma audiência agendada — cadastre em Casos &rsaquo; editar caso</div>
+            : <div className={styles.eventList}>
+                {(rawHearings ?? []).map(h => (
+                  <HearingEventItem key={h.id} h={h} todayISO={todayISO} />
+                ))}
+              </div>
+          }
         </div>
       </div>
 

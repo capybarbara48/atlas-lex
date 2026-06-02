@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { useKanbanSituations } from '@/hooks/useKanbanSituations'
+import { useCaseHearings, addHearing, deleteHearing } from '@/hooks/useHearings'
 import Modal from '@/components/ui/Modal'
 import ClientForm from './ClientForm'
 import s from './Form.module.css'
@@ -9,6 +10,90 @@ import s from './Form.module.css'
 const AREAS = ['Cível','Trabalhista','Família','Criminal','Tributário','Bancário',
                'Societário','Imobiliário','Ambiental','Administrativo','Previdenciário',
                'Consumidor','Outro']
+
+function HearingsSection({ caseId, lawyerId }) {
+  const { data: hearings, refetch } = useCaseHearings(caseId)
+  const [nh, setNh] = useState({ title: '', date: '', time: '', location: '' })
+  const [adding, setAdding] = useState(false)
+
+  const setNhF = (k, v) => setNh(n => ({ ...n, [k]: v }))
+
+  async function handleAdd() {
+    if (!nh.title.trim() || !nh.date) return
+    setAdding(true)
+    await addHearing({
+      lawyer_id: lawyerId,
+      case_id:   caseId,
+      title:     nh.title.trim(),
+      date:      nh.date,
+      time:      nh.time || null,
+      location:  nh.location.trim() || null,
+    })
+    setAdding(false)
+    setNh({ title: '', date: '', time: '', location: '' })
+    refetch()
+  }
+
+  async function handleDel(id) {
+    await deleteHearing(id)
+    refetch()
+  }
+
+  const list = hearings ?? []
+
+  return (
+    <>
+      <hr className={s.sectionDivider} />
+      <div className={`${s.field} ${s.span2}`}>
+        <div className={s.sectionTitle}>Audiências</div>
+        {list.length > 0 && (
+          <div className={s.hearingList}>
+            {list.map(h => (
+              <div key={h.id} className={s.hearingItem}>
+                <span className={s.hearingItemDate}>
+                  {new Date(h.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                </span>
+                {h.time && <span className={s.hearingItemMeta}>{h.time.slice(0, 5)}</span>}
+                <span className={s.hearingItemTitle}>{h.title}</span>
+                {h.location && <span className={s.hearingItemMeta}>{h.location}</span>}
+                <button type="button" className={s.hearingItemDel} onClick={() => handleDel(h.id)} title="Excluir">✕</button>
+              </div>
+            ))}
+          </div>
+        )}
+        {list.length === 0 && <div className={s.hint}>Nenhuma audiência cadastrada.</div>}
+      </div>
+      <div className={`${s.field} ${s.span2}`}>
+        <div className={s.inlineCard}>
+          <div className={s.inlineCardTitle}>Adicionar audiência</div>
+          <div className={s.inlineGrid}>
+            <div className={`${s.field} ${s.span2}`}>
+              <label className={s.label}>Título *</label>
+              <input className={s.input} value={nh.title} onChange={e => setNhF('title', e.target.value)} placeholder="Ex: Audiência de Instrução" />
+            </div>
+            <div className={s.field}>
+              <label className={s.label}>Data *</label>
+              <input className={s.input} type="date" value={nh.date} onChange={e => setNhF('date', e.target.value)} />
+            </div>
+            <div className={s.field}>
+              <label className={s.label}>Horário</label>
+              <input className={s.input} type="time" value={nh.time} onChange={e => setNhF('time', e.target.value)} />
+            </div>
+            <div className={`${s.field} ${s.span2}`}>
+              <label className={s.label}>Local</label>
+              <input className={s.input} value={nh.location} onChange={e => setNhF('location', e.target.value)} placeholder="Ex: Vara Cível, Fórum Central" />
+            </div>
+          </div>
+          <div className={s.inlineActions}>
+            <button type="button" className={s.btnSave} disabled={adding || !nh.title.trim() || !nh.date} onClick={handleAdd}>
+              {adding ? 'Adicionando…' : '+ Adicionar'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
 
 export default function CaseForm({ initial, onSave, onClose }) {
   const { session, lawyer } = useAuth()
@@ -259,6 +344,10 @@ export default function CaseForm({ initial, onSave, onClose }) {
               placeholder="0,00" />
           </div>
         </>}
+
+        {initial?.id && (
+          <HearingsSection caseId={initial.id} lawyerId={session.user.id} />
+        )}
 
       </div>
 

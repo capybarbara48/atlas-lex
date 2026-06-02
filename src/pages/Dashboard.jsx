@@ -5,6 +5,7 @@ import { useCaseStats, useCases, updateCaseSituation } from '@/hooks/useCases'
 import { useKanbanSituations } from '@/hooks/useKanbanSituations'
 import { useClientCount } from '@/hooks/useClients'
 import { useTodayTasks, updateTaskStatus } from '@/hooks/useTasks'
+import { useUpcomingHearings } from '@/hooks/useHearings'
 import { useMonthFinancials, useRecentEntries } from '@/hooks/useFinancials'
 import Modal from '@/components/ui/Modal'
 import CaseForm from '@/components/forms/CaseForm'
@@ -221,6 +222,34 @@ function EntradaItem({ e }) {
   )
 }
 
+const WDAYS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
+
+function HearingEventItem({ h }) {
+  const today = new Date().toISOString().split('T')[0]
+  const isToday = h.date === today
+  const d = new Date(h.date + 'T12:00:00')
+  return (
+    <div className={styles.eventItem}>
+      <div className={styles.evDateCol}>
+        <span className={styles.evWeekday}>{WDAYS[d.getDay()]}</span>
+        <span className={styles.evDay}>{d.getDate()}</span>
+      </div>
+      <div className={styles.evSep} />
+      <div className={styles.evBody}>
+        <div className={styles.evTitle}>{h.title}</div>
+        <div className={styles.evMeta}>
+          <span className={`${styles.evTag} ${isToday ? styles.evTagHoje : styles.evTagProx}`}>
+            {isToday ? 'Hoje' : d.toLocaleDateString('pt-BR', { month: 'short' })}
+          </span>
+          {h.cases?.title && <span>{h.cases.title}</span>}
+          {h.location && <span>{h.location}</span>}
+        </div>
+      </div>
+      {h.time && <span className={styles.evHora}>{h.time.slice(0, 5)}</span>}
+    </div>
+  )
+}
+
 /* ── main dashboard ───────────────────────────────────────────────────── */
 export default function Dashboard() {
   const { lawyer } = useAuth()
@@ -234,6 +263,7 @@ export default function Dashboard() {
   const { data: rawTasks,   refetch: refetchTasks } = useTodayTasks()
   const { data: finMonth }                          = useMonthFinancials()
   const { data: rawEntries }                        = useRecentEntries({ limit: 6 })
+  const { data: rawHearings }                       = useUpcomingHearings()
 
   /* derived data */
   const cases   = useMemo(() => (rawCases   ?? []).map(mapDashCase),  [rawCases])
@@ -243,6 +273,7 @@ export default function Dashboard() {
   const today        = new Date().toISOString().split('T')[0]
   const overdueTasks = tasks.filter(t => t.prazo && t.prazo < today)
   const todayTasks   = tasks.filter(t => t.prazo === today)
+  const hearings     = rawHearings ?? []
 
   const casosTotal  = caseStats?.total ?? '—'
   const casosAtivos = caseStats?.ativo ?? '—'
@@ -304,24 +335,34 @@ export default function Dashboard() {
           <KanbanBoard cases={cases} situations={situations} onMove={handleMoveCase} />
         </div>
 
-        {/* ── Card: Tarefas atrasadas ── */}
+        {/* ── Card: Audiências ── */}
         <div className={`${styles.card} ${styles.cardAudiencias}`}>
           <div className={styles.cardHeader}>
             <div className={styles.cardTitleGroup}>
-              <div className={`${styles.cardIcon} ${styles.iconBlue}`}>⚠</div>
+              <div className={`${styles.cardIcon} ${styles.iconGold}`} style={{ color: 'var(--accent)' }}>
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" width="22" height="22">
+                  <path d="M1.5 14.5h13"/>
+                  <rect x="2.5" y="10" width="11" height="4" rx="0.5"/>
+                  <path d="M4.5 10V8M8 10V8M11.5 10V8"/>
+                  <path d="M2.5 8h11"/>
+                  <path d="M8 2.5l5.5 5.5H2.5L8 2.5z"/>
+                </svg>
+              </div>
               <div>
-                <div className={styles.cardTitle}>Atrasadas &amp; Urgentes</div>
+                <div className={styles.cardTitle}>Audiências</div>
                 <div className={styles.cardSubtitle}>
-                  {overdueTasks.length > 0 ? `${overdueTasks.length} tarefa(s) vencida(s)` : 'Nenhuma tarefa atrasada'}
+                  {hearings.length > 0 ? `${hearings.length} próxima(s)` : 'Nenhuma agendada'}
                 </div>
               </div>
             </div>
-            <Link to="/painel/tarefas" className={styles.cardLink}>Ver todas →</Link>
+            <Link to="/painel/tarefas" className={styles.cardLink}>Ver agenda →</Link>
           </div>
           <div className={styles.cardBody}>
-            {overdueTasks.length === 0
-              ? <div className={styles.emptyHint}>Tudo em dia!</div>
-              : overdueTasks.map(t => <TarefaItem key={t.id} t={t} onCheck={handleTaskCheck} />)
+            {hearings.length === 0
+              ? <div className={styles.emptyHint}>Nenhuma audiência agendada</div>
+              : <div className={styles.eventList}>
+                  {hearings.map(h => <HearingEventItem key={h.id} h={h} />)}
+                </div>
             }
           </div>
         </div>
