@@ -69,6 +69,22 @@
   flex-wrap: wrap;
 }
 
+.agendaCardIcon {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-dim);
+  color: var(--accent);
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.agendaCardIcon svg {
+  width: 15px;
+  height: 15px;
+}
+
 .agendaCardTitle {
   font-size: 0.8rem;
   font-weight: 700;

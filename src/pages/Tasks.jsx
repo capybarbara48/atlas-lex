@@ -66,6 +66,48 @@ function fmtDate(d, opts) {
   return new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', opts)
 }
 
+/* ── Card icons ─────────────────────────────────────────────────────── */
+const ICON_TODAY = (
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="3" width="12" height="11" rx="1.5"/>
+    <path d="M5.5 1.5v3M10.5 1.5v3M2 7h12"/>
+    <circle cx="8" cy="10.5" r="2" fill="currentColor" stroke="none"/>
+  </svg>
+)
+
+const ICON_NODATE = (
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="3" width="12" height="11" rx="1.5"/>
+    <path d="M5.5 1.5v3M10.5 1.5v3M2 7h12"/>
+    <path d="M5.5 10.5h5"/>
+  </svg>
+)
+
+const ICON_TMR = (
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="3" width="12" height="11" rx="1.5"/>
+    <path d="M5.5 1.5v3M10.5 1.5v3M2 7h12"/>
+    <path d="M5.5 10.5h2.5M10.5 8.5l2 2-2 2"/>
+  </svg>
+)
+
+const ICON_UPCOMING = (
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="3" width="12" height="11" rx="1.5"/>
+    <path d="M5.5 1.5v3M10.5 1.5v3M2 7h12"/>
+    <circle cx="5"  cy="9.5"  r="0.9" fill="currentColor" stroke="none"/>
+    <circle cx="8"  cy="9.5"  r="0.9" fill="currentColor" stroke="none"/>
+    <circle cx="11" cy="9.5"  r="0.9" fill="currentColor" stroke="none"/>
+    <circle cx="5"  cy="12.5" r="0.9" fill="currentColor" stroke="none" opacity="0.4"/>
+    <circle cx="8"  cy="12.5" r="0.9" fill="currentColor" stroke="none" opacity="0.4"/>
+    <circle cx="11" cy="12.5" r="0.9" fill="currentColor" stroke="none" opacity="0.4"/>
+  </svg>
+)
+
+function CardIcon({ icon }) {
+  return <span className={styles.agendaCardIcon}>{icon}</span>
+}
+
 /* ── Agenda: shared sub-components ─────────────────────────────────── */
 function RespPills({ responsaveis, value, onChange }) {
   if (responsaveis.length === 0) return null
@@ -252,6 +294,7 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
       {/* ── Card 1: Tarefas do Dia ── */}
       <div className={styles.agendaCard}>
         <div className={styles.agendaCardHeader}>
+          <CardIcon icon={ICON_TODAY} />
           <div className={styles.agendaNavRow}>
             <button className={styles.agendaNavBtn} onClick={() => setDayOffset(d => d - 1)}>‹</button>
             <button className={styles.agendaNavBtnToday} onClick={() => setDayOffset(0)}>Hoje</button>
@@ -285,6 +328,7 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
       {/* ── Card 2: Tarefas Sem Prazo ── */}
       <div className={styles.agendaCard}>
         <div className={styles.agendaCardHeader}>
+          <CardIcon icon={ICON_NODATE} />
           <span className={styles.agendaCardTitle}>Tarefas Sem Prazo</span>
         </div>
         <RespPills responsaveis={responsaveis} value={filterNDL} onChange={setFilterNDL} />
@@ -318,6 +362,7 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
       {/* ── Card 3: Amanhã ── */}
       <div className={`${styles.agendaCard} ${styles.agendaCardFull}`}>
         <div className={styles.agendaCardHeader}>
+          <CardIcon icon={ICON_TMR} />
           <span className={styles.agendaCardTitle}>Amanhã</span>
           <span className={styles.agendaCardSub}>
             {new Date(tomorrowISO + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'short' })}
@@ -347,6 +392,7 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
       {/* ── Card 4: Próximos 21 Dias ── */}
       <div className={`${styles.agendaCard} ${styles.agendaCardFull}`}>
         <div className={styles.agendaCardHeader}>
+          <CardIcon icon={ICON_UPCOMING} />
           <span className={styles.agendaCardTitle}>Próximos Dias</span>
           <div className={styles.weekOffsetToggle}>
             <button
