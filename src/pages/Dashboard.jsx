@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useCaseStats, useCases } from '@/hooks/useCases'
+import { useKanbanSituations } from '@/hooks/useKanbanSituations'
 import { useClientCount } from '@/hooks/useClients'
 import { useTodayTasks, updateTaskStatus } from '@/hooks/useTasks'
 import { useMonthFinancials, useRecentEntries } from '@/hooks/useFinancials'
@@ -34,10 +35,11 @@ function tribColor(court) {
 /* ── data mappers ─────────────────────────────────────────────────────── */
 function mapDashCase(c) {
   return {
-    id:        c.id,
-    titulo:    c.title,
-    status:    c.status,
-    tribunal:  c.court ?? '—',
+    id:         c.id,
+    titulo:     c.title,
+    status:     c.status,
+    situation:  c.situation ?? null,
+    tribunal:   c.court ?? '—',
     trib_color: tribColor(c.court),
   }
 }
@@ -63,14 +65,6 @@ function mapDashEntry(e) {
   }
 }
 
-/* ── kanban columns (DB statuses) ─────────────────────────────────────── */
-const DASH_COLS = [
-  { key: 'ativo',     title: 'Ativo',     color: 'st-green' },
-  { key: 'suspenso',  title: 'Suspenso',  color: 'st-gold' },
-  { key: 'encerrado', title: 'Encerrado', color: 'st-blue' },
-  { key: 'arquivado', title: 'Arquivado', color: 'st-dark' },
-]
-
 /* ── sub-components ───────────────────────────────────────────────────── */
 function StatBox({ num, label }) {
   return (
@@ -81,17 +75,44 @@ function StatBox({ num, label }) {
   )
 }
 
-function KanbanBoard({ cases }) {
+function KanbanBoard({ cases, situations }) {
   const navigate = useNavigate()
+
+  const bySituation = useMemo(() => {
+    const map = {}
+    situations.forEach(s => { map[s.id] = [] })
+    map['__none__'] = []
+    cases.forEach(c => {
+      if (c.situation && map[c.situation] !== undefined) {
+        map[c.situation].push(c)
+      } else {
+        map['__none__'].push(c)
+      }
+    })
+    return map
+  }, [cases, situations])
+
+  const hasNone = (bySituation['__none__'] ?? []).length > 0
+  const cols = [
+    ...situations,
+    ...(hasNone ? [{ id: '__none__', value: 'Não categorizado', color: '#94a3b8' }] : []),
+  ]
+
   return (
     <div className={styles.kanbanWrapper}>
       <div className={styles.kanbanBoard}>
-        {DASH_COLS.map(col => {
-          const items = cases.filter(c => c.status === col.key)
+        {cols.map(sit => {
+          const items = bySituation[sit.id] ?? []
+          const col = sit.color ?? '#888'
           return (
-            <div key={col.key} className={styles.kanbanCol}>
+            <div key={sit.id} className={styles.kanbanCol}>
               <div className={styles.kanbanColHeader}>
-                <span className={`${styles.kanbanColTitle} ${col.color}`}>{col.title}</span>
+                <span
+                  className={styles.kanbanColTitle}
+                  style={{ background: col + '28', color: col }}
+                >
+                  {sit.value}
+                </span>
                 <span className={styles.kanbanColCount}>{items.length}</span>
               </div>
               <div className={styles.kanbanItems}>
@@ -174,6 +195,7 @@ export default function Dashboard() {
   /* data hooks */
   const { data: caseStats }                         = useCaseStats()
   const { data: rawCases,   refetch: refetchCases } = useCases()
+  const { situations }                              = useKanbanSituations()
   const { data: clientesTotal }                     = useClientCount()
   const { data: rawTasks,   refetch: refetchTasks } = useTodayTasks()
   const { data: finMonth }                          = useMonthFinancials()
@@ -240,7 +262,7 @@ export default function Dashboard() {
             </div>
             <Link to="/painel/casos" className={styles.cardLink}>Ver todos →</Link>
           </div>
-          <KanbanBoard cases={cases} />
+          <KanbanBoard cases={cases} situations={situations} />
         </div>
 
         {/* ── Card: Tarefas atrasadas ── */}
