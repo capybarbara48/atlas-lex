@@ -164,9 +164,6 @@
 .respPills {
   display: flex;
   gap: 0.25rem;
-  padding: 0.45rem 1rem;
-  background: var(--bg);
-  border-bottom: var(--border);
   flex-wrap: wrap;
 }
 

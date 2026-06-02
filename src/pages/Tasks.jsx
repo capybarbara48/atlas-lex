@@ -217,16 +217,12 @@ function AgendaTaskRow({ t, todayISO, responsaveis, onClick, onCheck, onOrderCha
 }
 
 /* ── Agenda view ────────────────────────────────────────────────────── */
-function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, refetch }) {
+function AgendaView({ rawTasks, responsaveis, filterResp, session, onEdit, onNewWithDate, refetch }) {
   const today    = new Date()
   const todayISO = toISO(today)
   const tomorrowISO = toISO(addDays(today, 1))
 
   const [dayOffset,  setDayOffset]  = useState(0)
-  const [filterDay,  setFilterDay]  = useState('todos')
-  const [filterNDL,  setFilterNDL]  = useState('todos')
-  const [filterTmr,  setFilterTmr]  = useState('todos')
-  const [filterWk,   setFilterWk]   = useState('todos')
   const [weekOffset, setWeekOffset] = useState(2)
   const [quickTitle, setQuickTitle] = useState('')
   const [addingQuick, setAddingQuick] = useState(false)
@@ -282,9 +278,9 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
 
   const active = rawTasks.filter(t => !['concluida','cancelada'].includes(t.status))
 
-  const todayTasks    = byOrder(byResp(active.filter(t => t.due_date?.split('T')[0] === selectedISO), filterDay))
-  const noDateTasks   = byOrder(byResp(active.filter(t => !t.due_date), filterNDL))
-  const tomorrowTasks = byOrder(byResp(active.filter(t => t.due_date?.split('T')[0] === tomorrowISO), filterTmr))
+  const todayTasks    = byOrder(byResp(active.filter(t => t.due_date?.split('T')[0] === selectedISO), filterResp))
+  const noDateTasks   = byOrder(byResp(active.filter(t => !t.due_date), filterResp))
+  const tomorrowTasks = byOrder(byResp(active.filter(t => t.due_date?.split('T')[0] === tomorrowISO), filterResp))
 
   const weekDays = useMemo(() =>
     Array.from({ length: 21 }, (_, i) => {
@@ -295,11 +291,11 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
         isToday: iso === todayISO,
         tasks: rawTasks.filter(t =>
           t.due_date?.split('T')[0] === iso &&
-          (filterWk === 'todos' || t.assigned_to === filterWk)
+          (filterResp === 'todos' || t.assigned_to === filterResp)
         ),
       }
     })
-  , [rawTasks, filterWk, todayISO, weekOffset])
+  , [rawTasks, filterResp, todayISO, weekOffset])
 
   function dayTitle() {
     if (dayOffset === 0) return 'Hoje'
@@ -319,7 +315,7 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
       priority:    'media',
       status:      'pendente',
       due_date:    null,
-      assigned_to: filterNDL !== 'todos' ? filterNDL : null,
+      assigned_to: filterResp !== 'todos' ? filterResp : null,
     })
     setAddingQuick(false)
     setQuickTitle('')
@@ -343,11 +339,10 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
           </span>
           <button
             className={styles.agendaAddBtn}
-            onClick={() => onNewWithDate(selectedISO, filterDay !== 'todos' ? filterDay : null)}
+            onClick={() => onNewWithDate(selectedISO, filterResp !== 'todos' ? filterResp : null)}
             title="Nova tarefa"
           >+</button>
         </div>
-        <RespPills responsaveis={responsaveis} value={filterDay} onChange={setFilterDay} />
         <div
           className={`${styles.agendaCardBody} ${dropTarget === 'today' ? styles.agendaCardBodyDrop : ''}`}
           onDragOver={e => handleDragOver('today', e)}
@@ -369,7 +364,6 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
           <CardIcon icon={ICON_NODATE} />
           <span className={styles.agendaCardTitle}>Tarefas Sem Prazo</span>
         </div>
-        <RespPills responsaveis={responsaveis} value={filterNDL} onChange={setFilterNDL} />
         <form className={styles.agendaQuickAdd} onSubmit={handleQuickAdd}>
           <input
             className={styles.agendaQuickInput}
@@ -407,11 +401,10 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
           </span>
           <button
             className={styles.agendaAddBtn}
-            onClick={() => onNewWithDate(tomorrowISO, filterTmr !== 'todos' ? filterTmr : null)}
+            onClick={() => onNewWithDate(tomorrowISO, filterResp !== 'todos' ? filterResp : null)}
             title="Nova tarefa para amanhã"
           >+</button>
         </div>
-        <RespPills responsaveis={responsaveis} value={filterTmr} onChange={setFilterTmr} />
         <div
           className={`${styles.agendaCardBody} ${dropTarget === 'tmr' ? styles.agendaCardBodyDrop : ''}`}
           onDragOver={e => handleDragOver('tmr', e)}
@@ -462,11 +455,10 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
           </div>
           <button
             className={styles.agendaAddBtn}
-            onClick={() => onNewWithDate(null, filterWk !== 'todos' ? filterWk : null)}
+            onClick={() => onNewWithDate(null, filterResp !== 'todos' ? filterResp : null)}
             title="Nova tarefa"
           >+</button>
         </div>
-        <RespPills responsaveis={responsaveis} value={filterWk} onChange={setFilterWk} />
         <div className={styles.weekColumns}>
           {weekDays.map(({ d, iso, isToday, tasks }) => (
             <div
@@ -787,11 +779,12 @@ export default function Tasks() {
   const prefs = loadPreferences(lawyer?.id)
   const responsaveis = lawyer?.preferences?.responsaveis ?? []
 
-  const [view, setView]         = useState(prefs.tarefas_view ?? 'agenda')
-  const [search, setSearch]     = useState('')
+  const [view, setView]           = useState(prefs.tarefas_view ?? 'agenda')
+  const [search, setSearch]       = useState('')
   const [filterPri, setFilterPri] = useState('todos')
-  const [formOpen, setFormOpen] = useState(false)
-  const [editing,  setEditing]  = useState(null)
+  const [filterResp, setFilterResp] = useState('todos')
+  const [formOpen, setFormOpen]   = useState(false)
+  const [editing,  setEditing]    = useState(null)
 
   const { data: rawTasks, loading, error, refetch } = useAllTasks()
   const tasks = useMemo(() => (rawTasks ?? []).map(mapTask), [rawTasks])
@@ -844,33 +837,36 @@ export default function Tasks() {
           Nova tarefa
         </button>
       }
-      filters={view !== 'agenda'
-        ? (
-          <>
-            <div className={styles.searchWrap}>
-              <svg className={styles.searchIcon} viewBox="0 0 16 16" fill="currentColor">
-                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.856a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
-              </svg>
-              <input
-                className={styles.searchInput}
-                type="text"
-                placeholder="Buscar tarefa ou caso..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
-            </div>
-            <div className={styles.filterGroup}>
-              {[{ v: 'todos', l: 'Todas' }, { v: 'urgente', l: 'Urgente' }, { v: 'alta', l: 'Alta' }, { v: 'media', l: 'Média' }, { v: 'baixa', l: 'Baixa' }].map(({ v, l }) => (
-                <button
-                  key={v}
-                  className={`${styles.filterBtn} ${filterPri === v ? styles.filterActive : ''}`}
-                  onClick={() => setFilterPri(v)}
-                >{l}</button>
-              ))}
-            </div>
-          </>
-        )
-        : null
+      filters={
+        view === 'agenda'
+          ? (responsaveis.length > 0
+              ? <RespPills responsaveis={responsaveis} value={filterResp} onChange={setFilterResp} />
+              : null)
+          : (
+            <>
+              <div className={styles.searchWrap}>
+                <svg className={styles.searchIcon} viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.856a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
+                </svg>
+                <input
+                  className={styles.searchInput}
+                  type="text"
+                  placeholder="Buscar tarefa ou caso..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
+              </div>
+              <div className={styles.filterGroup}>
+                {[{ v: 'todos', l: 'Todas' }, { v: 'urgente', l: 'Urgente' }, { v: 'alta', l: 'Alta' }, { v: 'media', l: 'Média' }, { v: 'baixa', l: 'Baixa' }].map(({ v, l }) => (
+                  <button
+                    key={v}
+                    className={`${styles.filterBtn} ${filterPri === v ? styles.filterActive : ''}`}
+                    onClick={() => setFilterPri(v)}
+                  >{l}</button>
+                ))}
+              </div>
+            </>
+          )
       }
     >
       {error
@@ -879,6 +875,7 @@ export default function Tasks() {
           ? <AgendaView
               rawTasks={rawTasks ?? []}
               responsaveis={responsaveis}
+              filterResp={filterResp}
               session={session}
               onEdit={openEdit}
               onNewWithDate={openNewWithDate}
