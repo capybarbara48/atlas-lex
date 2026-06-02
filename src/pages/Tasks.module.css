@@ -398,7 +398,7 @@
   background: var(--bg);
   border: var(--border);
   border-radius: 10px;
-  height: 148px;
+  height: 192px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
