@@ -4,7 +4,6 @@ import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
 import { useAllTasks } from '@/hooks/useTasks'
 import { useToast } from '@/context/ToastContext'
 import { supabase } from '@/lib/supabase'
-import { useGoogleIntegration } from '@/hooks/useGoogleIntegration'
 import PageShell from '@/components/ui/PageShell'
 import ViewToggle from '@/components/ui/ViewToggle'
 import Modal from '@/components/ui/Modal'
@@ -96,32 +95,16 @@ function RespPills({ responsaveis, value, onChange }) {
 }
 
 function AgendaTaskRow({ t, todayISO, responsaveis, onClick }) {
-  const overdue  = t.due_date && t.due_date.split('T')[0] < todayISO && !['concluida','cancelada'].includes(t.status)
-  const done     = t.status === 'concluida'
-  const isGcal   = t.source === 'google_calendar'
-  const isGtask  = t.source === 'google_tasks'
-  const isGoogle = isGcal || isGtask
-
-  function handleClick() {
-    if (isGcal && t.sourceUrl) { window.open(t.sourceUrl, '_blank'); return }
-    if (!isGoogle) onClick(t.id)
-  }
-
+  const overdue = t.due_date && t.due_date.split('T')[0] < todayISO && !['concluida','cancelada'].includes(t.status)
+  const done    = t.status === 'concluida'
   return (
     <div
       className={`${styles.agendaTaskRow} ${overdue ? styles.agendaTaskOverdue : ''} ${done ? styles.agendaTaskDone : ''}`}
-      onClick={handleClick}
-      style={isGoogle && !t.sourceUrl ? { cursor: 'default' } : undefined}
+      onClick={() => onClick(t.id)}
     >
-      <span
-        className={styles.agendaTaskDot}
-        style={{ background: isGcal ? '#4285F4' : isGtask ? '#34A853' : (PRI_DOT_HEX[t.priority] ?? '#888') }}
-      />
+      <span className={styles.agendaTaskDot} style={{ background: PRI_DOT_HEX[t.priority] ?? '#888' }} />
       <span className={styles.agendaTaskTitle}>{t.title}</span>
-      {isGcal && t.startTime && <span className={styles.agendaTaskTime}>{t.startTime}</span>}
-      {isGcal && <span className={`${styles.agendaSourceBadge} ${styles.agendaBadgeGcal}`}>G Agenda</span>}
-      {isGtask && <span className={`${styles.agendaSourceBadge} ${styles.agendaBadgeGtask}`}>G Tarefas</span>}
-      {!isGoogle && t.assigned_to && (
+      {t.assigned_to && (
         <span
           className={styles.agendaTaskResp}
           style={{
@@ -138,22 +121,9 @@ function AgendaTaskRow({ t, todayISO, responsaveis, onClick }) {
 
 /* ── Agenda view ────────────────────────────────────────────────────── */
 function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, refetch }) {
-  const { status: googleStatus, fetchCalendarEvents, fetchGoogleTasks } = useGoogleIntegration()
-  const [googleItems, setGoogleItems] = useState([])
-
   const today    = new Date()
   const todayISO = toISO(today)
   const tomorrowISO = toISO(addDays(today, 1))
-
-  useEffect(() => {
-    if (googleStatus !== 'ok') return
-    const tMin = new Date(today); tMin.setHours(0, 0, 0, 0)
-    const tMax = addDays(tMin, 14); tMax.setHours(23, 59, 59, 999)
-    Promise.all([
-      fetchCalendarEvents(tMin.toISOString(), tMax.toISOString()),
-      fetchGoogleTasks(),
-    ]).then(([events, tasks]) => setGoogleItems([...events, ...tasks]))
-  }, [googleStatus, fetchCalendarEvents, fetchGoogleTasks])
 
   const [dayOffset,  setDayOffset]  = useState(0)
   const [filterDay,  setFilterDay]  = useState('todos')
@@ -165,15 +135,12 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
 
   const selectedISO = toISO(addDays(today, dayOffset))
 
-  // Combined: Atlas + Google items
-  const allTasks = [...rawTasks, ...googleItems]
-
   function byResp(tasks, filter) {
     if (filter === 'todos') return tasks
     return tasks.filter(t => t.assigned_to === filter)
   }
 
-  const active = allTasks.filter(t => !['concluida','cancelada'].includes(t.status))
+  const active = rawTasks.filter(t => !['concluida','cancelada'].includes(t.status))
 
   const todayTasks    = byResp(active.filter(t => t.due_date?.split('T')[0] === selectedISO), filterDay)
   const noDateTasks   = byResp(active.filter(t => !t.due_date), filterNDL)
@@ -186,13 +153,13 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
       return {
         d, iso,
         isToday: iso === todayISO,
-        tasks: allTasks.filter(t =>
+        tasks: rawTasks.filter(t =>
           t.due_date?.split('T')[0] === iso &&
           (filterWk === 'todos' || t.assigned_to === filterWk)
         ),
       }
     })
-  , [allTasks, filterWk, todayISO])
+  , [rawTasks, filterWk, todayISO])
 
   function dayTitle() {
     if (dayOffset === 0) return 'Hoje'
@@ -219,36 +186,8 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
     refetch()
   }
 
-  async function handleReconnectGoogle() {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.origin + '/painel/tarefas',
-        scopes: [
-          'email', 'profile',
-          'https://www.googleapis.com/auth/calendar.readonly',
-          'https://www.googleapis.com/auth/tasks.readonly',
-        ].join(' '),
-        queryParams: { access_type: 'offline', prompt: 'consent' },
-      },
-    })
-  }
-
   return (
     <div className={styles.agendaGrid}>
-
-      {/* ── Google status banner ── */}
-      {googleStatus === 'disconnected' && (
-        <div className={styles.googleBanner}>
-          <span className={styles.googleBannerIcon}>🔗</span>
-          <span className={styles.googleBannerText}>
-            Conecte sua conta Google para ver compromissos do Agenda e tarefas do Gmail aqui.
-          </span>
-          <button className={styles.googleBannerBtn} onClick={handleReconnectGoogle}>
-            Conectar Google
-          </button>
-        </div>
-      )}
 
       {/* ── Card 1: Tarefas do Dia ── */}
       <div className={styles.agendaCard}>

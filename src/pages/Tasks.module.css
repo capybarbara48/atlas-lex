@@ -242,58 +242,6 @@
   white-space: nowrap;
 }
 
-.agendaTaskTime {
-  font-size: 0.62rem;
-  color: var(--text-3);
-  flex-shrink: 0;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-
-.agendaSourceBadge {
-  font-size: 0.58rem;
-  font-weight: 700;
-  padding: 0.1rem 0.38rem;
-  border-radius: 999px;
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-.agendaBadgeGcal  { background: #4285F422; color: #4285F4; }
-.agendaBadgeGtask { background: #34A85322; color: #34A853; }
-
-/* Google reconnect banner */
-.googleBanner {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  background: var(--card);
-  border: var(--border);
-  border-radius: var(--radius);
-  border-left: 3px solid #4285F4;
-}
-.googleBannerIcon { font-size: 1rem; flex-shrink: 0; }
-.googleBannerText {
-  flex: 1;
-  font-size: 0.78rem;
-  color: var(--text-2);
-}
-.googleBannerBtn {
-  padding: 0.35rem 0.9rem;
-  background: #4285F4;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-  flex-shrink: 0;
-  transition: background 0.12s;
-}
-.googleBannerBtn:hover { background: #3367d6; }
-
 /* Quick add */
 .agendaQuickAdd {
   display: flex;
