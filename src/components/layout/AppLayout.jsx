@@ -129,20 +129,86 @@ const PAGE_TITLES = {
   '/painel/vitrine':       'Vitrine',
 }
 
-/* ── Clock ──────────────────────────────────────────────────────────── */
-function Clock() {
+/* ── Brand Header ───────────────────────────────────────────────────── */
+function BrandHeader() {
+  const { lawyer, session, isAdmin, isBeta } = useAuth()
   const [now, setNow] = useState(new Date())
+
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000)
     return () => clearInterval(id)
   }, [])
-  const time = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-  const date = now.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
+
+  const h = now.getHours()
+  const greeting = h >= 5 && h < 12 ? 'Bom dia' : h >= 12 && h < 18 ? 'Boa tarde' : 'Boa noite'
+  const timeStr  = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  const dateStr  = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+
+  const initials   = lawyer?.full_name
+    ? lawyer.full_name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
+    : 'AL'
+  const firmName   = lawyer?.firm_name ?? 'Atlas Adv'
+  const firmShort  = firmName.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
+  const firstName  = lawyer?.full_name?.split(' ')[0] ?? session?.user?.email?.split('@')[0] ?? '—'
+  const fullNameUp = lawyer?.full_name ? lawyer.full_name.toUpperCase() : null
+  const firmNameUp = firmName.toUpperCase()
+
+  const isDaytime = h >= 5 && h < 18
+  const TimeIcon  = isDaytime ? (
+    <svg viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+      <circle cx="6.5" cy="6.5" r="2.5"/>
+      <path d="M6.5 1v1.5M6.5 10v1.5M1 6.5h1.5M10 6.5h1.5M2.9 2.9l1 1M9.1 9.1l1 1M2.9 10.1l1-1M9.1 3.9l1-1"/>
+    </svg>
+  ) : (
+    <svg viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10.5 8A5 5 0 0 1 4.5 2 4.5 4.5 0 1 0 10.5 8Z"/>
+    </svg>
+  )
+
   return (
-    <div className={styles.clock}>
-      <span className={styles.clockTime}>{time}</span>
-      <span className={styles.clockDate}>{date}</span>
-    </div>
+    <header className={styles.brandHeader}>
+      <div className={styles.brandLeft}>
+        {lawyer?.logo_url
+          ? <img src={lawyer.logo_url} alt="logo" className={styles.brandLogo} />
+          : <div className={styles.brandLogoMark}>{firmShort}</div>
+        }
+        <div className={styles.brandIdentity}>
+          <span className={styles.brandFirmName}>
+            {fullNameUp ? `${fullNameUp} | ${firmNameUp}` : firmNameUp}
+          </span>
+          <span className={styles.brandGreeting}>
+            <span className={styles.greetingIcon}>{TimeIcon}</span>
+            {greeting}, {firstName}
+          </span>
+        </div>
+      </div>
+
+      <div className={styles.brandCenter}>
+        <span className={styles.brandClock}>{timeStr}</span>
+        <span className={styles.brandDate}>{dateStr}</span>
+      </div>
+
+      <div className={styles.brandRight}>
+        <div className={styles.brandLivePill}>
+          <span className={styles.liveDot} />
+          <span className={styles.brandLiveLabel}>Online</span>
+        </div>
+        <div className={styles.brandAvatar}>{initials}</div>
+        <span className={styles.brandUserName}>
+          {firstName}
+          {isBeta && <span className={styles.betaPill}>Beta</span>}
+        </span>
+        {isAdmin && (
+          <Link to="/admin" className={styles.brandAdminBtn} title="Painel Admin">
+            <span className={styles.brandBtnIcon}>{ICONS.admin}</span>
+          </Link>
+        )}
+        <button className={styles.brandSignOutBtn} onClick={() => supabase.auth.signOut()}>
+          <span className={styles.brandBtnIcon}>{ICONS.signout}</span>
+          <span className={styles.brandSignOutLabel}>Sair</span>
+        </button>
+      </div>
+    </header>
   )
 }
 
@@ -199,7 +265,7 @@ export default function AppLayout() {
 
   useEffect(() => { setSidebarOpen(false) }, [location.pathname])
 
-  const initials = lawyer?.full_name
+  const initials  = lawyer?.full_name
     ? lawyer.full_name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
     : 'AL'
   const firmName  = lawyer?.firm_name ?? 'Atlas Adv'
@@ -286,31 +352,18 @@ export default function AppLayout() {
     )
   }
 
-  /* ── Shared topbar right ─────────────────────────────────────────── */
-  function TopbarRight({ showUser }) {
+  /* ── Search trigger (shared) ─────────────────────────────────────── */
+  function SearchBtn({ dark }) {
     return (
-      <div className={styles.topbarRight}>
-        <button className={styles.searchTrigger} onClick={() => setSearchOpen(true)} title="Busca global (⌘K)">
-          <span className={styles.navIcon} style={{ width:15, height:15 }}>{ICONS.search}</span>
-          <span className={styles.searchTriggerLabel}>Buscar</span>
-          <kbd className={styles.searchKbd}>⌘K</kbd>
-        </button>
-        <div className={styles.livePill}>
-          <span className={styles.liveDot} />
-          <span className={styles.liveLabel}>Online</span>
-        </div>
-        <Clock />
-        {showUser && (
-          <div className={styles.topbarUser}>
-            <div className={styles.userAvatar} style={{ width:30, height:30, fontSize:'0.68rem' }}>{initials}</div>
-            <button
-              className={styles.topbarSignOut}
-              onClick={() => supabase.auth.signOut()}
-              title="Sair"
-            >{ICONS.signout}</button>
-          </div>
-        )}
-      </div>
+      <button
+        className={`${styles.searchTrigger} ${dark ? styles.searchTriggerDark : ''}`}
+        onClick={() => setSearchOpen(true)}
+        title="Busca global (⌘K)"
+      >
+        <span className={styles.navIcon} style={{ width:15, height:15 }}>{ICONS.search}</span>
+        <span className={styles.searchTriggerLabel}>Buscar</span>
+        <kbd className={styles.searchKbd}>⌘K</kbd>
+      </button>
     )
   }
 
@@ -318,6 +371,7 @@ export default function AppLayout() {
   if (navMode === 'sidebar') {
     return (
       <div className={`${styles.shell} ${styles.modeSidebar}`}>
+        <BrandHeader />
         {sidebarOpen && <div className={styles.backdrop} onClick={() => setSidebarOpen(false)} />}
 
         <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
@@ -338,7 +392,7 @@ export default function AppLayout() {
               </button>
               <span className={styles.pageTitle}>{pageTitle}</span>
             </div>
-            <TopbarRight showUser={false} />
+            <SearchBtn dark={false} />
           </header>
           <main className={styles.main}>
             <ErrorBoundary key={location.pathname}>
@@ -361,13 +415,8 @@ export default function AppLayout() {
   if (navMode === 'top') {
     return (
       <div className={`${styles.shell} ${styles.modeTop}`}>
+        <BrandHeader />
         <header className={styles.topbarFull}>
-          <div className={styles.topbarFullBrand}>
-            {lawyer?.logo_url
-              ? <img src={lawyer.logo_url} alt="logo" className={styles.topLogoImg} />
-              : <div className={styles.topLogoMark}>{firmShort}</div>
-            }
-          </div>
           <nav className={styles.topNav}>
             {NAV_ITEMS.map(({ to, label, icon, end }) => (
               <NavLink
@@ -384,7 +433,9 @@ export default function AppLayout() {
               </NavLink>
             ))}
           </nav>
-          <TopbarRight showUser={true} />
+          <div className={styles.topbarNavRight}>
+            <SearchBtn dark={true} />
+          </div>
         </header>
 
         <main className={`${styles.main} ${styles.mainTop}`}>
@@ -406,15 +457,12 @@ export default function AppLayout() {
   /* ── BOTTOM DOCK MODE ────────────────────────────────────────────── */
   return (
     <div className={`${styles.shell} ${styles.modeBottom}`}>
+      <BrandHeader />
       <header className={styles.topbarMinimal}>
         <div className={styles.topbarLeft}>
-          {lawyer?.logo_url
-            ? <img src={lawyer.logo_url} alt="logo" className={styles.topLogoImg} />
-            : <div className={styles.topLogoMark}>{firmShort}</div>
-          }
           <span className={styles.pageTitle}>{pageTitle}</span>
         </div>
-        <TopbarRight showUser={true} />
+        <SearchBtn dark={false} />
       </header>
 
       <main className={`${styles.main} ${styles.mainBottom}`}>

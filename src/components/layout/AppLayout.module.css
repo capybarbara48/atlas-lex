@@ -3,20 +3,233 @@
   display: flex;
   min-height: 100vh;
   background: var(--bg);
+  padding-top: 64px;
 }
+
+/* ── Brand Header ───────────────────────────────────────────────────── */
+.brandHeader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: var(--accent);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  padding: 0 1.75rem;
+  gap: 1.25rem;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+  flex-shrink: 0;
+}
+
+.brandLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.brandLogo {
+  max-height: 36px;
+  max-width: 100px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.brandLogoMark {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: #fff;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.brandIdentity {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.brandFirmName {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.09em;
+  color: #fff;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.brandGreeting {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.63rem;
+  color: rgba(255,255,255,0.6);
+  white-space: nowrap;
+}
+
+.greetingIcon {
+  display: flex;
+  align-items: center;
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+.greetingIcon svg { width: 100%; height: 100%; }
+
+.brandCenter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.brandClock {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 1.3rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  color: #fff;
+  line-height: 1;
+}
+
+.brandDate {
+  font-size: 0.6rem;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.03em;
+  margin-top: 0.2rem;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.brandRight {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.brandLivePill {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.65rem;
+  background: rgba(34,168,74,0.2);
+  border: 1px solid rgba(34,168,74,0.35);
+  border-radius: 999px;
+  font-size: 0.62rem;
+  color: #5ddb8b;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.brandLiveLabel { white-space: nowrap; }
+
+.brandAvatar {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  border: 1.5px solid rgba(255,255,255,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.72rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.brandUserName {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.9);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.brandAdminBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.7);
+  text-decoration: none;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.brandAdminBtn:hover { background: rgba(255,255,255,0.18); color: #fff; }
+
+.brandSignOutBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.8rem;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.75);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.brandSignOutBtn:hover {
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  border-color: rgba(255,255,255,0.4);
+}
+
+.brandSignOutLabel { font-size: 0.72rem; }
+
+.brandBtnIcon {
+  width: 15px;
+  height: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.brandBtnIcon svg { width: 100%; height: 100%; }
 
 /* ══════════════════════════════════════════════════════════════════════
    SIDEBAR MODE
 ══════════════════════════════════════════════════════════════════════ */
 .modeSidebar .sidebar {
   width: 64px;
-  min-height: 100vh;
   background: var(--accent);
   display: flex;
   flex-direction: column;
   position: fixed;
   left: 0;
-  top: 0;
+  top: 64px;
   bottom: 0;
   z-index: 200;
   overflow: hidden;
@@ -392,7 +605,7 @@
   background: var(--card);
   border-bottom: 2px solid rgba(var(--accent-rgb), 0.1);
   position: sticky;
-  top: 0;
+  top: 64px;
   z-index: 90;
   box-shadow: 0 1px 12px rgba(var(--accent-rgb), 0.06);
   flex-shrink: 0;
@@ -567,13 +780,13 @@
 }
 
 .topbarFull {
-  height: 52px;
+  height: 48px;
   display: flex;
   align-items: center;
   gap: 0;
   background: var(--accent);
   position: sticky;
-  top: 0;
+  top: 64px;
   z-index: 200;
   flex-shrink: 0;
   padding: 0 1rem 0 0;
@@ -672,27 +885,30 @@
 
 .topNavLabel { font-size: 0.78rem; }
 
-.topbarFull .topbarRight {
+/* Right-side search slot in topbarFull */
+.topbarNavRight {
+  display: flex;
+  align-items: center;
   margin-left: auto;
-  padding-left: 0.75rem;
+  padding-right: 1rem;
   flex-shrink: 0;
 }
 
-/* Override topbar right colors for dark bg */
-.topbarFull .searchTrigger {
-  background: rgba(255,255,255,0.1);
-  border-color: rgba(255,255,255,0.15);
-  color: rgba(255,255,255,0.75);
+/* Dark variant of search trigger (for accent-bg topbars) */
+.searchTriggerDark {
+  background: rgba(255,255,255,0.1) !important;
+  border-color: rgba(255,255,255,0.15) !important;
+  color: rgba(255,255,255,0.75) !important;
 }
-.topbarFull .searchTrigger:hover { border-color: rgba(255,255,255,0.5); color: #fff; }
-.topbarFull .searchKbd { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); color: rgba(255,255,255,0.5); }
-.topbarFull .clockTime { color: #fff; }
-.topbarFull .clockDate { color: rgba(255,255,255,0.55); }
-.topbarFull .livePill { background: rgba(34,168,74,0.2); border-color: rgba(34,168,74,0.35); }
-.topbarFull .userAvatar { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.25); }
-.topbarFull .topbarSignOut { border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.65); }
-.topbarFull .topbarSignOut:hover { border-color: rgba(255,255,255,0.5); color: #fff; }
-.topbarFull .topbarSignOut svg { stroke: currentColor; }
+.searchTriggerDark:hover {
+  border-color: rgba(255,255,255,0.5) !important;
+  color: #fff !important;
+}
+.searchTriggerDark .searchKbd {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.5);
+}
 
 .mainTop { margin-top: 0; }
 .footerTop { }
@@ -713,7 +929,7 @@
   background: var(--card);
   border-bottom: var(--border);
   position: sticky;
-  top: 0;
+  top: 64px;
   z-index: 90;
   box-shadow: 0 1px 8px rgba(var(--accent-rgb), 0.06);
   flex-shrink: 0;
@@ -860,6 +1076,16 @@
 
 /* Mobile sidebar: slide-in overlay */
 @media (max-width: 767px) {
+  /* Brand header — compact on mobile */
+  .brandHeader { padding: 0 1rem; gap: 0.75rem; }
+  .brandCenter { display: none; }
+  .brandUserName { display: none; }
+  .brandSignOutLabel { display: none; }
+  .brandLiveLabel { display: none; }
+  .brandGreeting { display: none; }
+  .brandFirmName { font-size: 0.65rem; }
+  .brandSignOutBtn { padding: 0.35rem 0.5rem; }
+
   .modeSidebar .sidebar {
     width: 240px !important;
     transform: translateX(-100%);
@@ -897,12 +1123,9 @@
   .modeSidebar .contentArea { margin-left: 0; }
   .hamburger { display: flex !important; }
   .topbar { padding: 0 1rem; gap: 0.5rem; }
-  .livePill { padding: 0.25rem 0.5rem; }
-  .liveLabel { display: none; }
-  .clockDate { display: none; }
   .footer { padding: 0.65rem 1rem; }
 
-  /* Top mode — hide middle nav items, keep scroll */
+  /* Top mode — hide labels, keep scroll */
   .topNavLabel { display: none; }
   .topNavItem { padding: 0 0.65rem; }
 
