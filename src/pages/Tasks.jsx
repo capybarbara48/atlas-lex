@@ -343,32 +343,28 @@ function AgendaView({ rawTasks, responsaveis, session, onEdit, onNewWithDate, re
         </div>
         <RespPills responsaveis={responsaveis} value={filterWk} onChange={setFilterWk} />
         <div className={styles.weekColumns}>
-          {[weekDays.slice(0, 7), weekDays.slice(7, 14), weekDays.slice(14, 21)].map((col, ci) => (
-            <div key={ci} className={styles.weekColumn}>
-              {col.map(({ d, iso, isToday, tasks }) => (
-                <div key={iso} className={`${styles.weekDayRow} ${isToday ? styles.weekDayRowToday : ''}`}>
-                  <div className={styles.weekDayRowLabel}>
-                    <span className={styles.weekDayWkd}>{WEEKDAYS_SHORT[d.getDay()]}</span>
-                    <span className={`${styles.weekDayNum} ${isToday ? styles.weekDayNumToday : ''}`}>{d.getDate()}</span>
+          {weekDays.map(({ d, iso, isToday, tasks }) => (
+            <div key={iso} className={`${styles.weekCell} ${isToday ? styles.weekCellToday : ''}`}>
+              <div className={styles.weekCellHeader}>
+                <span className={styles.weekDayWkd}>{WEEKDAYS_SHORT[d.getDay()]}</span>
+                <span className={`${styles.weekDayNum} ${isToday ? styles.weekDayNumToday : ''}`}>{d.getDate()}</span>
+              </div>
+              <div className={styles.weekCellTasks}>
+                {tasks.slice(0, 2).map(t => (
+                  <div
+                    key={t.id}
+                    className={styles.weekTaskChip}
+                    style={{ borderLeftColor: PRI_DOT_HEX[t.priority] ?? '#888' }}
+                    onClick={() => onEdit(t.id)}
+                    title={t.title}
+                  >
+                    {t.title}
                   </div>
-                  <div className={styles.weekDayRowTasks}>
-                    {tasks.slice(0, 3).map(t => (
-                      <div
-                        key={t.id}
-                        className={styles.weekTaskChip}
-                        style={{ borderLeftColor: PRI_DOT_HEX[t.priority] ?? '#888' }}
-                        onClick={() => onEdit(t.id)}
-                        title={t.title}
-                      >
-                        {t.title}
-                      </div>
-                    ))}
-                    {tasks.length > 3 && (
-                      <div className={styles.weekTaskMore}>+{tasks.length - 3}</div>
-                    )}
-                  </div>
-                </div>
-              ))}
+                ))}
+                {tasks.length > 2 && (
+                  <div className={styles.weekTaskMore}>+{tasks.length - 2}</div>
+                )}
+              </div>
             </div>
           ))}
         </div>
