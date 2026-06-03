@@ -532,7 +532,7 @@ function StatsRow({ lawyerId }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════ */
-/* Histórico                                                           */
+/* Histórico — navegação mês a mês, retenção 24 meses                 */
 /* ═══════════════════════════════════════════════════════════════════ */
 function HistoryCard({ lawyerId }) {
   const [month,   setMonth]   = useState(() => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), 1) })
@@ -540,12 +540,22 @@ function HistoryCard({ lawyerId }) {
   const [desps,   setDesps]   = useState([])
   const [loading, setLoading] = useState(false)
 
+  // Cleanup: remove despachos com mais de 24 meses ao montar
+  useEffect(() => {
+    if (!lawyerId) return
+    const histKey = `atlas_intern_desp_hist_${lawyerId}`
+    const cutoff  = new Date()
+    cutoff.setMonth(cutoff.getMonth() - 24)
+    const cleaned = lsGet(histKey, []).filter(d => new Date(d.doneAt) >= cutoff)
+    lsSet(histKey, cleaned)
+  }, [lawyerId])
+
   useEffect(() => {
     if (!lawyerId) return
     setLoading(true)
-    const from = isoDate(month)
-    const next = new Date(month.getFullYear(), month.getMonth() + 1, 1)
-    const to   = isoDate(next)
+    const from    = isoDate(month)
+    const next    = new Date(month.getFullYear(), month.getMonth() + 1, 1)
+    const to      = isoDate(next)
     const histKey = `atlas_intern_desp_hist_${lawyerId}`
     const hist    = lsGet(histKey, [])
 
@@ -554,7 +564,7 @@ function HistoryCard({ lawyerId }) {
       .gte('updated_at', from)
       .lt('updated_at',  to)
       .order('updated_at', { ascending: false })
-      .limit(60)
+      .limit(200)
       .then(({ data }) => {
         setTasks(data ?? [])
         setDesps(hist.filter(d => { const dt = new Date(d.doneAt); return dt >= month && dt < next }))
@@ -563,8 +573,8 @@ function HistoryCard({ lawyerId }) {
   }, [lawyerId, month])
 
   const combined = useMemo(() => {
-    const t = (tasks).map(t => ({ key: 't' + t.id,   type: 'task',     title: t.title,      sub: t.assigned_to, date: t.updated_at }))
-    const d = (desps).map(d => ({ key: 'd' + d.id,   type: 'despacho', title: d.caseTitle,  sub: d.tipo,        date: d.doneAt }))
+    const t = tasks.map(t => ({ key: 't' + t.id,  type: 'task',     title: t.title,     sub: t.assigned_to, date: t.updated_at }))
+    const d = desps.map(d => ({ key: 'd' + d.id,  type: 'despacho', title: d.caseTitle, sub: d.tipo,        date: d.doneAt }))
     return [...t, ...d].sort((a, b) => new Date(b.date) - new Date(a.date))
   }, [tasks, desps])
 
@@ -572,12 +582,19 @@ function HistoryCard({ lawyerId }) {
   function prevMonth() { setMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1)) }
   function nextMonth() { setMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1)) }
 
+  // Prevent navigating beyond 24 months ago
+  const cutoffMonth = new Date()
+  cutoffMonth.setMonth(cutoffMonth.getMonth() - 23)
+  cutoffMonth.setDate(1)
+  cutoffMonth.setHours(0, 0, 0, 0)
+  const atLimit = month <= cutoffMonth
+
   return (
     <div className={s.card}>
       <div className={s.cardHead}>
         <span className={s.cardTitle}>Histórico de Atividade</span>
         <div className={s.weekNav}>
-          <button className={s.wkBtn} onClick={prevMonth}>‹</button>
+          <button className={s.wkBtn} onClick={prevMonth} disabled={atLimit} style={{ opacity: atLimit ? 0.3 : 1 }}>‹</button>
           <span className={s.wkLabel} style={{ textTransform: 'capitalize' }}>{monthLabel}</span>
           <button className={s.wkBtn} onClick={nextMonth}>›</button>
         </div>
