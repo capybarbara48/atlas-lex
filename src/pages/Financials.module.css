@@ -278,6 +278,8 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 .chartTitle {
   font-size: 0.75rem;
@@ -286,6 +288,36 @@
   letter-spacing: 0.06em;
   color: var(--text-3);
 }
+.chartControls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.periodSelector {
+  display: flex;
+  gap: 0.1rem;
+  background: var(--bg);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.18rem;
+}
+.periodBtn {
+  padding: 0.2rem 0.55rem;
+  border-radius: calc(var(--radius-sm) - 2px);
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-3);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+  white-space: nowrap;
+  line-height: 1.6;
+}
+.periodBtn:hover { color: var(--text); background: rgba(var(--accent-rgb),0.06); }
+.periodBtnActive { background: var(--card) !important; color: var(--accent) !important; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
 .chartLegend {
   display: flex;
   align-items: center;

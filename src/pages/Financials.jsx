@@ -135,21 +135,48 @@ function StatBox({ label, value, sub, variant, wide }) {
 }
 
 /* ── MonthlyChart ─────────────────────────────────────────────────────── */
+const CHART_PERIODS = [
+  { label: '3m',  months: 3  },
+  { label: '6m',  months: 6  },
+  { label: '12m', months: 12 },
+  { label: '2a',  months: 24 },
+  { label: '3a',  months: 36 },
+  { label: '4a',  months: 48 },
+  { label: '6a',  months: 72 },
+]
+
+function barLabel(date, periodMonths, index) {
+  const freq =
+    periodMonths <= 12 ? 1 :
+    periodMonths <= 24 ? 3 :
+    periodMonths <= 36 ? 4 :
+    periodMonths <= 48 ? 6 : 12
+  if (index % freq !== 0) return null
+  const m = date.getMonth()
+  const isYearMark = periodMonths > 12 && m === 0
+  return {
+    text: isYearMark ? String(date.getFullYear()).slice(2) : monthShort(m),
+    bold: isYearMark,
+  }
+}
+
 function MonthlyChart({ entries, selYear, selMonth }) {
+  const [period, setPeriod] = useState(12)
+
   const months = useMemo(() => {
     const today = new Date()
     const result = []
-    for (let i = 11; i >= 0; i--) {
+    for (let i = period - 1; i >= 0; i--) {
       const d = new Date(today.getFullYear(), today.getMonth() - i, 1)
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
       result.push({
         key,
-        label: monthShort(d.getMonth()),
+        date: new Date(d),
         isSel: d.getFullYear() === selYear && d.getMonth() === selMonth,
       })
     }
     return result
-  }, [selYear, selMonth])
+  }, [period, selYear, selMonth])
 
   const data = useMemo(() => months.map(({ key }) => {
     const paid = entries.filter(e => e.data?.startsWith(key) && e.status === 'pago')
@@ -166,18 +193,31 @@ function MonthlyChart({ entries, selYear, selMonth }) {
   const chartW = W - padL - padR
   const chartH = H - padT - padB
   const groupW = chartW / months.length
-  const barW = groupW * 0.28
-  const gap = groupW * 0.05
+  const barW   = Math.max(2, groupW * 0.28)
+  const gap    = Math.max(0.5, groupW * 0.05)
 
   return (
     <div className={styles.chartCard}>
       <div className={styles.chartHeader}>
-        <span className={styles.chartTitle}>Últimos 12 meses (pagamentos)</span>
-        <div className={styles.chartLegend}>
-          <span className={styles.legendDot} style={{ background: 'var(--green)' }} />
-          <span>Receitas</span>
-          <span className={styles.legendDot} style={{ background: 'var(--red)', marginLeft: '0.75rem' }} />
-          <span>Despesas</span>
+        <span className={styles.chartTitle}>Histórico de pagamentos</span>
+        <div className={styles.chartControls}>
+          <div className={styles.periodSelector}>
+            {CHART_PERIODS.map(p => (
+              <button
+                key={p.months}
+                className={`${styles.periodBtn} ${period === p.months ? styles.periodBtnActive : ''}`}
+                onClick={() => setPeriod(p.months)}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <div className={styles.chartLegend}>
+            <span className={styles.legendDot} style={{ background: 'var(--green)' }} />
+            <span>Rec.</span>
+            <span className={styles.legendDot} style={{ background: 'var(--red)', marginLeft: '0.6rem' }} />
+            <span>Desp.</span>
+          </div>
         </div>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} className={styles.chartSvg}>
@@ -197,27 +237,31 @@ function MonthlyChart({ entries, selYear, selMonth }) {
         ))}
         {data.map((d, i) => {
           const cx = padL + i * groupW + groupW / 2
-          const rH = Math.max((d.receita / maxVal) * chartH, d.receita > 0 ? 4 : 0)
-          const dH = Math.max((d.despesa / maxVal) * chartH, d.despesa > 0 ? 4 : 0)
+          const rH = Math.max((d.receita / maxVal) * chartH, d.receita > 0 ? 3 : 0)
+          const dH = Math.max((d.despesa / maxVal) * chartH, d.despesa > 0 ? 3 : 0)
           const opacity = months[i].isSel ? 1 : 0.55
           return (
             <g key={i}>
-              <rect x={cx - barW - gap / 2} y={padT + chartH - rH} width={barW} height={rH} rx={3}
+              <rect x={cx - barW - gap / 2} y={padT + chartH - rH} width={barW} height={rH} rx={2}
                 fill="var(--green)" opacity={opacity} />
-              <rect x={cx + gap / 2} y={padT + chartH - dH} width={barW} height={dH} rx={3}
+              <rect x={cx + gap / 2} y={padT + chartH - dH} width={barW} height={dH} rx={2}
                 fill="var(--red)" opacity={opacity} />
             </g>
           )
         })}
-        {months.map((m, i) => (
-          <text key={i}
-            x={padL + i * groupW + groupW / 2} y={H - 8}
-            textAnchor="middle" fontSize="11"
-            fill={m.isSel ? 'var(--accent)' : 'var(--text-3)'}
-            fontWeight={m.isSel ? '700' : '400'}
-            fontFamily="inherit"
-          >{m.label}</text>
-        ))}
+        {months.map((m, i) => {
+          const lbl = barLabel(m.date, period, i)
+          if (!lbl) return null
+          return (
+            <text key={i}
+              x={padL + i * groupW + groupW / 2} y={H - 8}
+              textAnchor="middle" fontSize="11"
+              fill={m.isSel ? 'var(--accent)' : lbl.bold ? 'var(--text-2)' : 'var(--text-3)'}
+              fontWeight={m.isSel ? '700' : lbl.bold ? '600' : '400'}
+              fontFamily="inherit"
+            >{lbl.text}</text>
+          )
+        })}
       </svg>
     </div>
   )
