@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { loadPreferences, savePreferences, resetPreferences } from '@/hooks/usePreferences'
 import { TRIBUNAIS_MASTER, ALL_GROUP_KEYS } from '@/lib/tribunais'
 import { loadGoogleFont, loadCustomFont, applyFonts } from '@/lib/fonts'
+import { useAreas } from '@/hooks/useAreas'
 import PageShell from '@/components/ui/PageShell'
 import SuporteSection from '@/components/support/SuporteSection'
 import LogoUpload from '@/components/ui/LogoUpload'
@@ -141,6 +142,9 @@ export default function Settings() {
   const [fontScope,    setFontScope]    = useState('all')
   const [customFont,   setCustomFont]   = useState(null)
   const [fontSaving,   setFontSaving]   = useState(false)
+
+  const { areas, addArea, deleteArea } = useAreas()
+  const [newArea, setNewArea] = useState('')
 
   const [saving,  setSaving]  = useState(false)
   const [success, setSuccess] = useState('')
@@ -297,6 +301,14 @@ export default function Settings() {
     if (!v || responsaveis.includes(v)) return
     setResponsaveis(prev => [...prev, v])
     setNewResponsavel('')
+  }
+
+  async function handleAddArea() {
+    const v = newArea.trim()
+    if (!v || areas.some(a => a.value.toLowerCase() === v.toLowerCase())) return
+    const { error } = await addArea(v)
+    if (error) { setError('Erro ao adicionar área: ' + error.message); return }
+    setNewArea('')
   }
 
   return (
@@ -771,6 +783,39 @@ export default function Settings() {
                     </button>
                   )
                 })}
+              </div>
+            </div>
+
+            {/* Áreas de Atuação */}
+            <div className={styles.listBlock}>
+              <span className={styles.listBlockTitle}>Áreas de Atuação (Casos)</span>
+              <div className={styles.listItems}>
+                {areas.length === 0
+                  ? <span style={{ fontSize: '0.78rem', color: 'var(--text-3)' }}>Nenhuma área cadastrada ainda.</span>
+                  : areas.map(item => (
+                    <span key={item.id} className={styles.listTag}>
+                      {item.value}
+                      <button
+                        type="button"
+                        className={styles.listTagDel}
+                        onClick={() => deleteArea(item.id)}
+                        title="Remover"
+                      >×</button>
+                    </span>
+                  ))
+                }
+              </div>
+              <div className={styles.listAddRow}>
+                <input
+                  className={styles.listInput}
+                  value={newArea}
+                  onChange={e => setNewArea(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddArea())}
+                  placeholder="Ex: Direito Digital…"
+                />
+                <button type="button" className={styles.btnListAdd} onClick={handleAddArea}>
+                  Adicionar
+                </button>
               </div>
             </div>
 

@@ -2,15 +2,12 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { useKanbanSituations } from '@/hooks/useKanbanSituations'
+import { useAreas } from '@/hooks/useAreas'
 import { getActiveGroups } from '@/lib/tribunais'
 import { useCaseHearings, addHearing, deleteHearing } from '@/hooks/useHearings'
 import Modal from '@/components/ui/Modal'
 import ClientForm from './ClientForm'
 import s from './Form.module.css'
-
-const AREAS = ['Cível','Trabalhista','Família','Criminal','Tributário','Bancário',
-               'Societário','Imobiliário','Ambiental','Administrativo','Previdenciário',
-               'Consumidor','Outro']
 
 const HEARING_TYPES = [
   'Audiência de Conciliação',
@@ -129,6 +126,7 @@ function HearingsSection({ caseId, lawyerId }) {
 export default function CaseForm({ initial, onSave, onClose }) {
   const { session, lawyer } = useAuth()
   const { situations } = useKanbanSituations()
+  const { areas } = useAreas()
   const activeGroups = getActiveGroups(lawyer?.preferences?.tribunais_active_groups)
 
   const [courtCustom, setCourtCustom] = useState(() => {
@@ -340,7 +338,7 @@ export default function CaseForm({ initial, onSave, onClose }) {
           <label className={s.label}>Área</label>
           <select className={s.select} value={f.area} onChange={e => set('area', e.target.value)}>
             <option value="">— Selecionar —</option>
-            {AREAS.map(a => <option key={a} value={a}>{a}</option>)}
+            {areas.map(a => <option key={a.id} value={a.value}>{a.value}</option>)}
           </select>
         </div>
 
