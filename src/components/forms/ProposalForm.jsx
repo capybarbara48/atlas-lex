@@ -4,7 +4,16 @@ import { useAuth } from '@/context/AuthContext'
 import s from './Form.module.css'
 
 export default function ProposalForm({ initial, onSave, onClose }) {
-  const { session } = useAuth()
+  const { session, lawyer } = useAuth()
+  const quotaLitisList = lawyer?.preferences?.quota_litis_options ?? []
+
+  const [feePercentCustom, setFeePercentCustom] = useState(() => {
+    if (!initial?.fee_percentage) return false
+    const str = String(parseFloat(initial.fee_percentage))
+    return quotaLitisList.length > 0 &&
+      !quotaLitisList.map(q => String(parseFloat(q))).includes(str)
+  })
+
   const [f, setF] = useState({
     title:          initial?.title          ?? '',
     client_id:      initial?.client_id      ?? '',
@@ -127,9 +136,35 @@ export default function ProposalForm({ initial, onSave, onClose }) {
         {showPercentage && (
           <div className={s.field}>
             <label className={s.label}>Percentual de êxito (%)</label>
-            <input className={s.input} type="number" min="0" max="100" step="0.01"
-              value={f.fee_percentage} onChange={e => set('fee_percentage', e.target.value)}
-              placeholder="20" />
+            {quotaLitisList.length > 0 ? (
+              <>
+                <select
+                  className={s.select}
+                  value={feePercentCustom ? '__custom__' : (f.fee_percentage || '')}
+                  onChange={e => {
+                    if (e.target.value === '__custom__') { setFeePercentCustom(true); set('fee_percentage', '') }
+                    else { setFeePercentCustom(false); set('fee_percentage', e.target.value) }
+                  }}
+                >
+                  <option value="">— Selecionar —</option>
+                  {quotaLitisList.map(q => {
+                    const num = String(parseFloat(q))
+                    return <option key={q} value={num}>{q}</option>
+                  })}
+                  <option value="__custom__">Personalizado…</option>
+                </select>
+                {feePercentCustom && (
+                  <input className={s.input} type="number" min="0" max="100" step="0.01"
+                    style={{ marginTop: '0.45rem' }}
+                    value={f.fee_percentage} onChange={e => set('fee_percentage', e.target.value)}
+                    placeholder="Ex: 25" autoFocus />
+                )}
+              </>
+            ) : (
+              <input className={s.input} type="number" min="0" max="100" step="0.01"
+                value={f.fee_percentage} onChange={e => set('fee_percentage', e.target.value)}
+                placeholder="20" />
+            )}
           </div>
         )}
 

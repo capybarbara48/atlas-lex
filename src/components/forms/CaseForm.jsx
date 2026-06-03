@@ -99,6 +99,12 @@ export default function CaseForm({ initial, onSave, onClose }) {
   const { session, lawyer } = useAuth()
   const { situations } = useKanbanSituations()
   const tribunaisList = lawyer?.preferences?.tribunais ?? []
+
+  const [courtCustom, setCourtCustom] = useState(() => {
+    const c = initial?.court ?? ''
+    return Boolean(c) && tribunaisList.length > 0 && !tribunaisList.includes(c)
+  })
+
   const [f, setF] = useState({
     title:            initial?.title            ?? '',
     case_number:      initial?.case_number      ?? '',
@@ -274,12 +280,29 @@ export default function CaseForm({ initial, onSave, onClose }) {
 
         <div className={s.field}>
           <label className={s.label}>Tribunal / Vara</label>
-          <input className={s.input} value={f.court} onChange={e => set('court', e.target.value)}
-            placeholder="TJSP, TRT-2, STJ…" list="caseFormTribunais" autoComplete="off" />
-          {tribunaisList.length > 0 && (
-            <datalist id="caseFormTribunais">
-              {tribunaisList.map(t => <option key={t} value={t} />)}
-            </datalist>
+          {tribunaisList.length > 0 ? (
+            <>
+              <select
+                className={s.select}
+                value={courtCustom ? '__outro__' : (f.court || '')}
+                onChange={e => {
+                  if (e.target.value === '__outro__') { setCourtCustom(true); set('court', '') }
+                  else { setCourtCustom(false); set('court', e.target.value) }
+                }}
+              >
+                <option value="">— Selecionar —</option>
+                {tribunaisList.map(t => <option key={t} value={t}>{t}</option>)}
+                <option value="__outro__">Outro (digitar manualmente)…</option>
+              </select>
+              {courtCustom && (
+                <input className={s.input} style={{ marginTop: '0.45rem' }}
+                  value={f.court} onChange={e => set('court', e.target.value)}
+                  placeholder="Ex: TJSP, TRT-2, STJ…" autoFocus />
+              )}
+            </>
+          ) : (
+            <input className={s.input} value={f.court} onChange={e => set('court', e.target.value)}
+              placeholder="TJSP, TRT-2, STJ…" />
           )}
         </div>
 
