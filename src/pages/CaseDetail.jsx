@@ -478,9 +478,8 @@ function CaseNotesSection({ caseId, lawyerId }) {
   )
 }
 
-function CasePhasePicker({ casoTitle, onClose, onConfirm, onSkip }) {
-  const [search,     setSearch]     = useState('')
-  const [selectedId, setSelectedId] = useState(null)
+function PhaseSelectorSection({ selectedPhase, onSelect }) {
+  const [search, setSearch] = useState('')
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim()
@@ -501,57 +500,65 @@ function CasePhasePicker({ casoTitle, onClose, onConfirm, onSkip }) {
     return g
   }, [filtered])
 
-  const selectedPhase = PROCESS_PHASES.find(p => p.id === selectedId) ?? null
-
-  function handleSelect(id) {
-    setSelectedId(prev => prev === id ? null : id)
-  }
-
   return (
-    <div className={styles.phasePicker}>
-      <p className={styles.phasePickerSub}>PDF · {casoTitle}</p>
-      <input
-        className={styles.phaseSearch}
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        placeholder="Filtrar fases ou situações…"
-        autoFocus
-      />
-      <div className={styles.phaseList}>
-        {Object.keys(groups).length === 0 && (
-          <div className={styles.phaseEmpty}>Nenhuma fase encontrada.</div>
+    <div className={styles.section}>
+      <div className={styles.sectionHeader}>
+        <span className={styles.sectionTitle}>Fase para o PDF</span>
+        {selectedPhase
+          ? <span className={styles.phaseSelectedPill}>
+              <span className={styles.phaseSelectedId}>{selectedPhase.id}</span>
+              {selectedPhase.titulo}
+            </span>
+          : <span className={styles.phaseNoneLabel}>Nenhuma fase selecionada</span>
+        }
+        {selectedPhase && (
+          <button className={styles.phaseClearBtn} onClick={() => onSelect(null)}>
+            Sem fase
+          </button>
         )}
-        {Object.entries(groups).map(([grupo, items]) => (
-          <div key={grupo}>
-            <div className={styles.phaseGroupLabel}>{grupo}</div>
-            {items.map(p => (
-              <div
-                key={p.id}
-                className={`${styles.phaseItem} ${selectedId === p.id ? styles.phaseItemSelected : ''}`}
-                onClick={() => handleSelect(p.id)}
-              >
-                <span className={styles.phaseItemId}>{p.id}</span>
-                <div className={styles.phaseItemBody}>
-                  <div className={styles.phaseItemTitle}>{p.titulo}</div>
-                  <div className={styles.phaseItemType}>
-                    {p.tipo === 'aguardando' ? 'Situação de Espera' : 'Fase Processual'}
+      </div>
+      <div className={styles.phaseSelectorBody}>
+        <input
+          className={styles.phaseSearch}
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Filtrar fases ou situações…"
+        />
+        <div className={styles.phaseList}>
+          <div
+            className={`${styles.phaseItem} ${!selectedPhase ? styles.phaseItemSelected : ''}`}
+            onClick={() => onSelect(null)}
+          >
+            <span className={`${styles.phaseItemId} ${styles.phaseItemIdNone}`}>—</span>
+            <div className={styles.phaseItemBody}>
+              <div className={styles.phaseItemTitle}>Gerar sem fase</div>
+              <div className={styles.phaseItemType}>O PDF será gerado sem indicar a situação atual</div>
+            </div>
+          </div>
+          {Object.keys(groups).length === 0 && search && (
+            <div className={styles.phaseEmpty}>Nenhuma fase encontrada.</div>
+          )}
+          {Object.entries(groups).map(([grupo, items]) => (
+            <div key={grupo}>
+              <div className={styles.phaseGroupLabel}>{grupo}</div>
+              {items.map(p => (
+                <div
+                  key={p.id}
+                  className={`${styles.phaseItem} ${selectedPhase?.id === p.id ? styles.phaseItemSelected : ''}`}
+                  onClick={() => onSelect(p)}
+                >
+                  <span className={styles.phaseItemId}>{p.id}</span>
+                  <div className={styles.phaseItemBody}>
+                    <div className={styles.phaseItemTitle}>{p.titulo}</div>
+                    <div className={styles.phaseItemType}>
+                      {p.tipo === 'aguardando' ? 'Situação de Espera' : 'Fase Processual'}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
-      <div className={styles.phasePickerFooter}>
-        <button className={styles.phasePickerCancel} onClick={onClose}>Cancelar</button>
-        <button className={styles.phasePickerSkip} onClick={onSkip}>Gerar sem fase</button>
-        <button
-          className={styles.phasePickerConfirm}
-          onClick={() => onConfirm(selectedPhase)}
-          disabled={!selectedId}
-        >
-          Gerar PDF
-        </button>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -570,7 +577,7 @@ export default function CaseDetail() {
   const [editing,       setEditing]       = useState(false)
   const [newTask,       setNewTask]       = useState(false)
   const [newEntry,      setNewEntry]      = useState(false)
-  const [phasePickerOpen, setPhasePickerOpen] = useState(false)
+  const [selectedPhase, setSelectedPhase] = useState(null)
 
   const { situations } = useKanbanSituations()
 
@@ -687,7 +694,7 @@ export default function CaseDetail() {
         </div>
 
         <div className={styles.headerActions}>
-          <button className={styles.pdfBtn} onClick={() => setPhasePickerOpen(true)}>
+          <button className={styles.pdfBtn} onClick={() => generateCasePDF(caso, tasks, entries, lawyer, selectedPhase)}>
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
               <polyline points="4 6 4 1.5 12 1.5 12 6"/>
               <path d="M4 11.5H2.5a1.5 1.5 0 0 1-1.5-1.5V6a1.5 1.5 0 0 1 1.5-1.5h11A1.5 1.5 0 0 1 14 6v4a1.5 1.5 0 0 1-1.5 1.5H11"/>
@@ -732,6 +739,9 @@ export default function CaseDetail() {
           </div>
         )}
       </div>
+
+      {/* ── Fase para o PDF ── */}
+      <PhaseSelectorSection selectedPhase={selectedPhase} onSelect={setSelectedPhase} />
 
       {/* ── Tarefas ── */}
       <Section title="Tarefas" count={tasks.length} onAdd={() => setNewTask(true)} addLabel="+ Tarefa">
@@ -798,17 +808,6 @@ export default function CaseDetail() {
 
       {/* ── Notas ── */}
       <CaseNotesSection caseId={caso.id} lawyerId={caso.lawyer_id} />
-
-      {phasePickerOpen && (
-        <Modal title="Situação Atual do Processo" onClose={() => setPhasePickerOpen(false)} size="lg">
-          <CasePhasePicker
-            casoTitle={caso.title}
-            onClose={() => setPhasePickerOpen(false)}
-            onConfirm={phase => { setPhasePickerOpen(false); generateCasePDF(caso, tasks, entries, lawyer, phase) }}
-            onSkip={() => { setPhasePickerOpen(false); generateCasePDF(caso, tasks, entries, lawyer, null) }}
-          />
-        </Modal>
-      )}
 
       {editing && (
         <Modal title="Editar processo" onClose={() => setEditing(false)} size="lg">
