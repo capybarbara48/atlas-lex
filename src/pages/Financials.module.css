@@ -41,7 +41,7 @@
 
 /* ── Quota-Litis view ──────────────────────────────────────────── */
 .qlWrap { display: flex; flex-direction: column; gap: 1.25rem; }
-.qlTop  { display: flex; justify-content: flex-start; }
+.qlTop  { display: flex; justify-content: center; }
 .qlChartCard { background: var(--card); border: var(--border); border-radius: var(--radius); padding: 1.5rem 1.75rem; display: flex; flex-direction: column; gap: 0.875rem; min-width: 340px; }
 .qlChartTitle { font-size: 0.82rem; font-weight: 700; color: var(--text); }
 .qlChartInner { display: flex; align-items: center; gap: 1.75rem; flex-wrap: wrap; }
