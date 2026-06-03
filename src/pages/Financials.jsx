@@ -1,13 +1,13 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { useAllEntries } from '@/hooks/useFinancials'
+import { useAllEntries, deleteEntry } from '@/hooks/useFinancials'
 import { useQuotaLitisCases, toggleQuotaLitisReceived } from '@/hooks/useCases'
 import PageShell from '@/components/ui/PageShell'
 import Modal from '@/components/ui/Modal'
 import EntryForm from '@/components/forms/EntryForm'
 import styles from './Financials.module.css'
 
-/* ── data mapper ────────────────────────────────────────────────────── */
+/* ── data mapper ──────────────────────────────────────────────────────── */
 function mapEntry(e) {
   return {
     id:     e.id,
@@ -20,38 +20,78 @@ function mapEntry(e) {
   }
 }
 
-/* ── helpers ────────────────────────────────────────────────────────── */
+/* ── helpers ──────────────────────────────────────────────────────────── */
 function brl(v) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v ?? 0)
 }
 
-function currentMonthLabel() {
-  return new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+function fmtDate(iso) {
+  return new Date(iso + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
+}
+
+function prevM(y, m) { return m === 0 ? [y - 1, 11] : [y, m - 1] }
+function nextM(y, m) { return m === 11 ? [y + 1, 0] : [y, m + 1] }
+
+function monthLong(y, m) {
+  return new Date(y, m, 1)
+    .toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
     .replace(/^\w/, c => c.toUpperCase())
 }
 
-function SummaryCard({ label, value, sub, color }) {
+function monthShort(m) {
+  return new Date(2000, m, 1)
+    .toLocaleDateString('pt-BR', { month: 'short' })
+    .replace('.', '')
+}
+
+/* ── inline SVG icons ─────────────────────────────────────────────────── */
+function IconEdit() {
   return (
-    <div className={styles.summaryCard} style={{ borderTopColor: color }}>
-      <span className={styles.summaryLabel}>{label}</span>
-      <span className={styles.summaryValue} style={{ color }}>{value}</span>
-      {sub && <span className={styles.summarySub}>{sub}</span>}
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="12" height="12">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
+  )
+}
+
+function IconTrash() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="12" height="12">
+      <polyline points="3 6 5 6 21 6"/>
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+      <path d="M10 11v6"/><path d="M14 11v6"/>
+      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+    </svg>
+  )
+}
+
+/* ── StatBox ──────────────────────────────────────────────────────────── */
+function StatBox({ label, value, sub, variant, wide }) {
+  return (
+    <div className={`${styles.statBox} ${variant ? styles[variant] : ''} ${wide ? styles.statBoxWide : ''}`}>
+      <div className={styles.statNum}>{value}</div>
+      <div className={styles.statLabel}>{label}</div>
+      {sub && <div className={styles.statSub}>{sub}</div>}
     </div>
   )
 }
 
-function MonthlyChart({ entries }) {
+/* ── MonthlyChart ─────────────────────────────────────────────────────── */
+function MonthlyChart({ entries, selYear, selMonth }) {
   const months = useMemo(() => {
+    const today = new Date()
     const result = []
-    const now = new Date()
     for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const d = new Date(today.getFullYear(), today.getMonth() - i, 1)
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-      const label = d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')
-      result.push({ key, label })
+      result.push({
+        key,
+        label: monthShort(d.getMonth()),
+        isSel: d.getFullYear() === selYear && d.getMonth() === selMonth,
+      })
     }
     return result
-  }, [])
+  }, [selYear, selMonth])
 
   const data = useMemo(() => months.map(({ key }) => {
     const paid = entries.filter(e => e.data?.startsWith(key) && e.status === 'pago')
@@ -63,13 +103,13 @@ function MonthlyChart({ entries }) {
 
   const maxVal = Math.max(...data.flatMap(d => [d.receita, d.despesa]), 1)
 
-  const W = 600, H = 170
-  const padL = 8, padR = 8, padT = 12, padB = 28
+  const W = 600, H = 180
+  const padL = 8, padR = 8, padT = 16, padB = 30
   const chartW = W - padL - padR
   const chartH = H - padT - padB
   const groupW = chartW / months.length
-  const barW = groupW * 0.3
-  const gap = groupW * 0.06
+  const barW = groupW * 0.28
+  const gap = groupW * 0.05
 
   return (
     <div className={styles.chartCard}>
@@ -83,31 +123,41 @@ function MonthlyChart({ entries }) {
         </div>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} className={styles.chartSvg} preserveAspectRatio="none">
+        {months.map((m, i) => m.isSel && (
+          <rect key={`hl-${i}`}
+            x={padL + i * groupW + 2} y={padT - 8}
+            width={groupW - 4} height={chartH + 10}
+            fill="rgba(var(--accent-rgb),0.06)" rx={4}
+          />
+        ))}
         {[0.25, 0.5, 0.75, 1].map(f => (
           <line key={f}
             x1={padL} x2={W - padR}
             y1={padT + chartH * (1 - f)} y2={padT + chartH * (1 - f)}
-            stroke="rgba(128,128,128,0.1)" strokeWidth="1"
+            stroke="rgba(128,128,128,0.08)" strokeWidth="1"
           />
         ))}
         {data.map((d, i) => {
           const cx = padL + i * groupW + groupW / 2
-          const rH = Math.max((d.receita / maxVal) * chartH, d.receita > 0 ? 3 : 0)
-          const dH = Math.max((d.despesa / maxVal) * chartH, d.despesa > 0 ? 3 : 0)
+          const rH = Math.max((d.receita / maxVal) * chartH, d.receita > 0 ? 4 : 0)
+          const dH = Math.max((d.despesa / maxVal) * chartH, d.despesa > 0 ? 4 : 0)
+          const opacity = months[i].isSel ? 1 : 0.55
           return (
             <g key={i}>
               <rect x={cx - barW - gap / 2} y={padT + chartH - rH} width={barW} height={rH} rx={3}
-                fill="var(--green)" opacity="0.75" />
+                fill="var(--green)" opacity={opacity} />
               <rect x={cx + gap / 2} y={padT + chartH - dH} width={barW} height={dH} rx={3}
-                fill="var(--red)" opacity="0.75" />
+                fill="var(--red)" opacity={opacity} />
             </g>
           )
         })}
         {months.map((m, i) => (
           <text key={i}
-            x={padL + i * groupW + groupW / 2}
-            y={H - 8}
-            textAnchor="middle" fontSize="11" fill="var(--text-3)" fontFamily="inherit"
+            x={padL + i * groupW + groupW / 2} y={H - 8}
+            textAnchor="middle" fontSize="11"
+            fill={m.isSel ? 'var(--accent)' : 'var(--text-3)'}
+            fontWeight={m.isSel ? '700' : '400'}
+            fontFamily="inherit"
           >{m.label}</text>
         ))}
       </svg>
@@ -115,20 +165,63 @@ function MonthlyChart({ entries }) {
   )
 }
 
-/* ── Quota-Litis helpers ────────────────────────────────────────────── */
+/* ── EntryItem ────────────────────────────────────────────────────────── */
+function EntryItem({ e, confirmDeleteId, setConfirmDeleteId, onEdit, onDelete }) {
+  const isReceita  = e.tipo === 'receita'
+  const isPaid     = e.status === 'pago'
+  const confirming = confirmDeleteId === e.id
+
+  return (
+    <div className={`${styles.entryItem} ${isPaid ? styles.entryPaid : styles.entryPending}`}>
+      <div className={`${styles.entryDot} ${isReceita ? styles.entryDotGreen : styles.entryDotRed}`} />
+      <div className={styles.entryBody}>
+        <div className={styles.entryName}>{e.desc}</div>
+        <div className={styles.entryMeta}>
+          {e.caso && <span className={styles.entryCase}>{e.caso}</span>}
+          <span className={isPaid ? styles.statusPaid : styles.statusPending}>
+            {isPaid ? '✓ Pago' : '⏳ Pendente'}
+          </span>
+          {e.data && <span className={styles.entryDate}>{fmtDate(e.data)}</span>}
+        </div>
+      </div>
+      <div className={styles.entryRight}>
+        <div className={`${styles.entryAmount} ${isReceita ? styles.amountGreen : styles.amountRed}`}>
+          {isReceita ? '+' : '−'}{brl(e.valor)}
+        </div>
+        {confirming ? (
+          <div className={styles.confirmDeleteInline}>
+            <span className={styles.confirmDeleteLabel}>Excluir?</span>
+            <button className={styles.confirmYes} onClick={() => onDelete(e.id)}>Sim</button>
+            <button className={styles.confirmNo} onClick={() => setConfirmDeleteId(null)}>Não</button>
+          </div>
+        ) : (
+          <div className={styles.entryActions}>
+            <button className={styles.entryActionBtn} onClick={() => onEdit(e.id)} title="Editar">
+              <IconEdit />
+            </button>
+            <button className={`${styles.entryActionBtn} ${styles.entryDeleteBtn}`} onClick={() => setConfirmDeleteId(e.id)} title="Excluir">
+              <IconTrash />
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/* ── Quota-Litis helpers ──────────────────────────────────────────────── */
 function calcQL(c) {
-  const pct = parseFloat(c.quota_litis_pct) || 0
-  return (Number(c.valor) || 0) * pct / 100
+  return (Number(c.valor) || 0) * (parseFloat(c.quota_litis_pct) || 0) / 100
 }
 
 function QLDonut({ pending, received }) {
   const total = pending + received
   const r = 52, cx = 68, cy = 68, sw = 22
   const circ = 2 * Math.PI * r
-  const pPct = total > 0 ? pending / total : 0
+  const pPct = total > 0 ? pending  / total : 0
   const rPct = total > 0 ? received / total : 0
-  const pendDash  = pPct * circ
-  const recvDash  = rPct * circ
+  const pendDash   = pPct * circ
+  const recvDash   = rPct * circ
   const recvOffset = -(pPct) * circ
 
   return (
@@ -166,14 +259,13 @@ function QuotaLitisView({ cases, loading, onToggle }) {
   )
 
   const pending  = cases.filter(c => !c.quota_litis_received)
-  const received = cases.filter(c => c.quota_litis_received)
+  const received = cases.filter(c =>  c.quota_litis_received)
   const totalPending  = pending.reduce((s, c)  => s + calcQL(c), 0)
   const totalReceived = received.reduce((s, c) => s + calcQL(c), 0)
   const totalAll      = totalPending + totalReceived
 
   return (
     <div className={styles.qlWrap}>
-      {/* ── top: donut + stats ── */}
       <div className={styles.qlTop}>
         <div className={styles.qlChartCard}>
           <div className={styles.qlChartTitle}>Quota-Litis Previstas</div>
@@ -201,7 +293,6 @@ function QuotaLitisView({ cases, loading, onToggle }) {
         </div>
       </div>
 
-      {/* ── list: pending first, then received ── */}
       <div className={styles.qlTableCard}>
         <table className={styles.table}>
           <thead>
@@ -222,17 +313,13 @@ function QuotaLitisView({ cases, loading, onToggle }) {
               return (
                 <tr key={c.id} className={`${styles.tableRow} ${recv ? styles.qlRowReceived : ''}`}>
                   <td>
-                    <Link to={`/painel/casos/${c.id}`} className={styles.qlCaseLink}>
-                      {c.title}
-                    </Link>
+                    <Link to={`/painel/casos/${c.id}`} className={styles.qlCaseLink}>{c.title}</Link>
                     {c.case_number && <div className={styles.qlCaseNumber}>{c.case_number}</div>}
                   </td>
                   <td className={styles.caseCell}>{c.clients?.full_name ?? '—'}</td>
                   <td className={styles.valorCell}>{brl(c.valor)}</td>
-                  <td><span className={`badge st-blue`}>{c.quota_litis_pct}</span></td>
-                  <td className={`${styles.valorCell} ${recv ? styles.positive : styles.qlPending}`}>
-                    {brl(qlVal)}
-                  </td>
+                  <td><span className="badge st-blue">{c.quota_litis_pct}</span></td>
+                  <td className={`${styles.valorCell} ${recv ? styles.positive : styles.qlPending}`}>{brl(qlVal)}</td>
                   <td>
                     {recv
                       ? <span className={styles.qlReceivedBadge}>✓ Recebida</span>
@@ -257,14 +344,17 @@ function QuotaLitisView({ cases, loading, onToggle }) {
   )
 }
 
-/* ── page ───────────────────────────────────────────────────────────── */
+/* ── Page ─────────────────────────────────────────────────────────────── */
 export default function Financials() {
-  const [tab, setTab]                   = useState('lancamentos')
-  const [filterTipo, setFilterTipo]     = useState('todos')
-  const [filterStatus, setFilterStatus] = useState('todos')
-  const [search, setSearch]             = useState('')
-  const [formOpen, setFormOpen]         = useState(false)
-  const [editing,  setEditing]          = useState(null)
+  const now = new Date()
+
+  const [tab, setTab]             = useState('lancamentos')
+  const [viewYear, setViewYear]   = useState(now.getFullYear())
+  const [viewMonth, setViewMonth] = useState(now.getMonth())
+  const [search, setSearch]       = useState('')
+  const [formOpen, setFormOpen]   = useState(false)
+  const [editing,  setEditing]    = useState(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
 
   const { data: rawEntries, loading, error, refetch } = useAllEntries()
   const { data: qlCases, loading: qlLoading, refetch: qlRefetch } = useQuotaLitisCases()
@@ -273,48 +363,71 @@ export default function Financials() {
     await toggleQuotaLitisReceived(caseId, received)
     qlRefetch()
   }
-  const entries = useMemo(() => (rawEntries ?? []).map(mapEntry), [rawEntries])
 
+  const entries = useMemo(() => (rawEntries ?? []).map(mapEntry), [rawEntries])
   const rawById = useMemo(() =>
     Object.fromEntries((rawEntries ?? []).map(r => [r.id, r]))
   , [rawEntries])
 
-  function openNew()    { setEditing(null); setFormOpen(true) }
+  function openNew()    { setEditing(null);              setFormOpen(true) }
   function openEdit(id) { setEditing(rawById[id] ?? null); setFormOpen(true) }
   function handleSave() { refetch(); setFormOpen(false) }
 
-  const filtered = useMemo(() => {
-    let list = entries
-    if (filterTipo   !== 'todos') list = list.filter(e => e.tipo   === filterTipo)
-    if (filterStatus !== 'todos') list = list.filter(e => e.status === filterStatus)
+  async function handleDelete(id) {
+    await deleteEntry(id)
+    setConfirmDeleteId(null)
+    refetch()
+  }
+
+  function handlePrev() { const [y, m] = prevM(viewYear, viewMonth); setViewYear(y); setViewMonth(m) }
+  function handleNext() { const [y, m] = nextM(viewYear, viewMonth); setViewYear(y); setViewMonth(m) }
+
+  const monthStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}`
+  const mLabel   = monthLong(viewYear, viewMonth)
+  const mShort   = monthShort(viewMonth)
+
+  const monthEntries = useMemo(() => {
+    let list = entries.filter(e => e.data?.startsWith(monthStr))
     if (search.trim()) {
       const q = search.toLowerCase()
-      list = list.filter(e => e.desc.toLowerCase().includes(q) || (e.caso ?? '').toLowerCase().includes(q))
+      list = list.filter(e =>
+        e.desc.toLowerCase().includes(q) || (e.caso ?? '').toLowerCase().includes(q)
+      )
     }
     return list
-  }, [entries, filterTipo, filterStatus, search])
+  }, [entries, monthStr, search])
 
-  const receitas  = entries.filter(e => e.tipo === 'receita' && e.status === 'pago').reduce((s, e) => s + e.valor, 0)
-  const despesas  = entries.filter(e => e.tipo === 'despesa' && e.status === 'pago').reduce((s, e) => s + e.valor, 0)
-  const pendentes = entries.filter(e => e.status === 'pendente').reduce((s, e) => s + e.valor, 0)
-  const saldo     = receitas - despesas
+  const receitasMes = useMemo(() => monthEntries.filter(e => e.tipo === 'receita'), [monthEntries])
+  const despesasMes = useMemo(() => monthEntries.filter(e => e.tipo === 'despesa'), [monthEntries])
 
-  const nReceitas  = entries.filter(e => e.tipo === 'receita' && e.status === 'pago').length
-  const nDespesas  = entries.filter(e => e.tipo === 'despesa' && e.status === 'pago').length
-  const nPendentes = entries.filter(e => e.status === 'pendente').length
+  const totalRecebido = receitasMes.filter(e => e.status === 'pago').reduce((s, e) => s + e.valor, 0)
+  const totalDespesas = despesasMes.filter(e => e.status === 'pago').reduce((s, e) => s + e.valor, 0)
+  const totalAReceber = monthEntries.filter(e => e.status === 'pendente').reduce((s, e) => s + e.valor, 0)
+  const saldo         = totalRecebido - totalDespesas
+
+  const nRecPagas  = receitasMes.filter(e => e.status === 'pago').length
+  const nDespPagas = despesasMes.filter(e => e.status === 'pago').length
+  const nPendentes = monthEntries.filter(e => e.status === 'pendente').length
+
+  const qlPendingCount = (qlCases ?? []).filter(c => !c.quota_litis_received).length
 
   return (
     <PageShell
       title="Financeiro"
-      subtitle={`${currentMonthLabel()} · Todos os lançamentos`}
+      subtitle={tab === 'lancamentos' ? mLabel : 'Quota-Litis'}
       action={
-        <button className={styles.btnNovo} onClick={openNew}>
-          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.75.75 0 0 1 .75.75v5.5h5.5a.75.75 0 0 1 0 1.5h-5.5v5.5a.75.75 0 0 1-1.5 0v-5.5H1.75a.75.75 0 0 1 0-1.5h5.5v-5.5A.75.75 0 0 1 8 1Z"/></svg>
-          Novo lançamento
-        </button>
+        tab === 'lancamentos' && (
+          <button className={styles.btnNovo} onClick={openNew}>
+            <svg viewBox="0 0 16 16" fill="currentColor" width="14" height="14">
+              <path d="M8 1a.75.75 0 0 1 .75.75v5.5h5.5a.75.75 0 0 1 0 1.5h-5.5v5.5a.75.75 0 0 1-1.5 0v-5.5H1.75a.75.75 0 0 1 0-1.5h5.5v-5.5A.75.75 0 0 1 8 1Z"/>
+            </svg>
+            Novo lançamento
+          </button>
+        )
       }
       filters={
         <>
+          {/* Tab bar */}
           <div className={styles.tabBar}>
             <button
               className={`${styles.tabBtn} ${tab === 'lancamentos' ? styles.tabBtnActive : ''}`}
@@ -327,14 +440,22 @@ export default function Financials() {
               onClick={() => setTab('quota')}
             >
               Quota-Litis
-              {(qlCases ?? []).filter(c => !c.quota_litis_received).length > 0 && (
-                <span className={styles.tabCount}>{(qlCases ?? []).filter(c => !c.quota_litis_received).length}</span>
+              {qlPendingCount > 0 && (
+                <span className={styles.tabCount}>{qlPendingCount}</span>
               )}
             </button>
           </div>
 
           {tab === 'lancamentos' && (
             <>
+              {/* Month navigation */}
+              <div className={styles.monthNavWrap}>
+                <button className={styles.navBtn} onClick={handlePrev} aria-label="Mês anterior">&#8249;</button>
+                <span className={styles.navLabel}>{mLabel}</span>
+                <button className={styles.navBtn} onClick={handleNext} aria-label="Próximo mês">&#8250;</button>
+              </div>
+
+              {/* Search */}
               <div className={styles.searchWrap}>
                 <svg className={styles.searchIcon} viewBox="0 0 16 16" fill="currentColor">
                   <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.856a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
@@ -342,77 +463,104 @@ export default function Financials() {
                 <input
                   className={styles.searchInput}
                   type="text"
-                  placeholder="Buscar lançamento ou caso..."
+                  placeholder="Buscar lançamento ou caso…"
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                 />
-              </div>
-              <div className={styles.filterGroup}>
-                {[{ v: 'todos', l: 'Tudo' }, { v: 'receita', l: 'Receitas' }, { v: 'despesa', l: 'Despesas' }].map(({ v, l }) => (
-                  <button key={v} className={`${styles.filterBtn} ${filterTipo === v ? styles.filterActive : ''}`} onClick={() => setFilterTipo(v)}>{l}</button>
-                ))}
-              </div>
-              <div className={styles.filterGroup}>
-                {[{ v: 'todos', l: 'Todos' }, { v: 'pago', l: 'Pago' }, { v: 'pendente', l: 'Pendente' }].map(({ v, l }) => (
-                  <button key={v} className={`${styles.filterBtn} ${filterStatus === v ? styles.filterActive : ''}`} onClick={() => setFilterStatus(v)}>{l}</button>
-                ))}
               </div>
             </>
           )}
         </>
       }
     >
-      {tab === 'quota'
-        ? <QuotaLitisView cases={qlCases ?? []} loading={qlLoading} onToggle={handleQLToggle} />
-        : <>
-            {/* Summary cards */}
-            <div className={styles.summaryRow}>
-              <SummaryCard label="Receitas recebidas" value={brl(receitas)}  sub={`${nReceitas} lançamentos`}          color="var(--green)" />
-              <SummaryCard label="Despesas pagas"      value={brl(despesas)}  sub={`${nDespesas} lançamentos`}          color="var(--red)" />
-              <SummaryCard label="Saldo"               value={brl(saldo)}                                               color={saldo >= 0 ? 'var(--green)' : 'var(--red)'} />
-              <SummaryCard label="A receber"           value={brl(pendentes)} sub={`${nPendentes} lançamentos pendentes`} color="var(--blue)" />
-            </div>
+      {tab === 'quota' ? (
+        <QuotaLitisView cases={qlCases ?? []} loading={qlLoading} onToggle={handleQLToggle} />
+      ) : (
+        <>
+          {/* ── Stat grid ── */}
+          <div className={styles.statGrid}>
+            <StatBox
+              label="Recebido"
+              value={brl(totalRecebido)}
+              sub={`${nRecPagas} receita${nRecPagas !== 1 ? 's' : ''}`}
+              variant="statGreen"
+            />
+            <StatBox
+              label="Despesas"
+              value={brl(totalDespesas)}
+              sub={`${nDespPagas} despesa${nDespPagas !== 1 ? 's' : ''}`}
+              variant="statRed"
+            />
+            <StatBox
+              label="A receber"
+              value={brl(totalAReceber)}
+              sub={`${nPendentes} pendente${nPendentes !== 1 ? 's' : ''}`}
+              variant="statBlue"
+            />
+            <StatBox
+              label={`Saldo de ${mShort}`}
+              value={brl(saldo)}
+              variant={saldo >= 0 ? 'statSaldoPos' : 'statSaldoNeg'}
+              wide
+            />
+          </div>
 
-            {/* Monthly chart */}
-            {!loading && !error && entries.length > 0 && <MonthlyChart entries={entries} />}
+          {/* ── Monthly chart ── */}
+          {!loading && !error && entries.length > 0 && (
+            <MonthlyChart entries={entries} selYear={viewYear} selMonth={viewMonth} />
+          )}
 
-            {/* Entries table */}
-            <div className={styles.tableCard}>
-              <table className={styles.table}>
-                <thead>
-                  <tr><th>Descrição</th><th>Caso</th><th>Tipo</th><th>Status</th><th>Valor</th><th>Data</th></tr>
-                </thead>
-                <tbody>
-                  {loading
-                    ? <tr><td colSpan={6} className={styles.emptyRow}>Carregando…</td></tr>
-                    : error
-                    ? <tr><td colSpan={6} className={styles.emptyRow}>Erro ao carregar lançamentos.</td></tr>
-                    : filtered.length === 0
-                    ? <tr><td colSpan={6} className={styles.emptyRow}>Nenhum lançamento encontrado</td></tr>
-                    : filtered.map(e => (
-                        <tr key={e.id} className={styles.tableRow} onClick={() => openEdit(e.id)} style={{ cursor: 'pointer' }}>
-                          <td className={styles.descCell}>{e.desc}</td>
-                          <td className={styles.caseCell}>{e.caso ?? '—'}</td>
-                          <td><span className={`badge badge-${e.tipo}`}>{e.tipo === 'receita' ? 'Receita' : 'Despesa'}</span></td>
-                          <td>
-                            <span className={styles.entryStatus} style={{ color: e.status === 'pago' ? 'var(--green)' : '#b45309' }}>
-                              {e.status === 'pago' ? '✓ Pago' : '⏳ Pendente'}
-                            </span>
-                          </td>
-                          <td className={`${styles.valorCell} ${e.tipo === 'despesa' ? styles.negative : styles.positive}`}>
-                            {e.tipo === 'despesa' ? '−' : '+'}{brl(e.valor)}
-                          </td>
-                          <td className={styles.dateCell}>
-                            {e.data ? new Date(e.data + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—'}
-                          </td>
-                        </tr>
-                      ))
-                  }
-                </tbody>
-              </table>
-            </div>
-          </>
-      }
+          {/* ── Receitas section ── */}
+          <div className={styles.sectionHdr}>
+            <span>Receitas de {mLabel}</span>
+            <span className={styles.sectionCount}>{receitasMes.length}</span>
+          </div>
+          <div className={styles.entryList}>
+            {loading ? (
+              <div className={styles.emptySection}>Carregando…</div>
+            ) : error ? (
+              <div className={styles.emptySection}>Erro ao carregar lançamentos.</div>
+            ) : receitasMes.length === 0 ? (
+              <div className={styles.emptySection}>Nenhuma receita registrada em {mLabel.toLowerCase()}</div>
+            ) : (
+              receitasMes.map(e => (
+                <EntryItem
+                  key={e.id}
+                  e={e}
+                  confirmDeleteId={confirmDeleteId}
+                  setConfirmDeleteId={setConfirmDeleteId}
+                  onEdit={openEdit}
+                  onDelete={handleDelete}
+                />
+              ))
+            )}
+          </div>
+
+          {/* ── Despesas section ── */}
+          <div className={styles.sectionHdr} style={{ marginTop: '0.75rem' }}>
+            <span>Despesas de {mLabel}</span>
+            <span className={styles.sectionCount}>{despesasMes.length}</span>
+          </div>
+          <div className={styles.entryList}>
+            {loading ? (
+              <div className={styles.emptySection}>Carregando…</div>
+            ) : despesasMes.length === 0 ? (
+              <div className={styles.emptySection}>Nenhuma despesa registrada em {mLabel.toLowerCase()}</div>
+            ) : (
+              despesasMes.map(e => (
+                <EntryItem
+                  key={e.id}
+                  e={e}
+                  confirmDeleteId={confirmDeleteId}
+                  setConfirmDeleteId={setConfirmDeleteId}
+                  onEdit={openEdit}
+                  onDelete={handleDelete}
+                />
+              ))
+            )}
+          </div>
+        </>
+      )}
 
       {formOpen && (
         <Modal title={editing ? 'Editar lançamento' : 'Novo lançamento'} onClose={() => setFormOpen(false)}>

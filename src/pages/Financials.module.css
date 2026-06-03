@@ -68,6 +68,195 @@
 .qlEmpty { text-align: center; padding: 3rem 1rem; color: var(--text-2); background: var(--card); border: var(--border); border-radius: var(--radius); }
 .qlEmptyIcon { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.3; }
 
+/* ── Month navigation ──────────────────────────────────────────────── */
+.monthNavWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.navBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: var(--border);
+  background: var(--card);
+  color: var(--accent);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  line-height: 1;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.navBtn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.navLabel {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text);
+  min-width: 148px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* ── Stat grid ─────────────────────────────────────────────────────── */
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+@media (max-width: 700px) { .statGrid { grid-template-columns: repeat(2, 1fr); } }
+
+.statBox {
+  background: var(--card);
+  border: var(--border);
+  border-left: 4px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 0.9rem 1.1rem;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.statBox:hover { transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+.statBoxWide { grid-column: 1 / -1; border-left-width: 0; border-top: 4px solid transparent; flex-direction: row; align-items: center; justify-content: space-between; }
+
+.statGreen    { border-left-color: var(--green); }
+.statRed      { border-left-color: var(--red); background: rgba(224,60,60,0.03); }
+.statBlue     { border-left-color: var(--accent); }
+.statSaldoPos { border-top-color: var(--green); background: rgba(34,168,74,0.06); }
+.statSaldoNeg { border-top-color: var(--red);   background: rgba(224,60,60,0.06); }
+
+.statNum {
+  font-size: 1.35rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  color: var(--text);
+}
+.statGreen .statNum    { color: var(--green); }
+.statRed .statNum      { color: var(--red); }
+.statBlue .statNum     { color: var(--accent); }
+.statSaldoPos .statNum { color: var(--green); }
+.statSaldoNeg .statNum { color: var(--red); }
+.statBoxWide .statNum  { font-size: 1.55rem; }
+
+.statLabel {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+}
+.statSub { font-size: 0.67rem; color: var(--text-3); margin-top: 0.1rem; }
+
+/* ── Section headers ───────────────────────────────────────────────── */
+.sectionHdr {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+  margin: 1.25rem 0 0.5rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(var(--accent-rgb),0.08);
+}
+.sectionCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 16px;
+  background: rgba(var(--accent-rgb),0.1);
+  color: var(--accent);
+  border-radius: 999px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0 0.35rem;
+}
+
+/* ── Entry items ───────────────────────────────────────────────────── */
+.entryList { display: flex; flex-direction: column; }
+
+.entryItem {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.65rem 0.875rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.3rem;
+  transition: background 0.12s, border-color 0.12s;
+}
+.entryItem:hover { background: rgba(var(--accent-rgb),0.025); border-color: rgba(var(--accent-rgb),0.1); }
+.entryPaid    { background: rgba(var(--accent-rgb),0.02); }
+.entryPending { border-left: 3px solid #f59e0b; padding-left: 0.6rem; background: rgba(245,158,11,0.03); }
+
+.entryDot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; margin-top: 1px; }
+.entryDotGreen { background: var(--green); }
+.entryDotRed   { background: var(--red); }
+
+.entryBody { flex: 1; min-width: 0; }
+.entryName {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.entryMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.18rem;
+  flex-wrap: wrap;
+}
+.entryCase { font-size: 0.69rem; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+.entryDate { font-size: 0.67rem; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.statusPaid    { font-size: 0.67rem; font-weight: 700; color: var(--green); }
+.statusPending { font-size: 0.67rem; font-weight: 700; color: #b45309; }
+
+.entryRight { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+.entryAmount { font-size: 0.9rem; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 90px; text-align: right; }
+.amountGreen { color: var(--green); }
+.amountRed   { color: var(--red); }
+
+.entryActions { display: flex; align-items: center; gap: 0.15rem; opacity: 0; transition: opacity 0.15s; }
+.entryItem:hover .entryActions { opacity: 1; }
+
+.entryActionBtn {
+  width: 24px; height: 24px; border-radius: 5px; border: none;
+  background: transparent; color: var(--text-3);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.12s;
+}
+.entryActionBtn:hover  { background: var(--bg); color: var(--accent); }
+.entryDeleteBtn:hover  { background: rgba(224,60,60,0.1); color: var(--red); }
+
+.confirmDeleteInline { display: flex; align-items: center; gap: 0.3rem; }
+.confirmDeleteLabel  { font-size: 0.68rem; font-weight: 600; color: var(--red); }
+.confirmYes {
+  padding: 0.18rem 0.5rem; border-radius: 5px; border: none;
+  background: var(--red); color: #fff; font-size: 0.65rem; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+}
+.confirmYes:hover { filter: brightness(0.9); }
+.confirmNo {
+  padding: 0.18rem 0.5rem; border-radius: 5px;
+  background: var(--bg); color: var(--text-2); border: var(--border);
+  font-size: 0.65rem; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+.confirmNo:hover { border-color: var(--accent); color: var(--accent); }
+
+.emptySection { font-size: 0.78rem; color: var(--text-3); padding: 0.5rem 0.875rem 0.75rem; }
+
 /* ── Monthly chart ─────────────────────────────────────────────── */
 .chartCard {
   background: var(--card);
@@ -105,6 +294,6 @@
 }
 .chartSvg {
   width: 100%;
-  height: 170px;
+  height: 180px;
   display: block;
 }

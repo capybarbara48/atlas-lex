@@ -45,3 +45,8 @@ export function useAllEntries() {
       .order('created_at', { ascending: false })
   }, [])
 }
+
+export async function deleteEntry(id) {
+  const { error } = await supabase.from('financial_entries').delete().eq('id', id)
+  return { error }
+}
