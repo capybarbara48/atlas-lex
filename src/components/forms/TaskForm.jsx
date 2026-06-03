@@ -40,7 +40,7 @@ export default function TaskForm({ initial, onSave, onClose }) {
     }
     const { error } = initial?.id
       ? await supabase.from('tasks').update(payload).eq('id', initial.id)
-      : await supabase.from('tasks').insert({ ...payload, lawyer_id: session.user.id })
+      : await supabase.from('tasks').insert({ ...payload, lawyer_id: lawyer?.id ?? session.user.id })
     setSaving(false)
     if (error) { setError(error.message); return }
     onSave()

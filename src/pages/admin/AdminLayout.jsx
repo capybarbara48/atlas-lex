@@ -62,6 +62,12 @@ export default function AdminLayout() {
             >
               Suporte
             </NavLink>
+            <NavLink
+              to="/admin/equipe"
+              className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navActive : ''}`}
+            >
+              Equipe
+            </NavLink>
           </nav>
         </div>
 

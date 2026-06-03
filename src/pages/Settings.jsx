@@ -109,9 +109,141 @@ function HeaderPreview({ firmName, accent }) {
   )
 }
 
+/* ── Team Members Section ────────────────────────────────────────── */
+const ROLE_LABELS = { advogado: 'Advogado', estagiario: 'Estagiário' }
+const ROLE_CAPS   = { advogado: 3, estagiario: 3 }
+
+const STATUS_INFO = {
+  pending_admin:  { label: 'Aguardando aprovação', cls: 'st-gold'  },
+  pending_invite: { label: 'Aprovado — aguardando cadastro', cls: 'st-teal' },
+  active:         { label: 'Ativo', cls: 'st-green' },
+  disabled:       { label: 'Desativado', cls: 'st-gray' },
+}
+
+function TeamMembersSection({ lawyerId, session }) {
+  const [members,  setMembers]  = useState([])
+  const [loading,  setLoading]  = useState(true)
+  const [saving,   setSaving]   = useState(false)
+  const [error,    setError]    = useState('')
+  const [name,     setName]     = useState('')
+  const [email,    setEmail]    = useState('')
+  const [role,     setRole]     = useState('estagiario')
+
+  useEffect(() => {
+    if (!lawyerId) return
+    supabase.from('team_members').select('*').eq('lawyer_id', lawyerId).order('invited_at')
+      .then(({ data }) => { setMembers(data ?? []); setLoading(false) })
+  }, [lawyerId])
+
+  const countByRole = role => members.filter(m => m.role === role && m.status !== 'disabled').length
+
+  async function handleAdd(e) {
+    e.preventDefault()
+    setError('')
+    const cap = ROLE_CAPS[role]
+    if (countByRole(role) >= cap) {
+      setError(`Limite de ${cap} ${ROLE_LABELS[role].toLowerCase()}s atingido.`)
+      return
+    }
+    setSaving(true)
+    const { data, error } = await supabase.from('team_members').insert({
+      lawyer_id:     lawyerId,
+      invited_email: email.trim().toLowerCase(),
+      full_name:     name.trim(),
+      role,
+    }).select().single()
+    setSaving(false)
+    if (error) { setError(error.message); return }
+    setMembers(m => [...m, data])
+    setName(''); setEmail('')
+  }
+
+  async function handleRemove(id) {
+    if (!window.confirm('Remover este membro? O acesso será revogado imediatamente.')) return
+    const { error } = await supabase.from('team_members').delete().eq('id', id)
+    if (error) { setError(error.message); return }
+    setMembers(m => m.filter(x => x.id !== id))
+  }
+
+  return (
+    <div>
+      {loading
+        ? <div style={{ fontSize: '0.8rem', color: 'var(--text-3)' }}>Carregando…</div>
+        : members.length === 0
+          ? <div style={{ fontSize: '0.82rem', color: 'var(--text-3)', marginBottom: '1rem' }}>Nenhum membro convidado ainda.</div>
+          : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.25rem' }}>
+              {members.map(m => {
+                const st = STATUS_INFO[m.status] ?? STATUS_INFO.pending_admin
+                return (
+                  <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.65rem 0.875rem', background: 'var(--bg)', border: 'var(--border)', borderRadius: 'var(--radius-sm)' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text)' }}>{m.full_name}</span>
+                        <span className={`badge ${m.role === 'advogado' ? 'st-blue' : 'st-teal'}`}>{ROLE_LABELS[m.role]}</span>
+                        <span className={`badge ${st.cls}`}>{st.label}</span>
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-3)', marginTop: '0.2rem' }}>{m.invited_email}</div>
+                      {m.status === 'pending_invite' && (
+                        <div style={{ fontSize: '0.72rem', color: 'var(--accent)', marginTop: '0.3rem', fontWeight: 500 }}>
+                          Instrua o membro a se cadastrar em <strong>atlas-lex.com</strong> com o e-mail <strong>{m.invited_email}</strong>
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleRemove(m.id)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', fontSize: '0.75rem', padding: '0.25rem', borderRadius: 4, flexShrink: 0 }}
+                      title="Remover membro"
+                    >✕</button>
+                  </div>
+                )
+              })}
+            </div>
+          )
+      }
+
+      <form onSubmit={handleAdd} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto auto', gap: '0.65rem', alignItems: 'end' }}>
+        <div>
+          <label style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: '0.3rem' }}>Nome completo</label>
+          <input
+            style={{ width: '100%', background: 'var(--bg)', border: 'var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.5rem 0.75rem', fontSize: '0.875rem', color: 'var(--text)', fontFamily: 'inherit' }}
+            value={name} onChange={e => setName(e.target.value)} required placeholder="Ex: Ana Souza" />
+        </div>
+        <div>
+          <label style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: '0.3rem' }}>E-mail</label>
+          <input
+            type="email"
+            style={{ width: '100%', background: 'var(--bg)', border: 'var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.5rem 0.75rem', fontSize: '0.875rem', color: 'var(--text)', fontFamily: 'inherit' }}
+            value={email} onChange={e => setEmail(e.target.value)} required placeholder="ana@escritorio.com" />
+        </div>
+        <div>
+          <label style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: '0.3rem' }}>Função</label>
+          <select
+            style={{ background: 'var(--bg)', border: 'var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.5rem 0.75rem', fontSize: '0.875rem', color: 'var(--text)', fontFamily: 'inherit', cursor: 'pointer' }}
+            value={role} onChange={e => setRole(e.target.value)}>
+            <option value="estagiario">Estagiário</option>
+            <option value="advogado">Advogado</option>
+          </select>
+        </div>
+        <button
+          type="submit" disabled={saving || !name.trim() || !email.trim()}
+          style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', padding: '0.5rem 1rem', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', opacity: (saving || !name.trim() || !email.trim()) ? 0.5 : 1, whiteSpace: 'nowrap' }}
+        >{saving ? 'Salvando…' : '+ Convidar'}</button>
+      </form>
+
+      <div style={{ marginTop: '0.75rem', fontSize: '0.72rem', color: 'var(--text-3)' }}>
+        {countByRole('advogado')}/{ROLE_CAPS.advogado} advogados · {countByRole('estagiario')}/{ROLE_CAPS.estagiario} estagiários
+        &nbsp;·&nbsp;Convites ficam pendentes até aprovação pelo administrador Atlas Lex.
+      </div>
+
+      {error && <div style={{ marginTop: '0.75rem', padding: '0.5rem 0.75rem', background: 'rgba(220,38,38,0.07)', border: '1px solid rgba(220,38,38,0.25)', borderRadius: 'var(--radius-sm)', fontSize: '0.82rem', color: '#dc2626' }}>{error}</div>}
+    </div>
+  )
+}
+
 /* ── Main ───────────────────────────────────────────────────────── */
 export default function Settings() {
-  const { lawyer, session, refreshLawyer } = useAuth()
+  const { lawyer, session, refreshLawyer, isTeamMember } = useAuth()
 
   /* Profile fields */
   const [fullName,  setFullName]  = useState('')
@@ -859,6 +991,16 @@ export default function Settings() {
             </button>
           </div>
         </Section>
+
+        {/* ── Membros da Equipe ── */}
+        {!isTeamMember && (
+          <Section
+            title="Membros da Equipe"
+            subtitle="Convide advogados e estagiários para acessar o escritório com suas próprias credenciais. Estagiários não têm acesso ao módulo Financeiro nem a Clientes."
+          >
+            <TeamMembersSection lawyerId={lawyer?.id} session={session} />
+          </Section>
+        )}
 
         {/* ── Conta ── */}
         <Section

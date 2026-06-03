@@ -7,7 +7,7 @@ const ESTADOS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG
                  'PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO']
 
 export default function ClientForm({ initial, onSave, onClose }) {
-  const { session } = useAuth()
+  const { session, lawyer } = useAuth()
   const [f, setF] = useState({
     full_name: initial?.full_name ?? '',
     tipo:      initial?.tipo      ?? 'PF',
@@ -38,7 +38,7 @@ export default function ClientForm({ initial, onSave, onClose }) {
     }
     const { error } = initial
       ? await supabase.from('clients').update(payload).eq('id', initial.id)
-      : await supabase.from('clients').insert({ ...payload, lawyer_id: session.user.id })
+      : await supabase.from('clients').insert({ ...payload, lawyer_id: lawyer?.id ?? session.user.id })
     setSaving(false)
     if (error) { setError(error.message); return }
     onSave()

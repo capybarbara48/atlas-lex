@@ -22,15 +22,16 @@ const Vitrine      = lazy(() => import('@/pages/Vitrine'))
 const DevSeed      = import.meta.env.DEV ? lazy(() => import('@/pages/DevSeed')) : null
 
 /* ── Admin chunks ───────────────────────────────────────────────────── */
-const AdminLayout   = lazy(() => import('@/pages/admin/AdminLayout'))
-const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'))
-const AdminUsers    = lazy(() => import('@/pages/admin/AdminUsers'))
-const AdminFeedback = lazy(() => import('@/pages/admin/AdminFeedback'))
-const AdminTickets  = lazy(() => import('@/pages/admin/AdminTickets'))
+const AdminLayout        = lazy(() => import('@/pages/admin/AdminLayout'))
+const AdminDashboard     = lazy(() => import('@/pages/admin/AdminDashboard'))
+const AdminUsers         = lazy(() => import('@/pages/admin/AdminUsers'))
+const AdminFeedback      = lazy(() => import('@/pages/admin/AdminFeedback'))
+const AdminTickets       = lazy(() => import('@/pages/admin/AdminTickets'))
+const AdminTeamInvites   = lazy(() => import('@/pages/admin/AdminTeamInvites'))
 
 /* ── Auth guard ─────────────────────────────────────────────────────── */
 function PrivateRoute({ children }) {
-  const { session, lawyer, loading } = useAuth()
+  const { session, lawyer, loading, isTeamMember } = useAuth()
 
   if (loading) {
     return (
@@ -57,10 +58,20 @@ function PrivateRoute({ children }) {
 
   if (!session) return <Navigate to="/" replace />
 
+  // Team members bypass onboarding — they access the firm's data directly
+  if (isTeamMember) return lawyer ? children : null
+
   if (!lawyer || !lawyer.onboarding_completed) {
     return <Onboarding />
   }
 
+  return children
+}
+
+/* ── Role guard — blocks pages by teamRole ──────────────────────────── */
+function RoleRoute({ children, allow }) {
+  const { teamRole } = useAuth()
+  if (!allow.includes(teamRole)) return <Navigate to="/painel" replace />
   return children
 }
 
@@ -92,6 +103,7 @@ export default function App() {
         <Route path="usuarios"    element={<AdminUsers />} />
         <Route path="feedback"    element={<AdminFeedback />} />
         <Route path="suporte"     element={<AdminTickets />} />
+        <Route path="equipe"      element={<AdminTeamInvites />} />
       </Route>
 
       {/* ── Landing (public) ── */}
@@ -109,11 +121,11 @@ export default function App() {
         <Route index                        element={<Dashboard />} />
         <Route path="casos"                 element={<Cases />} />
         <Route path="casos/:id"             element={<CaseDetail />} />
-        <Route path="clientes"              element={<Clients />} />
-        <Route path="clientes/:id"          element={<ClientDetail />} />
-        <Route path="propostas"             element={<Proposals />} />
-        <Route path="tarefas"               element={<Tasks />} />
-        <Route path="financeiro"            element={<Financials />} />
+        <Route path="clientes"     element={<RoleRoute allow={['advogado']}><Clients /></RoleRoute>} />
+        <Route path="clientes/:id" element={<RoleRoute allow={['advogado']}><ClientDetail /></RoleRoute>} />
+        <Route path="propostas"    element={<Proposals />} />
+        <Route path="tarefas"      element={<Tasks />} />
+        <Route path="financeiro"   element={<RoleRoute allow={['advogado']}><Financials /></RoleRoute>} />
         <Route path="configuracoes"         element={<Settings />} />
         <Route path="notas"                 element={<Notes />} />
         <Route path="estagiarios"           element={<Interns />} />

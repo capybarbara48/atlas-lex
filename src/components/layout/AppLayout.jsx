@@ -103,17 +103,17 @@ const ICONS = {
 }
 
 /* ── Nav config ────────────────────────────────────────────────────── */
-const NAV_ITEMS = [
-  { to: '/painel',               label: 'Painel',        end: true,  icon: ICONS.painel    },
-  { to: '/painel/casos',         label: 'Casos',         end: false, icon: ICONS.casos     },
-  { to: '/painel/clientes',      label: 'Clientes',      end: false, icon: ICONS.clientes  },
-  { to: '/painel/propostas',     label: 'Propostas',     end: false, icon: ICONS.propostas },
-  { to: '/painel/tarefas',       label: 'Tarefas',       end: false, icon: ICONS.tarefas   },
-  { to: '/painel/notas',         label: 'Notas',         end: false, icon: ICONS.notas     },
-  { to: '/painel/financeiro',    label: 'Financeiro',    end: false, icon: ICONS.financeiro},
-  { to: '/painel/estagiarios',   label: 'Equipe',        end: false, icon: ICONS.equipe    },
-  { to: '/painel/vitrine',       label: 'Vitrine',       end: false, icon: ICONS.vitrine   },
-  { to: '/painel/configuracoes', label: 'Configurações', end: false, icon: ICONS.configs   },
+const ALL_NAV_ITEMS = [
+  { to: '/painel',               label: 'Painel',        end: true,  icon: ICONS.painel,     roles: ['advogado','estagiario'] },
+  { to: '/painel/casos',         label: 'Casos',         end: false, icon: ICONS.casos,      roles: ['advogado','estagiario'] },
+  { to: '/painel/clientes',      label: 'Clientes',      end: false, icon: ICONS.clientes,   roles: ['advogado'] },
+  { to: '/painel/propostas',     label: 'Propostas',     end: false, icon: ICONS.propostas,  roles: ['advogado','estagiario'] },
+  { to: '/painel/tarefas',       label: 'Tarefas',       end: false, icon: ICONS.tarefas,    roles: ['advogado','estagiario'] },
+  { to: '/painel/notas',         label: 'Notas',         end: false, icon: ICONS.notas,      roles: ['advogado','estagiario'] },
+  { to: '/painel/financeiro',    label: 'Financeiro',    end: false, icon: ICONS.financeiro, roles: ['advogado'] },
+  { to: '/painel/estagiarios',   label: 'Equipe',        end: false, icon: ICONS.equipe,     roles: ['advogado','estagiario'] },
+  { to: '/painel/vitrine',       label: 'Vitrine',       end: false, icon: ICONS.vitrine,    roles: ['advogado','estagiario'] },
+  { to: '/painel/configuracoes', label: 'Configurações', end: false, icon: ICONS.configs,    roles: ['advogado','estagiario'] },
 ]
 
 const PAGE_TITLES = {
@@ -131,7 +131,7 @@ const PAGE_TITLES = {
 
 /* ── Brand Header ───────────────────────────────────────────────────── */
 function BrandHeader() {
-  const { lawyer, session, isAdmin, isBeta } = useAuth()
+  const { lawyer, session, isAdmin, isBeta, memberName, teamRole } = useAuth()
   const [now, setNow] = useState(new Date())
 
   useEffect(() => {
@@ -144,12 +144,13 @@ function BrandHeader() {
   const timeStr  = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
   const dateStr  = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
-  const initials   = lawyer?.full_name
-    ? lawyer.full_name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
+  const displayName = memberName ?? lawyer?.full_name
+  const initials   = displayName
+    ? displayName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
     : 'AL'
   const firmName   = lawyer?.firm_name ?? 'Atlas Adv'
   const firmShort  = firmName.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
-  const firstName  = lawyer?.full_name?.split(' ')[0] ?? session?.user?.email?.split('@')[0] ?? '—'
+  const firstName  = displayName?.split(' ')[0] ?? session?.user?.email?.split('@')[0] ?? '—'
   const firmNameUp = firmName.toUpperCase()
 
   const isDaytime = h >= 5 && h < 18
@@ -219,7 +220,8 @@ function PageLoader() {
 
 /* ── Layout ─────────────────────────────────────────────────────────── */
 export default function AppLayout() {
-  const { lawyer, session, isAdmin, isBeta } = useAuth()
+  const { lawyer, session, isAdmin, isBeta, teamRole, memberName } = useAuth()
+  const NAV_ITEMS = ALL_NAV_ITEMS.filter(item => item.roles.includes(teamRole))
   const location = useLocation()
   const [sidebarOpen,  setSidebarOpen]  = useState(false)
   const [overdueCount, setOverdueCount] = useState(0)
@@ -262,8 +264,9 @@ export default function AppLayout() {
 
   useEffect(() => { setSidebarOpen(false) }, [location.pathname])
 
-  const initials  = lawyer?.full_name
-    ? lawyer.full_name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
+  const sidebarDisplayName = memberName ?? lawyer?.full_name
+  const initials  = sidebarDisplayName
+    ? sidebarDisplayName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
     : 'AL'
   const firmName  = lawyer?.firm_name ?? 'Atlas Adv'
   const firmShort = firmName.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
@@ -330,8 +333,9 @@ export default function AppLayout() {
             {!compact && (
               <div className={styles.userInfo}>
                 <span className={styles.userName}>
-                  {lawyer?.full_name?.split(' ')[0] ?? session?.user?.email?.split('@')[0] ?? '—'}
+                  {sidebarDisplayName?.split(' ')[0] ?? session?.user?.email?.split('@')[0] ?? '—'}
                   {isBeta && <span className={styles.betaPill}>Beta</span>}
+                  {teamRole === 'estagiario' && <span className={styles.betaPill} style={{ background: '#2a9d8f' }}>Estag.</span>}
                 </span>
                 <span className={styles.userEmail}>{session?.user?.email}</span>
               </div>

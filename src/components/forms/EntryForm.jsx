@@ -115,7 +115,7 @@ export default function EntryForm({ initial, defaultType = 'receita', onSave, on
           ? Math.round((totalAmt - perParcela * (nParcelas - 1)) * 100) / 100
           : perParcela
         return {
-          lawyer_id:            session.user.id,
+          lawyer_id:            lawyer?.id ?? session.user.id,
           description:          `${f.description.trim()} (${i + 1}/${nParcelas})`,
           type:                 'receita',
           amount,
@@ -153,7 +153,7 @@ export default function EntryForm({ initial, defaultType = 'receita', onSave, on
 
     const { error } = initial?.id
       ? await supabase.from('financial_entries').update(payload).eq('id', initial.id)
-      : await supabase.from('financial_entries').insert({ ...payload, lawyer_id: session.user.id })
+      : await supabase.from('financial_entries').insert({ ...payload, lawyer_id: lawyer?.id ?? session.user.id })
 
     setSaving(false)
     if (error) { setError(error.message); return }

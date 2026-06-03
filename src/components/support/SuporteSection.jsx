@@ -111,7 +111,7 @@ export default function SuporteSection() {
     setSaving(true)
     const { data, error } = await supabase
       .from('tickets')
-      .insert({ lawyer_id: session.user.id, subject: form.subject.trim(), body: form.body.trim() })
+      .insert({ lawyer_id: lawyer?.id ?? session.user.id, subject: form.subject.trim(), body: form.body.trim() })
       .select()
       .single()
     setSaving(false)

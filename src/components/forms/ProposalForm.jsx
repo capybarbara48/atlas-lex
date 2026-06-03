@@ -56,7 +56,7 @@ export default function ProposalForm({ initial, onSave, onClose }) {
     }
     const { error } = initial
       ? await supabase.from('proposals').update(payload).eq('id', initial.id)
-      : await supabase.from('proposals').insert({ ...payload, lawyer_id: session.user.id })
+      : await supabase.from('proposals').insert({ ...payload, lawyer_id: lawyer?.id ?? session.user.id })
     setSaving(false)
     if (error) { setError(error.message); return }
     onSave()

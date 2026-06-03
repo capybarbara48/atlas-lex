@@ -190,7 +190,7 @@ function NoteExpand({ nota, onClose, onSaved }) {
 
 /* ── Page ──────────────────────────────────────────────────────── */
 export default function Notes() {
-  const { session } = useAuth()
+  const { session, lawyer } = useAuth()
   const { data: rawNotes, loading, error, refetch } = useNotes()
 
   const [tab,       setTab]       = useState('todas')
@@ -220,7 +220,7 @@ export default function Notes() {
     if (!newTitulo.trim() && !newCorpo.trim()) return
     setSaving(true)
     await supabase.from('notas').insert({
-      lawyer_id: session.user.id,
+      lawyer_id: lawyer?.id ?? session.user.id,
       titulo: newTitulo.trim() || null,
       corpo:  newCorpo.trim()  || null,
       cor:    newCor,

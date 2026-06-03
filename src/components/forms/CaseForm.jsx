@@ -218,7 +218,7 @@ export default function CaseForm({ initial, onSave, onClose }) {
           ? Math.round((feeTotal - feePerUnit * (feeN - 1)) * 100) / 100
           : feePerUnit
         return {
-          lawyer_id:            session.user.id,
+          lawyer_id:            lawyer?.id ?? session.user.id,
           case_id:              caseId,
           description:          `${baseDesc} (${i + 1}/${feeN})`,
           type:                 'receita',
@@ -239,7 +239,7 @@ export default function CaseForm({ initial, onSave, onClose }) {
       return feeN
     } else {
       const { error } = await supabase.from('financial_entries').insert({
-        lawyer_id: session.user.id,
+        lawyer_id: lawyer?.id ?? session.user.id,
         case_id:   caseId,
         description: baseDesc,
         type:        'receita',
@@ -300,7 +300,7 @@ export default function CaseForm({ initial, onSave, onClose }) {
     } else {
       const { data: caseData, error } = await supabase
         .from('cases')
-        .insert({ ...payload, lawyer_id: session.user.id })
+        .insert({ ...payload, lawyer_id: lawyer?.id ?? session.user.id })
         .select('id')
         .single()
       if (error) { setError(error.message); setSaving(false); return }
@@ -347,7 +347,7 @@ export default function CaseForm({ initial, onSave, onClose }) {
     setNcSaving(true); setNcError('')
     const { data, error } = await supabase
       .from('clients')
-      .insert({ lawyer_id: session.user.id, full_name: nc.full_name.trim(), tipo: nc.tipo, email: nc.email.trim() || null, phone: nc.phone.trim() || null })
+      .insert({ lawyer_id: lawyer?.id ?? session.user.id, full_name: nc.full_name.trim(), tipo: nc.tipo, email: nc.email.trim() || null, phone: nc.phone.trim() || null })
       .select('id, full_name')
       .single()
     setNcSaving(false)
