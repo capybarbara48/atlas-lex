@@ -136,7 +136,7 @@ function MonthlyChart({ entries, selYear, selMonth }) {
   const months = useMemo(() => {
     const today = new Date()
     const result = []
-    for (let i = 5; i >= 0; i--) {
+    for (let i = 11; i >= 0; i--) {
       const d = new Date(today.getFullYear(), today.getMonth() - i, 1)
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
       result.push({
@@ -158,7 +158,7 @@ function MonthlyChart({ entries, selYear, selMonth }) {
 
   const maxVal = Math.max(...data.flatMap(d => [d.receita, d.despesa]), 1)
 
-  const W = 600, H = 180
+  const W = 900, H = 180
   const padL = 8, padR = 8, padT = 16, padB = 30
   const chartW = W - padL - padR
   const chartH = H - padT - padB
@@ -169,7 +169,7 @@ function MonthlyChart({ entries, selYear, selMonth }) {
   return (
     <div className={styles.chartCard}>
       <div className={styles.chartHeader}>
-        <span className={styles.chartTitle}>Últimos 6 meses (pagamentos)</span>
+        <span className={styles.chartTitle}>Últimos 12 meses (pagamentos)</span>
         <div className={styles.chartLegend}>
           <span className={styles.legendDot} style={{ background: 'var(--green)' }} />
           <span>Receitas</span>
@@ -177,7 +177,7 @@ function MonthlyChart({ entries, selYear, selMonth }) {
           <span>Despesas</span>
         </div>
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} className={styles.chartSvg} preserveAspectRatio="none">
+      <svg viewBox={`0 0 ${W} ${H}`} className={styles.chartSvg}>
         {months.map((m, i) => m.isSel && (
           <rect key={`hl-${i}`}
             x={padL + i * groupW + 2} y={padT - 8}

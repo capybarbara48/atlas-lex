@@ -301,7 +301,7 @@
 }
 .chartSvg {
   width: 100%;
-  height: 180px;
+  height: auto;
   display: block;
 }
 
