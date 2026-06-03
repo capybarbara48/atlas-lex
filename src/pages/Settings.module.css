@@ -649,3 +649,82 @@
 @media (max-width: 600px) {
   .navModeGrid { grid-template-columns: 1fr; }
 }
+
+/* ── Tribunais group toggles ─────────────────────────────────────── */
+.tribunaisGroups {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.65rem;
+  margin-top: 0.35rem;
+}
+
+.tribunaisGroupCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem 0.875rem;
+  background: var(--bg);
+  border: 1.5px solid rgba(var(--accent-rgb), 0.12);
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.tribunaisGroupCard:hover {
+  border-color: rgba(var(--accent-rgb), 0.3);
+  background: var(--card-hover, var(--bg));
+}
+.tribunaisGroupCardActive {
+  background: var(--accent-dim) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.1);
+}
+
+.tribunaisGroupTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.1rem;
+}
+
+.tribunaisGroupAbbr {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+}
+.tribunaisGroupCard:not(.tribunaisGroupCardActive) .tribunaisGroupAbbr {
+  color: var(--text-3);
+}
+
+.tribunaisGroupCount {
+  font-size: 0.6rem;
+  color: var(--text-3);
+  background: rgba(var(--accent-rgb), 0.07);
+  border: 1px solid rgba(var(--accent-rgb), 0.12);
+  border-radius: 99px;
+  padding: 0.05rem 0.4rem;
+  font-weight: 600;
+}
+
+.tribunaisGroupLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.tribunaisGroupStatus {
+  font-size: 0.62rem;
+  color: var(--text-3);
+  margin-top: 0.15rem;
+}
+.tribunaisGroupCardActive .tribunaisGroupStatus {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .tribunaisGroups { grid-template-columns: repeat(2, 1fr); }
+}

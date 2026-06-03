@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { useKanbanSituations } from '@/hooks/useKanbanSituations'
+import { getActiveGroups } from '@/lib/tribunais'
 import { useCaseHearings, addHearing, deleteHearing } from '@/hooks/useHearings'
 import Modal from '@/components/ui/Modal'
 import ClientForm from './ClientForm'
@@ -98,11 +99,12 @@ function HearingsSection({ caseId, lawyerId }) {
 export default function CaseForm({ initial, onSave, onClose }) {
   const { session, lawyer } = useAuth()
   const { situations } = useKanbanSituations()
-  const tribunaisList = lawyer?.preferences?.tribunais ?? []
+  const activeGroups = getActiveGroups(lawyer?.preferences?.tribunais_active_groups)
 
   const [courtCustom, setCourtCustom] = useState(() => {
     const c = initial?.court ?? ''
-    return Boolean(c) && tribunaisList.length > 0 && !tribunaisList.includes(c)
+    if (!c || activeGroups.length === 0) return false
+    return !activeGroups.some(g => g.items.includes(c))
   })
 
   const [f, setF] = useState({
@@ -279,8 +281,8 @@ export default function CaseForm({ initial, onSave, onClose }) {
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Tribunal / Vara</label>
-          {tribunaisList.length > 0 ? (
+          <label className={s.label}>Tribunal</label>
+          {activeGroups.length > 0 ? (
             <>
               <select
                 className={s.select}
@@ -291,18 +293,22 @@ export default function CaseForm({ initial, onSave, onClose }) {
                 }}
               >
                 <option value="">— Selecionar —</option>
-                {tribunaisList.map(t => <option key={t} value={t}>{t}</option>)}
+                {activeGroups.map(group => (
+                  <optgroup key={group.key} label={group.label}>
+                    {group.items.map(t => <option key={t} value={t}>{t}</option>)}
+                  </optgroup>
+                ))}
                 <option value="__outro__">Outro (digitar manualmente)…</option>
               </select>
               {courtCustom && (
                 <input className={s.input} style={{ marginTop: '0.45rem' }}
                   value={f.court} onChange={e => set('court', e.target.value)}
-                  placeholder="Ex: TJSP, TRT-2, STJ…" autoFocus />
+                  placeholder="Ex: TJSP, TRT-2, Vara Cível…" autoFocus />
               )}
             </>
           ) : (
             <input className={s.input} value={f.court} onChange={e => set('court', e.target.value)}
-              placeholder="TJSP, TRT-2, STJ…" />
+              placeholder="Ex: TJSP, TRT-2, STJ…" />
           )}
         </div>
 

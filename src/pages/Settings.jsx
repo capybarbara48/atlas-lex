@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { loadPreferences, savePreferences, resetPreferences } from '@/hooks/usePreferences'
+import { TRIBUNAIS_MASTER, ALL_GROUP_KEYS } from '@/lib/tribunais'
 import { loadGoogleFont, loadCustomFont, applyFonts } from '@/lib/fonts'
 import PageShell from '@/components/ui/PageShell'
 import SuporteSection from '@/components/support/SuporteSection'
@@ -21,12 +22,6 @@ const DEFAULT_SERVICE_TYPES = [
 
 const DEFAULT_QUOTA_LITIS = ['5%','10%','15%','20%','25%','30%','35%']
 
-const DEFAULT_TRIBUNAIS = [
-  'Vara Cível','Vara do Trabalho','Vara de Família e Sucessões',
-  'Juizado Especial Cível','Juizado Especial Criminal',
-  'Vara Criminal','Vara Federal','Tribunal de Justiça',
-  'Tribunal Regional do Trabalho','Tribunal Regional Federal',
-]
 
 const HEADING_FONTS = [
   { family: null,                label: 'Padrão Atlas' },
@@ -130,15 +125,14 @@ export default function Settings() {
   const [prefs, setPrefs] = useState({})
 
   /* Editable lists (saved to lawyers.preferences in Supabase) */
-  const [serviceTypes,    setServiceTypes]    = useState(DEFAULT_SERVICE_TYPES)
-  const [quotaLitis,      setQuotaLitis]      = useState(DEFAULT_QUOTA_LITIS)
-  const [tribunais,       setTribunais]       = useState(DEFAULT_TRIBUNAIS)
-  const [responsaveis,    setResponsaveis]    = useState([])
-  const [newServiceType,  setNewServiceType]  = useState('')
-  const [newQuotaLitis,   setNewQuotaLitis]   = useState('')
-  const [newTribunal,     setNewTribunal]     = useState('')
-  const [newResponsavel,  setNewResponsavel]  = useState('')
-  const [listSaving,      setListSaving]      = useState(false)
+  const [serviceTypes,          setServiceTypes]          = useState(DEFAULT_SERVICE_TYPES)
+  const [quotaLitis,            setQuotaLitis]            = useState(DEFAULT_QUOTA_LITIS)
+  const [tribunaisActiveGroups, setTribunaisActiveGroups] = useState(ALL_GROUP_KEYS)
+  const [responsaveis,          setResponsaveis]          = useState([])
+  const [newServiceType,        setNewServiceType]        = useState('')
+  const [newQuotaLitis,         setNewQuotaLitis]         = useState('')
+  const [newResponsavel,        setNewResponsavel]        = useState('')
+  const [listSaving,            setListSaving]            = useState(false)
 
   /* Font state */
   const [fontHeading,  setFontHeading]  = useState(null)
@@ -162,10 +156,10 @@ export default function Settings() {
     setAccent(lawyer.theme_accent  ?? '#043b61')
     setPrefs(loadPreferences(lawyer.id))
     const prefs = lawyer.preferences ?? {}
-    if (prefs.service_types?.length)       setServiceTypes(prefs.service_types)
-    if (prefs.quota_litis_options?.length) setQuotaLitis(prefs.quota_litis_options)
-    if (prefs.tribunais?.length)           setTribunais(prefs.tribunais)
-    if (prefs.responsaveis?.length)        setResponsaveis(prefs.responsaveis)
+    if (prefs.service_types?.length)              setServiceTypes(prefs.service_types)
+    if (prefs.quota_litis_options?.length)        setQuotaLitis(prefs.quota_litis_options)
+    if (prefs.tribunais_active_groups?.length)    setTribunaisActiveGroups(prefs.tribunais_active_groups)
+    if (prefs.responsaveis?.length)               setResponsaveis(prefs.responsaveis)
     if (prefs.font_heading)    setFontHeading(prefs.font_heading)
     if (prefs.font_body)       setFontBody(prefs.font_body)
     if (prefs.font_mono)       setFontMono(prefs.font_mono)
@@ -242,9 +236,9 @@ export default function Settings() {
       .from('lawyers')
       .update({ preferences: {
         ...existing,
-        service_types:       serviceTypes,
-        quota_litis_options: quotaLitis,
-        tribunais,
+        service_types:          serviceTypes,
+        quota_litis_options:    quotaLitis,
+        tribunais_active_groups: tribunaisActiveGroups,
         responsaveis,
       }})
       .eq('id', session.user.id)
@@ -298,13 +292,6 @@ export default function Settings() {
     setNewQuotaLitis('')
   }
 
-  function addTribunal() {
-    const v = newTribunal.trim()
-    if (!v || tribunais.includes(v)) return
-    setTribunais(prev => [...prev, v])
-    setNewTribunal('')
-  }
-
   function addResponsavel() {
     const v = newResponsavel.trim()
     if (!v || responsaveis.includes(v)) return
@@ -315,7 +302,7 @@ export default function Settings() {
   return (
     <PageShell
       title="Configurações"
-      subtitle="Personalize o Atlas Adv para a identidade visual do seu escritório em apenas 3 minutos."
+      subtitle="Personalize o Atlas Adv para a identidade visual do seu escritório em apenas 3 minutos. Configure opções, tribunais e responsáveis do seu escritório."
     >
       <div className={styles.layout}>
 
@@ -692,7 +679,7 @@ export default function Settings() {
         {/* ── Listas personalizáveis ── */}
         <Section
           title="Listas Personalizáveis"
-          subtitle="Configure as opções disponíveis em Propostas e Honorários. Salvas na nuvem para todos os seus dispositivos."
+          subtitle="Configure as opções disponíveis para todo o seu escritório. Essas opções aparecem nas propostas de honorários e no cadastramento de casos e clientes."
         >
           <div className={styles.listEditor}>
 
@@ -758,31 +745,32 @@ export default function Settings() {
 
             {/* Tribunais */}
             <div className={styles.listBlock}>
-              <span className={styles.listBlockTitle}>Tribunais e Varas (Processos)</span>
-              <div className={styles.listItems}>
-                {tribunais.map(item => (
-                  <span key={item} className={styles.listTag}>
-                    {item}
+              <span className={styles.listBlockTitle}>Tribunais — ative os grupos que seu escritório utiliza</span>
+              <div className={styles.tribunaisGroups}>
+                {TRIBUNAIS_MASTER.map(group => {
+                  const active = tribunaisActiveGroups.includes(group.key)
+                  return (
                     <button
+                      key={group.key}
                       type="button"
-                      className={styles.listTagDel}
-                      onClick={() => setTribunais(prev => prev.filter(i => i !== item))}
-                      title="Remover"
-                    >×</button>
-                  </span>
-                ))}
-              </div>
-              <div className={styles.listAddRow}>
-                <input
-                  className={styles.listInput}
-                  value={newTribunal}
-                  onChange={e => setNewTribunal(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addTribunal())}
-                  placeholder="Ex: Vara de Execuções Penais"
-                />
-                <button type="button" className={styles.btnListAdd} onClick={addTribunal}>
-                  Adicionar
-                </button>
+                      className={`${styles.tribunaisGroupCard} ${active ? styles.tribunaisGroupCardActive : ''}`}
+                      onClick={() =>
+                        setTribunaisActiveGroups(prev =>
+                          active ? prev.filter(k => k !== group.key) : [...prev, group.key]
+                        )
+                      }
+                    >
+                      <div className={styles.tribunaisGroupTop}>
+                        <span className={styles.tribunaisGroupAbbr}>{group.abbr}</span>
+                        <span className={styles.tribunaisGroupCount}>{group.items.length}</span>
+                      </div>
+                      <span className={styles.tribunaisGroupLabel}>{group.label}</span>
+                      <span className={styles.tribunaisGroupStatus}>
+                        {active ? '✓ Ativo' : 'Inativo'}
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
             </div>
 
