@@ -3,15 +3,29 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import s from './Form.module.css'
 
-export default function EntryForm({ initial, onSave, onClose }) {
+const DESP_CATEGORIES = [
+  'Aluguel',
+  'Internet / Telefone',
+  'Software / Assinaturas',
+  'OAB / Taxas',
+  'Pessoal / Salários',
+  'Contabilidade',
+  'Material de Escritório',
+  'Marketing',
+  'Transporte',
+  'Outros',
+]
+
+export default function EntryForm({ initial, defaultType = 'receita', onSave, onClose }) {
   const { session } = useAuth()
   const [f, setF] = useState({
     description: initial?.description ?? '',
-    type:        initial?.type        ?? 'receita',
+    type:        initial?.type        ?? defaultType,
     amount:      initial?.amount      != null ? String(initial.amount) : '',
     status:      initial?.status      ?? 'pendente',
     case_id:     initial?.case_id     ?? '',
     category:    initial?.category    ?? '',
+    recurring:   initial?.recurring   ?? false,
     due_date:    initial?.due_date    ? initial.due_date.split('T')[0] : '',
     paid_at:     initial?.paid_at     ? initial.paid_at.split('T')[0]  : '',
   })
@@ -26,6 +40,9 @@ export default function EntryForm({ initial, onSave, onClose }) {
 
   const set = (k, v) => setF(f => ({ ...f, [k]: v }))
 
+  const isDespesa  = f.type === 'despesa'
+  const isRecurr   = f.recurring
+
   async function handleSubmit(e) {
     e.preventDefault()
     setSaving(true); setError('')
@@ -35,8 +52,9 @@ export default function EntryForm({ initial, onSave, onClose }) {
       amount:      parseFloat(f.amount) || 0,
       status:      f.status,
       case_id:     f.case_id   || null,
-      category:    f.category.trim() || null,
-      due_date:    f.due_date  || null,
+      category:    f.category  || null,
+      recurring:   isDespesa ? f.recurring : false,
+      due_date:    (isDespesa && isRecurr) ? null : (f.due_date || null),
       paid_at:     f.status === 'pago' ? (f.paid_at || null) : null,
     }
     const { error } = initial?.id
@@ -98,15 +116,33 @@ export default function EntryForm({ initial, onSave, onClose }) {
 
         <div className={s.field}>
           <label className={s.label}>Categoria</label>
-          <input className={s.input} value={f.category} onChange={e => set('category', e.target.value)}
-            placeholder="Ex: Honorários, Custas, Diligências…" />
+          {isDespesa ? (
+            <select className={s.select} value={f.category} onChange={e => set('category', e.target.value)}>
+              <option value="">— Selecione —</option>
+              {DESP_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          ) : (
+            <input className={s.input} value={f.category} onChange={e => set('category', e.target.value)}
+              placeholder="Ex: Honorários, Custas, Diligências…" />
+          )}
         </div>
 
-        <div className={s.field}>
-          <label className={s.label}>Vencimento</label>
-          <input className={s.input} type="date" value={f.due_date}
-            onChange={e => set('due_date', e.target.value)} />
-        </div>
+        {isDespesa && (
+          <div className={`${s.field} ${s.span2}`}>
+            <label className={s.checkLabel}>
+              <input type="checkbox" checked={f.recurring} onChange={e => set('recurring', e.target.checked)} />
+              Despesa fixa (recorrente mensal)
+            </label>
+          </div>
+        )}
+
+        {!isRecurr && (
+          <div className={s.field}>
+            <label className={s.label}>Vencimento</label>
+            <input className={s.input} type="date" value={f.due_date}
+              onChange={e => set('due_date', e.target.value)} />
+          </div>
+        )}
 
         {f.status === 'pago' && (
           <div className={s.field}>

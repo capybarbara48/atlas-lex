@@ -41,12 +41,28 @@ export function useAllEntries() {
   return useSupabaseQuery(async () => {
     return supabase
       .from('financial_entries')
-      .select('id, description, type, amount, status, due_date, paid_at, created_at, category, cases ( title )')
+      .select('id, description, type, amount, status, due_date, paid_at, created_at, category, recurring, cases ( title )')
       .order('created_at', { ascending: false })
   }, [])
 }
 
 export async function deleteEntry(id) {
   const { error } = await supabase.from('financial_entries').delete().eq('id', id)
+  return { error }
+}
+
+export async function confirmEntry(id) {
+  const { error } = await supabase
+    .from('financial_entries')
+    .update({ status: 'pago', paid_at: new Date().toISOString() })
+    .eq('id', id)
+  return { error }
+}
+
+export async function unconfirmEntry(id) {
+  const { error } = await supabase
+    .from('financial_entries')
+    .update({ status: 'pendente', paid_at: null })
+    .eq('id', id)
   return { error }
 }

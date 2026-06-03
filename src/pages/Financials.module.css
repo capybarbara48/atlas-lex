@@ -1,3 +1,10 @@
+.actionBtns { display: inline-flex; align-items: center; gap: 0.45rem; }
+.btnPDF { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 0.9rem; border-radius: var(--radius-sm); border: var(--border); background: var(--card); color: var(--text-2); font-size: 0.8rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.btnPDF:hover { border-color: var(--accent); color: var(--accent); background: rgba(var(--accent-rgb),0.04); }
+.btnReceita { display: inline-flex; align-items: center; gap: 0.4rem; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); padding: 0.6rem 1.1rem; font-size: 0.84rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+.btnReceita:hover { background: var(--accent-dark, color-mix(in srgb, var(--accent) 82%, #000)); transform: translateY(-1px); }
+.btnDespesa { display: inline-flex; align-items: center; gap: 0.4rem; background: var(--red); color: #fff; border: none; border-radius: var(--radius-sm); padding: 0.6rem 1.1rem; font-size: 0.84rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+.btnDespesa:hover { filter: brightness(0.88); transform: translateY(-1px); }
 .btnNovo { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--accent); color: #fff; border-radius: var(--radius-sm); padding: 0.6rem 1.25rem; font-size: 0.875rem; font-weight: 600; transition: all 0.2s; }
 .btnNovo:hover { background: var(--accent-dark); transform: translateY(-1px); }
 .btnNovo svg { width: 14px; height: 14px; }
@@ -297,3 +304,36 @@
   height: 180px;
   display: block;
 }
+
+/* ── Recurring badge ───────────────────────────────────────────────── */
+.recurringBadge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #7c3aed;
+  background: rgba(139,92,246,0.12);
+  border-radius: 999px;
+  padding: 0.06rem 0.4rem;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+
+/* ── Confirm paid button ───────────────────────────────────────────── */
+.confirmPaidBtn {
+  width: 24px; height: 24px;
+  border-radius: 5px;
+  border: 1px solid rgba(34,197,94,0.35);
+  background: rgba(34,197,94,0.08);
+  color: var(--green);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.12s;
+}
+.confirmPaidBtn:hover { background: var(--green); color: #fff; border-color: var(--green); }
+
+/* ── Unconfirm button ──────────────────────────────────────────────── */
+.unconfirmBtn { color: var(--text-3) !important; }
+.unconfirmBtn:hover { color: #b45309 !important; background: rgba(245,158,11,0.1) !important; }
