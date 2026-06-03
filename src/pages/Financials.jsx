@@ -11,16 +11,19 @@ import styles from './Financials.module.css'
 /* ── data mapper ──────────────────────────────────────────────────────── */
 function mapEntry(e) {
   return {
-    id:        e.id,
-    desc:      e.description ?? '—',
-    tipo:      e.type,
-    valor:     Number(e.amount) || 0,
-    status:    e.status,
-    data:      e.paid_at?.split('T')[0] ?? e.due_date?.split('T')[0] ?? e.created_at?.split('T')[0] ?? null,
-    paidAt:    e.paid_at ?? null,
-    caso:      e.cases?.title ?? null,
-    category:  e.category ?? null,
-    recurring: e.recurring ?? false,
+    id:              e.id,
+    desc:            e.description ?? '—',
+    tipo:            e.type,
+    valor:           Number(e.amount) || 0,
+    status:          e.status,
+    // Use due_date for month placement so entries stay in their due month even after payment
+    data:            e.due_date?.split('T')[0] ?? e.created_at?.split('T')[0] ?? null,
+    paidAt:          e.paid_at ?? null,
+    caso:            e.cases?.title ?? null,
+    category:        e.category ?? null,
+    recurring:       e.recurring ?? false,
+    installmentOf:   e.installment_of    ?? null,
+    installmentTotal: e.installment_total ?? null,
   }
 }
 
@@ -233,6 +236,9 @@ function EntryItem({ e, confirmDeleteId, setConfirmDeleteId, onEdit, onDelete, o
         <div className={styles.entryName}>
           {e.desc}
           {e.recurring && <span className={styles.recurringBadge}>Fixa</span>}
+          {e.installmentOf && (
+            <span className={styles.installmentBadge}>{e.installmentOf}/{e.installmentTotal}</span>
+          )}
         </div>
         <div className={styles.entryMeta}>
           {e.caso && <span className={styles.entryCase}>{e.caso}</span>}

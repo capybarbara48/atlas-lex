@@ -305,6 +305,22 @@
   display: block;
 }
 
+/* ── Installment badge ─────────────────────────────────────────────── */
+.installmentBadge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.1);
+  border-radius: 999px;
+  padding: 0.06rem 0.4rem;
+  margin-left: 0.35rem;
+  vertical-align: middle;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
 /* ── Recurring badge ───────────────────────────────────────────────── */
 .recurringBadge {
   display: inline-flex;

@@ -41,7 +41,7 @@ export function useAllEntries() {
   return useSupabaseQuery(async () => {
     return supabase
       .from('financial_entries')
-      .select('id, description, type, amount, status, due_date, paid_at, created_at, category, recurring, cases ( title )')
+      .select('id, description, type, amount, status, due_date, paid_at, created_at, category, recurring, installment_of, installment_total, cases ( title )')
       .order('created_at', { ascending: false })
   }, [])
 }

@@ -129,11 +129,31 @@ function HearingsSection({ caseId, lawyerId }) {
   )
 }
 
+const FEE_TYPES = [
+  'Honorários Contratuais',
+  'Honorários Sucumbenciais',
+  'Custas',
+  'Diligência Jurídica',
+]
+
+function fmtBRLFee(v) {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v) || 0)
+}
+
+function monthLabelFee(ym) {
+  const [y, m] = ym.split('-').map(Number)
+  return new Date(y, m - 1, 1)
+    .toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
+    .replace('.', '')
+}
+
 export default function CaseForm({ initial, onSave, onClose }) {
   const { session, lawyer } = useAuth()
   const { situations } = useKanbanSituations()
   const { areas } = useAreas()
   const activeGroups = getActiveGroups(lawyer?.preferences?.tribunais_active_groups)
+  const now = new Date()
+  const curMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
 
   const [courtCustom, setCourtCustom] = useState(() => {
     const c = initial?.court ?? ''
@@ -156,6 +176,90 @@ export default function CaseForm({ initial, onSave, onClose }) {
   const [clients,       setClients]       = useState([])
   const [saving,        setSaving]        = useState(false)
   const [error,         setError]         = useState('')
+
+  /* ── Honorários / Fee section state ── */
+  const [feeType,      setFeeType]      = useState('')
+  const [feeTypeOther, setFeeTypeOther] = useState(false)
+  const [feeNote,      setFeeNote]      = useState('')
+  const [feeAmount,    setFeeAmount]    = useState('')
+  const [feeMode,      setFeeMode]      = useState('avista')
+  const [feeParcelas,  setFeeParcelas]  = useState(3)
+  const [feeDia,       setFeeDia]       = useState(5)
+  const [feeStart,     setFeeStart]     = useState(curMonth)
+  const [feeDueDate,   setFeeDueDate]   = useState('')
+  const [feeCreating,  setFeeCreating]  = useState(false)
+  const [feeCreated,   setFeeCreated]   = useState(0)
+
+  const feeTotal   = parseFloat(feeAmount) || 0
+  const feeN       = Math.max(2, Math.min(36, parseInt(feeParcelas, 10) || 2))
+  const feePerUnit = feeN > 0 ? Math.round(feeTotal / feeN * 100) / 100 : 0
+  let feePreview   = ''
+  if (feeMode === 'parcelado' && feePerUnit > 0 && feeStart) {
+    const [sy, sm] = feeStart.split('-').map(Number)
+    const endDate  = new Date(sy, sm - 1 + feeN - 1, 1)
+    const endMon   = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}`
+    feePreview = `${feeN} × ${fmtBRLFee(feePerUnit)} · dia ${feeDia} · ${monthLabelFee(feeStart)} → ${monthLabelFee(endMon)}`
+  }
+
+  async function createFeeEntries(caseId) {
+    if (!feeType || feeTotal <= 0) return 0
+    setFeeCreating(true)
+    const catVal  = feeTypeOther ? (feeNote.trim() || feeType) : feeType
+    const baseDesc = feeNote.trim() || catVal
+
+    if (feeMode === 'parcelado') {
+      const groupId = crypto.randomUUID()
+      const [sy, sm] = feeStart.split('-').map(Number)
+      const day = Math.max(1, Math.min(28, parseInt(feeDia, 10) || 5))
+
+      const records = Array.from({ length: feeN }, (_, i) => {
+        const dueDate = new Date(sy, sm - 1 + i, day)
+        const amount  = i === feeN - 1
+          ? Math.round((feeTotal - feePerUnit * (feeN - 1)) * 100) / 100
+          : feePerUnit
+        return {
+          lawyer_id:            session.user.id,
+          case_id:              caseId,
+          description:          `${baseDesc} (${i + 1}/${feeN})`,
+          type:                 'receita',
+          amount,
+          status:               'pendente',
+          category:             catVal,
+          recurring:            false,
+          due_date:             dueDate.toISOString().split('T')[0],
+          installment_of:       i + 1,
+          installment_total:    feeN,
+          installment_group_id: groupId,
+        }
+      })
+
+      const { error } = await supabase.from('financial_entries').insert(records)
+      setFeeCreating(false)
+      if (error) { setError(error.message); return 0 }
+      return feeN
+    } else {
+      const { error } = await supabase.from('financial_entries').insert({
+        lawyer_id: session.user.id,
+        case_id:   caseId,
+        description: baseDesc,
+        type:        'receita',
+        amount:      feeTotal,
+        status:      'pendente',
+        category:    catVal,
+        recurring:   false,
+        due_date:    feeDueDate || null,
+      })
+      setFeeCreating(false)
+      if (error) { setError(error.message); return 0 }
+      return 1
+    }
+  }
+
+  async function handleCreateFeeEntries() {
+    if (!initial?.id) return
+    const count = await createFeeEntries(initial.id)
+    if (count > 0) setFeeCreated(count)
+  }
 
   /* ── Inline new-client form ── */
   const [newClientOpen,  setNewClientOpen]  = useState(false)
@@ -187,11 +291,28 @@ export default function CaseForm({ initial, onSave, onClose }) {
       description:      f.description.trim() || null,
       quota_litis_pct:  f.quota_litis_pct  || null,
     }
-    const { error } = initial
-      ? await supabase.from('cases').update(payload).eq('id', initial.id)
-      : await supabase.from('cases').insert({ ...payload, lawyer_id: session.user.id })
+
+    let caseId
+    if (initial) {
+      const { error } = await supabase.from('cases').update(payload).eq('id', initial.id)
+      if (error) { setError(error.message); setSaving(false); return }
+      caseId = initial.id
+    } else {
+      const { data: caseData, error } = await supabase
+        .from('cases')
+        .insert({ ...payload, lawyer_id: session.user.id })
+        .select('id')
+        .single()
+      if (error) { setError(error.message); setSaving(false); return }
+      caseId = caseData.id
+    }
+
+    // Auto-create fee entries for NEW cases only
+    if (!initial && feeType && feeTotal > 0) {
+      await createFeeEntries(caseId)
+    }
+
     setSaving(false)
-    if (error) { setError(error.message); return }
     onSave()
   }
 
@@ -380,6 +501,123 @@ export default function CaseForm({ initial, onSave, onClose }) {
               Valor esperado: {fmtBRL(parseFloat(f.valor) * parseFloat(f.quota_litis_pct) / 100)}
             </span>
           )}
+        </div>
+
+        {/* ── Honorários section ── */}
+        <hr className={s.sectionDivider} />
+        <div className={`${s.field} ${s.span2}`}>
+          <div className={s.sectionTitle}>Honorários do Processo</div>
+        </div>
+
+        <div className={`${s.field} ${s.span2}`}>
+          <div className={s.inlineCard}>
+            <div className={s.inlineCardTitle}>
+              {initial ? 'Gerar lançamento financeiro vinculado' : 'Configurar honorários (opcional)'}
+            </div>
+
+            <div className={s.inlineGrid}>
+              <div className={`${s.field} ${s.span2}`}>
+                <label className={s.label}>Tipo de honorário</label>
+                <select
+                  className={s.select}
+                  value={feeTypeOther ? '__outro__' : (feeType || '')}
+                  onChange={e => {
+                    if (e.target.value === '__outro__') { setFeeTypeOther(true); setFeeType('Outro') }
+                    else { setFeeTypeOther(false); setFeeNote(''); setFeeType(e.target.value) }
+                  }}
+                >
+                  <option value="">— Não configurar —</option>
+                  {FEE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                  <option value="__outro__">Outro (digitar manualmente)…</option>
+                </select>
+                {feeTypeOther && (
+                  <input className={s.input} style={{ marginTop: '0.4rem' }}
+                    value={feeNote} onChange={e => setFeeNote(e.target.value)}
+                    placeholder="Descreva o honorário…" autoFocus />
+                )}
+              </div>
+
+              {feeType && (
+                <>
+                  <div className={s.field}>
+                    <label className={s.label}>Valor total (R$)</label>
+                    <input className={s.input} type="number" min="0" step="0.01"
+                      value={feeAmount} onChange={e => setFeeAmount(e.target.value)}
+                      placeholder="0,00" />
+                  </div>
+
+                  <div className={s.field}>
+                    <label className={s.label}>Forma de pagamento</label>
+                    <select className={s.select} value={feeMode} onChange={e => setFeeMode(e.target.value)}>
+                      <option value="avista">À vista</option>
+                      <option value="parcelado">Parcelado</option>
+                    </select>
+                  </div>
+
+                  {feeMode === 'avista' && (
+                    <div className={s.field}>
+                      <label className={s.label}>Vencimento</label>
+                      <input className={s.input} type="date"
+                        value={feeDueDate} onChange={e => setFeeDueDate(e.target.value)} />
+                    </div>
+                  )}
+
+                  {feeMode === 'parcelado' && (
+                    <>
+                      <div className={s.field}>
+                        <label className={s.label}>Nº de parcelas</label>
+                        <input className={s.input} type="number" min="2" max="36"
+                          value={feeParcelas}
+                          onChange={e => setFeeParcelas(Math.max(2, parseInt(e.target.value) || 2))}
+                        />
+                      </div>
+                      <div className={s.field}>
+                        <label className={s.label}>Dia do vencimento</label>
+                        <input className={s.input} type="number" min="1" max="28"
+                          value={feeDia}
+                          onChange={e => setFeeDia(Math.max(1, Math.min(28, parseInt(e.target.value) || 5)))}
+                        />
+                      </div>
+                      <div className={`${s.field} ${s.span2}`}>
+                        <label className={s.label}>Primeiro mês</label>
+                        <input className={s.input} type="month"
+                          value={feeStart} onChange={e => setFeeStart(e.target.value)} />
+                      </div>
+                      {feePreview && (
+                        <div className={`${s.field} ${s.span2}`}>
+                          <div className={s.installmentPreview}>{feePreview}</div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Auto-note for new cases */}
+            {!initial && feeType && feeTotal > 0 && (
+              <div className={s.hint} style={{ marginTop: '0.25rem' }}>
+                {feeMode === 'parcelado'
+                  ? `${feeN} lançamentos serão criados automaticamente ao criar o processo.`
+                  : '1 lançamento será criado automaticamente ao criar o processo.'}
+              </div>
+            )}
+
+            {/* Manual button for existing cases */}
+            {initial && feeType && feeTotal > 0 && (
+              <div className={s.inlineActions} style={{ marginTop: '0.25rem' }}>
+                {feeCreated > 0
+                  ? <div className={s.successMsg}>
+                      ✓ {feeCreated} lançamento{feeCreated > 1 ? 's' : ''} criado{feeCreated > 1 ? 's' : ''} com sucesso
+                    </div>
+                  : <button type="button" className={s.btnSecondary}
+                      disabled={feeCreating} onClick={handleCreateFeeEntries}>
+                      {feeCreating ? 'Criando…' : 'Criar lançamentos no Financeiro'}
+                    </button>
+                }
+              </div>
+            )}
+          </div>
         </div>
 
         <div className={`${s.field} ${s.span2}`}>
