@@ -12,9 +12,23 @@ const AREAS = ['Cível','Trabalhista','Família','Criminal','Tributário','Banc�
                'Societário','Imobiliário','Ambiental','Administrativo','Previdenciário',
                'Consumidor','Outro']
 
+const HEARING_TYPES = [
+  'Audiência de Conciliação',
+  'Audiência de Instrução e Julgamento',
+  'Audiência de Custódia',
+  'Audiência Inaugural',
+  'Audiência de Mediação',
+  'Audiência Preliminar',
+  'Audiência de Oitiva de Testemunhas',
+  'Audiência de Justificação',
+  'Audiência de Progressão de Regime',
+  'Audiência de Regulamentação de Visitas',
+]
+
 function HearingsSection({ caseId, lawyerId }) {
   const { data: hearings, refetch } = useCaseHearings(caseId)
   const [nh, setNh] = useState({ title: '', date: '', time: '', location: '' })
+  const [titleCustom, setTitleCustom] = useState(false)
   const [adding, setAdding] = useState(false)
 
   const setNhF = (k, v) => setNh(n => ({ ...n, [k]: v }))
@@ -69,8 +83,24 @@ function HearingsSection({ caseId, lawyerId }) {
           <div className={s.inlineCardTitle}>Adicionar audiência</div>
           <div className={s.inlineGrid}>
             <div className={`${s.field} ${s.span2}`}>
-              <label className={s.label}>Título *</label>
-              <input className={s.input} value={nh.title} onChange={e => setNhF('title', e.target.value)} placeholder="Ex: Audiência de Instrução" />
+              <label className={s.label}>Tipo de audiência *</label>
+              <select
+                className={s.select}
+                value={titleCustom ? '__outro__' : (nh.title || '')}
+                onChange={e => {
+                  if (e.target.value === '__outro__') { setTitleCustom(true); setNhF('title', '') }
+                  else { setTitleCustom(false); setNhF('title', e.target.value) }
+                }}
+              >
+                <option value="">— Selecionar —</option>
+                {HEARING_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                <option value="__outro__">Outro (digitar manualmente)…</option>
+              </select>
+              {titleCustom && (
+                <input className={s.input} style={{ marginTop: '0.45rem' }}
+                  value={nh.title} onChange={e => setNhF('title', e.target.value)}
+                  placeholder="Descreva o tipo de audiência…" autoFocus />
+              )}
             </div>
             <div className={s.field}>
               <label className={s.label}>Data *</label>
@@ -116,7 +146,6 @@ export default function CaseForm({ initial, onSave, onClose }) {
     status:           initial?.status           ?? 'ativo',
     situation:        initial?.situation        ?? '',
     valor:            initial?.valor       != null ? String(initial.valor)            : '',
-    opened_at:        initial?.opened_at        ?? '',
     description:      initial?.description      ?? '',
     final_fees:       initial?.final_fees  != null ? String(initial.final_fees)       : '',
     sucumbencia_fees: initial?.sucumbencia_fees != null ? String(initial.sucumbencia_fees) : '',
@@ -152,7 +181,6 @@ export default function CaseForm({ initial, onSave, onClose }) {
       status:           f.status,
       situation:        f.situation   || null,
       valor:            parseFloat(f.valor) || 0,
-      opened_at:        f.opened_at   || null,
       description:      f.description.trim() || null,
       final_fees:       f.status === 'encerrado' ? (parseFloat(f.final_fees)       || null) : null,
       sucumbencia_fees: f.status === 'encerrado' ? (parseFloat(f.sucumbencia_fees) || null) : null,
@@ -344,11 +372,6 @@ export default function CaseForm({ initial, onSave, onClose }) {
           <label className={s.label}>Valor da causa (R$)</label>
           <input className={s.input} type="number" min="0" step="0.01"
             value={f.valor} onChange={e => set('valor', e.target.value)} placeholder="0,00" />
-        </div>
-
-        <div className={s.field}>
-          <label className={s.label}>Data de abertura</label>
-          <input className={s.input} type="date" value={f.opened_at} onChange={e => set('opened_at', e.target.value)} />
         </div>
 
         <div className={`${s.field} ${s.span2}`}>
