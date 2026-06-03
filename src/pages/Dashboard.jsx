@@ -252,7 +252,7 @@ function HearingEventItem({ h }) {
 
 /* ── main dashboard ───────────────────────────────────────────────────── */
 export default function Dashboard() {
-  const { lawyer } = useAuth()
+  const { lawyer, teamRole } = useAuth()
   const [caseFormOpen, setCaseFormOpen] = useState(false)
 
   /* data hooks */
@@ -390,7 +390,7 @@ export default function Dashboard() {
         </div>
 
         {/* ── Card: Financeiro ── */}
-        <div className={`${styles.card} ${styles.cardFinanceiro}`}>
+        {teamRole !== 'estagiario' && <div className={`${styles.card} ${styles.cardFinanceiro}`}>
           <div className={styles.cardHeader}>
             <div className={styles.cardTitleGroup}>
               <div className={`${styles.cardIcon} ${styles.iconPurple}`}>💰</div>
@@ -428,7 +428,7 @@ export default function Dashboard() {
               : entries.map(e => <EntradaItem key={e.id} e={e} />)
             }
           </div>
-        </div>
+        </div>}
 
       </div>
 

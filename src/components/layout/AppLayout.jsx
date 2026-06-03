@@ -113,7 +113,7 @@ const ICONS = {
 const ALL_NAV_ITEMS = [
   { to: '/painel',               label: 'Painel',        end: true,  icon: ICONS.painel,     roles: ['advogado','estagiario'] },
   { to: '/painel/casos',         label: 'Casos',         end: false, icon: ICONS.casos,      roles: ['advogado','estagiario'] },
-  { to: '/painel/clientes',      label: 'Clientes',      end: false, icon: ICONS.clientes,   roles: ['advogado'] },
+  { to: '/painel/clientes',      label: 'Clientes',      end: false, icon: ICONS.clientes,   roles: ['advogado','estagiario'] },
   { to: '/painel/propostas',     label: 'Propostas',     end: false, icon: ICONS.propostas,  roles: ['advogado','estagiario'] },
   { to: '/painel/tarefas',       label: 'Tarefas',       end: false, icon: ICONS.tarefas,    roles: ['advogado','estagiario'] },
   { to: '/painel/notas',         label: 'Notas',         end: false, icon: ICONS.notas,      roles: ['advogado','estagiario'] },
@@ -121,7 +121,7 @@ const ALL_NAV_ITEMS = [
   { to: '/painel/estagiarios',   label: 'Equipe',        end: false, icon: ICONS.equipe,     roles: ['advogado','estagiario'] },
   { to: '/painel/vitrine',       label: 'Vitrine',       end: false, icon: ICONS.vitrine,    roles: ['advogado','estagiario'] },
   { to: '/painel/workspace',     label: 'Workspace',     end: false, icon: ICONS.workspace,  roles: ['advogado','estagiario'] },
-  { to: '/painel/configuracoes', label: 'Configurações', end: false, icon: ICONS.configs,    roles: ['advogado','estagiario'] },
+  { to: '/painel/configuracoes', label: 'Configurações', end: false, icon: ICONS.configs,    roles: ['advogado'] },
 ]
 
 const PAGE_TITLES = {

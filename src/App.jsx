@@ -122,12 +122,12 @@ export default function App() {
         <Route index                        element={<Dashboard />} />
         <Route path="casos"                 element={<Cases />} />
         <Route path="casos/:id"             element={<CaseDetail />} />
-        <Route path="clientes"     element={<RoleRoute allow={['advogado']}><Clients /></RoleRoute>} />
-        <Route path="clientes/:id" element={<RoleRoute allow={['advogado']}><ClientDetail /></RoleRoute>} />
+        <Route path="clientes"     element={<Clients />} />
+        <Route path="clientes/:id" element={<ClientDetail />} />
         <Route path="propostas"    element={<Proposals />} />
         <Route path="tarefas"      element={<Tasks />} />
         <Route path="financeiro"   element={<RoleRoute allow={['advogado']}><Financials /></RoleRoute>} />
-        <Route path="configuracoes"         element={<Settings />} />
+        <Route path="configuracoes"         element={<RoleRoute allow={['advogado']}><Settings /></RoleRoute>} />
         <Route path="notas"                 element={<Notes />} />
         <Route path="estagiarios"           element={<Interns />} />
         <Route path="vitrine"               element={<Vitrine />} />
