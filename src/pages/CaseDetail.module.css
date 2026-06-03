@@ -134,6 +134,157 @@
 }
 .editBtn:hover { background: var(--accent-dark); }
 
+.finalizeBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: transparent;
+  color: #16a34a;
+  border: 1.5px solid #86efac;
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.finalizeBtn:hover { background: #dcfce7; border-color: #22c55e; }
+
+.deleteBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--text-3);
+  border: var(--border);
+  border-radius: 10px;
+  padding: 0.5rem 0.7rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.deleteBtn:hover { background: #fee2e2; border-color: #fca5a5; color: #ef4444; }
+
+/* ── Finalizar Modal ── */
+.finalizeBody {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.finalizeQuestion {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+.outcomeCards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.outcomeCard {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: var(--bg);
+  border: 1.5px solid var(--border-color, #e2e8f0);
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  text-align: left;
+  position: relative;
+}
+.outcomeCard:hover { border-color: var(--accent); background: var(--accent-dim); }
+.outcomeCardSelected { font-weight: 600; }
+
+.outcomeIcon {
+  font-size: 1.1rem;
+  font-weight: 700;
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.outcomeLabel {
+  font-size: 0.88rem;
+  color: var(--text);
+  flex: 1;
+}
+
+.outcomeCheck {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.outcomeReason {
+  width: 100%;
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.84rem;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--bg);
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.outcomeReason:focus { border-color: var(--accent); }
+
+.finalizeFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+}
+
+.finalizeCancelBtn {
+  background: none;
+  border: var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-2);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.finalizeCancelBtn:hover { background: var(--card-hover); }
+
+.finalizeConfirmBtn {
+  background: #22c55e;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.finalizeConfirmBtn:hover { background: #16a34a; }
+.finalizeConfirmBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+
 /* ── Info card ── */
 .infoCard {
   background: var(--card);

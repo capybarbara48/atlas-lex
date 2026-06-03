@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { useKanbanSituations } from '@/hooks/useKanbanSituations'
-import { updateCaseSituation } from '@/hooks/useCases'
+import { updateCaseSituation, finalizeCase, deleteCase } from '@/hooks/useCases'
 import { useCaseNotes } from '@/hooks/useCaseNotes'
 import { PROCESS_PHASES } from '@/lib/processPhases'
 import Modal from '@/components/ui/Modal'
@@ -478,6 +478,69 @@ function CaseNotesSection({ caseId, lawyerId }) {
   )
 }
 
+const OUTCOMES = [
+  { key: 'procedente',   label: 'Procedente',   icon: '✓', color: '#22c55e', bg: '#dcfce7', border: '#86efac' },
+  { key: 'improcedente', label: 'Improcedente', icon: '✕', color: '#ef4444', bg: '#fee2e2', border: '#fca5a5' },
+  { key: 'outro',        label: 'Outro motivo', icon: '●', color: '#64748b', bg: '#f1f5f9', border: '#cbd5e1' },
+]
+
+function FinalizarModal({ onClose, onConfirm }) {
+  const [outcome, setOutcome] = useState(null)
+  const [reason,  setReason]  = useState('')
+  const [saving,  setSaving]  = useState(false)
+
+  async function handleConfirm() {
+    if (!outcome) return
+    if (outcome === 'outro' && !reason.trim()) return
+    setSaving(true)
+    await onConfirm(outcome, reason)
+    setSaving(false)
+  }
+
+  return (
+    <div className={styles.finalizeBody}>
+      <p className={styles.finalizeQuestion}>Qual foi o resultado deste processo?</p>
+      <div className={styles.outcomeCards}>
+        {OUTCOMES.map(o => (
+          <button
+            key={o.key}
+            type="button"
+            className={`${styles.outcomeCard} ${outcome === o.key ? styles.outcomeCardSelected : ''}`}
+            style={outcome === o.key ? { borderColor: o.color, background: o.bg } : {}}
+            onClick={() => setOutcome(o.key)}
+          >
+            <span className={styles.outcomeIcon} style={{ color: o.color }}>{o.icon}</span>
+            <span className={styles.outcomeLabel}>{o.label}</span>
+            {outcome === o.key && (
+              <span className={styles.outcomeCheck} style={{ background: o.color }}>✓</span>
+            )}
+          </button>
+        ))}
+      </div>
+      {outcome === 'outro' && (
+        <textarea
+          className={styles.outcomeReason}
+          value={reason}
+          onChange={e => setReason(e.target.value)}
+          placeholder="Descreva o motivo do encerramento…"
+          rows={3}
+          autoFocus
+        />
+      )}
+      <div className={styles.finalizeFooter}>
+        <button className={styles.finalizeCancelBtn} onClick={onClose}>Cancelar</button>
+        <button
+          className={styles.finalizeConfirmBtn}
+          onClick={handleConfirm}
+          disabled={saving || !outcome || (outcome === 'outro' && !reason.trim())}
+        >
+          {saving ? 'Finalizando…' : 'Finalizar Processo'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function PhaseSelectorSection({ selectedPhase, onSelect }) {
   const [search, setSearch] = useState('')
 
@@ -578,6 +641,7 @@ export default function CaseDetail() {
   const [newTask,       setNewTask]       = useState(false)
   const [newEntry,      setNewEntry]      = useState(false)
   const [selectedPhase, setSelectedPhase] = useState(null)
+  const [finalizarOpen, setFinalizarOpen] = useState(false)
 
   const { situations } = useKanbanSituations()
 
@@ -585,6 +649,20 @@ export default function CaseDetail() {
     const newSit = e.target.value || null
     await updateCaseSituation(id, newSit)
     setCaso(prev => ({ ...prev, situation: newSit }))
+  }
+
+  async function handleDelete() {
+    if (!window.confirm('Excluir este processo permanentemente? Todas as tarefas, lançamentos e notas vinculados serão removidos. Esta ação não pode ser desfeita.')) return
+    const { error } = await deleteCase(id)
+    if (error) { alert('Erro ao excluir: ' + error.message); return }
+    navigate('/painel/casos')
+  }
+
+  async function handleFinalize(outcome, reason) {
+    const { error } = await finalizeCase(id, outcome, reason)
+    if (error) { alert('Erro ao finalizar: ' + error.message); return }
+    setFinalizarOpen(false)
+    navigate('/painel/casos')
   }
 
   async function load() {
@@ -702,6 +780,19 @@ export default function CaseDetail() {
             </svg>
             PDF
           </button>
+          {caso.status !== 'finalizado' && (
+            <button className={styles.finalizeBtn} onClick={() => setFinalizarOpen(true)}>
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
+                <path d="M13.5 4.5 6 12 2.5 8.5"/>
+              </svg>
+              Finalizar
+            </button>
+          )}
+          <button className={styles.deleteBtn} onClick={handleDelete} title="Excluir processo">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
+              <path d="M2 4h12M5 4V2.5h6V4M6.5 7v5M9.5 7v5M3 4l.75 9.5a1 1 0 0 0 1 .975h6.5a1 1 0 0 0 1-.975L13 4"/>
+            </svg>
+          </button>
           <button className={styles.editBtn} onClick={() => setEditing(true)}>Editar</button>
         </div>
       </div>
@@ -808,6 +899,15 @@ export default function CaseDetail() {
 
       {/* ── Notas ── */}
       <CaseNotesSection caseId={caso.id} lawyerId={caso.lawyer_id} />
+
+      {finalizarOpen && (
+        <Modal title="Finalizar Processo" onClose={() => setFinalizarOpen(false)}>
+          <FinalizarModal
+            onClose={() => setFinalizarOpen(false)}
+            onConfirm={handleFinalize}
+          />
+        </Modal>
+      )}
 
       {editing && (
         <Modal title="Editar processo" onClose={() => setEditing(false)} size="lg">

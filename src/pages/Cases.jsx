@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
-import { useCases, updateCaseSituation } from '@/hooks/useCases'
+import { useCases, useFinalisedCases, updateCaseSituation } from '@/hooks/useCases'
 import { useKanbanSituations } from '@/hooks/useKanbanSituations'
 import { useToast } from '@/context/ToastContext'
 import PageShell from '@/components/ui/PageShell'
@@ -371,6 +371,144 @@ function ListView({ cases, onEdit }) {
   )
 }
 
+/* ── DonutChart ─────────────────────────────────────────────────────── */
+function DonutChart({ procedente, improcedente, outro }) {
+  const total = procedente + improcedente + outro
+  const r = 58
+  const cx = 80, cy = 80
+  const strokeW = 24
+  const circumference = 2 * Math.PI * r
+
+  const segments = [
+    { value: procedente,   color: '#22c55e', label: 'Procedente',   pct: total > 0 ? procedente / total : 0 },
+    { value: improcedente, color: '#ef4444', label: 'Improcedente', pct: total > 0 ? improcedente / total : 0 },
+    { value: outro,        color: '#94a3b8', label: 'Outro',        pct: total > 0 ? outro / total : 0 },
+  ]
+
+  let accumulated = 0
+  const arcs = segments.map(s => {
+    const dash   = s.pct * circumference
+    const offset = -(accumulated / (total || 1)) * circumference
+    accumulated += s.value
+    return { ...s, dash, offset }
+  })
+
+  return (
+    <div className={styles.chartWrap}>
+      <svg width="160" height="160" viewBox="0 0 160 160">
+        {total === 0
+          ? <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--border-color,#e2e8f0)" strokeWidth={strokeW} />
+          : arcs.map((a, i) => a.value > 0 && (
+              <circle key={i}
+                cx={cx} cy={cy} r={r}
+                fill="none"
+                stroke={a.color}
+                strokeWidth={strokeW}
+                strokeDasharray={`${a.dash} ${circumference - a.dash}`}
+                strokeDashoffset={a.offset}
+                transform={`rotate(-90 ${cx} ${cy})`}
+              />
+            ))
+        }
+        <text x={cx} y={cy - 7} textAnchor="middle" fontSize="22" fontWeight="800" fill="var(--text,#1a1a2e)">{total}</text>
+        <text x={cx} y={cy + 13} textAnchor="middle" fontSize="10" fill="var(--text-3,#94a3b8)" fontWeight="500">casos</text>
+      </svg>
+      <div className={styles.chartLegend}>
+        {segments.map(s => (
+          <div key={s.label} className={styles.legendRow}>
+            <span className={styles.legendDot} style={{ background: s.color }} />
+            <span className={styles.legendLabel}>{s.label}</span>
+            <span className={styles.legendCount}>{s.value}</span>
+            <span className={styles.legendPct}>
+              {total > 0 ? Math.round(s.pct * 100) : 0}%
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ── FinalizadosView ─────────────────────────────────────────────────── */
+const OUTCOME_META = {
+  procedente:   { label: 'Procedente',   cls: 'st-teal' },
+  improcedente: { label: 'Improcedente', cls: 'st-red'  },
+  outro:        { label: 'Outro',        cls: 'st-gray' },
+}
+
+function FinalizadosView({ cases, loading }) {
+  const navigate = useNavigate()
+
+  const procedente   = cases.filter(c => c.outcome === 'procedente').length
+  const improcedente = cases.filter(c => c.outcome === 'improcedente').length
+  const outro        = cases.filter(c => c.outcome === 'outro' || !c.outcome).length
+
+  if (loading) return <div className={styles.emptyState}><p>Carregando…</p></div>
+
+  return (
+    <div className={styles.finalizadosWrap}>
+      {cases.length === 0
+        ? (
+          <div className={styles.emptyState}>
+            <div className={styles.emptyIcon}>⚖</div>
+            <p>Nenhum processo finalizado ainda</p>
+          </div>
+        ) : (
+          <>
+            <div className={styles.finalizadosTop}>
+              <div className={styles.chartCard}>
+                <div className={styles.chartTitle}>Resultado dos Processos</div>
+                <DonutChart procedente={procedente} improcedente={improcedente} outro={outro} />
+              </div>
+            </div>
+
+            <div className={styles.tableCard}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Processo</th>
+                    <th>Cliente</th>
+                    <th>Área</th>
+                    <th>Resultado</th>
+                    <th>Motivo</th>
+                    <th>Finalizado em</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cases.map(c => {
+                    const om = OUTCOME_META[c.outcome] ?? { label: c.outcome ?? '—', cls: 'st-gray' }
+                    const finDate = c.finalizado_at
+                      ? new Date(c.finalizado_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
+                      : '—'
+                    return (
+                      <tr key={c.id} className={styles.tableRow} style={{ cursor: 'pointer' }}
+                        onClick={() => navigate('/painel/casos/' + c.id)}>
+                        <td>
+                          <div className={styles.caseTitle}>{c.title}</div>
+                          <div className={styles.caseNumber}>{c.case_number ?? '—'}</div>
+                        </td>
+                        <td className={styles.clientCell} onClick={e => e.stopPropagation()}>
+                          {c.clients?.id
+                            ? <Link to={`/painel/clientes/${c.clients.id}`} className={styles.clientLink}>{c.clients.full_name}</Link>
+                            : (c.clients?.full_name ?? '—')}
+                        </td>
+                        <td>{c.area ? <span className="badge st-teal">{c.area}</span> : '—'}</td>
+                        <td><span className={`badge ${om.cls}`}>{om.label}</span></td>
+                        <td className={styles.reasonCell}>{c.outcome_reason || '—'}</td>
+                        <td className={styles.dateCell}>{finDate}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )
+      }
+    </div>
+  )
+}
+
 /* ── page ───────────────────────────────────────────────────────────── */
 export default function Cases() {
   const { lawyer } = useAuth()
@@ -378,6 +516,7 @@ export default function Cases() {
   const navigate   = useNavigate()
   const prefs      = loadPreferences(lawyer?.id)
 
+  const [tab, setTab]                 = useState('ativos')
   const [view, setView]               = useState(prefs.casos_view ?? 'kanban')
   const [search, setSearch]           = useState('')
   const [filterStatus, setFilterStatus] = useState('todos')
@@ -386,9 +525,15 @@ export default function Cases() {
   const [editColsOpen, setEditColsOpen] = useState(false)
 
   const { data: rawCases, loading, error, refetch } = useCases()
+  const { data: rawFinalizados, loading: finLoading } = useFinalisedCases()
   const { situations, loading: sitLoading, addSituation, updateSituation, deleteSituation, reorderSituations } = useKanbanSituations()
 
-  const cases = useMemo(() => (rawCases ?? []).map(mapCase), [rawCases])
+  // exclude finalized from the active tab
+  const cases = useMemo(
+    () => (rawCases ?? []).filter(c => c.status !== 'finalizado').map(mapCase),
+    [rawCases]
+  )
+  const finalizados = rawFinalizados ?? []
 
   function openDetail(id) { navigate('/painel/casos/' + id) }
   function handleSave() {
@@ -428,57 +573,82 @@ export default function Cases() {
   return (
     <PageShell
       title="Casos"
-      subtitle={loading ? 'Carregando…' : `${cases.length} processos · ${counts.ativo ?? 0} ativos`}
-      viewToggle={<ViewToggle value={view} onChange={handleViewChange} />}
+      subtitle={loading ? 'Carregando…' : `${cases.length} ativos · ${finalizados.length} finalizados`}
+      viewToggle={tab === 'ativos' ? <ViewToggle value={view} onChange={handleViewChange} /> : null}
       action={
-        <button className={styles.btnNovo} onClick={() => { setEditing(null); setFormOpen(true) }}>
-          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.75.75 0 0 1 .75.75v5.5h5.5a.75.75 0 0 1 0 1.5h-5.5v5.5a.75.75 0 0 1-1.5 0v-5.5H1.75a.75.75 0 0 1 0-1.5h5.5v-5.5A.75.75 0 0 1 8 1Z"/></svg>
-          Novo caso
-        </button>
+        tab === 'ativos' ? (
+          <button className={styles.btnNovo} onClick={() => { setEditing(null); setFormOpen(true) }}>
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.75.75 0 0 1 .75.75v5.5h5.5a.75.75 0 0 1 0 1.5h-5.5v5.5a.75.75 0 0 1-1.5 0v-5.5H1.75a.75.75 0 0 1 0-1.5h5.5v-5.5A.75.75 0 0 1 8 1Z"/></svg>
+            Novo caso
+          </button>
+        ) : null
       }
       filters={
         <>
-          <div className={styles.searchWrap}>
-            <svg className={styles.searchIcon} viewBox="0 0 16 16" fill="currentColor">
-              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.856a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
-            </svg>
-            <input
-              className={styles.searchInput}
-              type="text"
-              placeholder="Buscar por título, cliente ou número..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
+          <div className={styles.tabBar}>
+            <button
+              className={`${styles.tabBtn} ${tab === 'ativos' ? styles.tabBtnActive : ''}`}
+              onClick={() => setTab('ativos')}
+            >
+              Processos Ativos
+              <span className={styles.tabCount}>{cases.length}</span>
+            </button>
+            <button
+              className={`${styles.tabBtn} ${tab === 'finalizados' ? styles.tabBtnActive : ''}`}
+              onClick={() => setTab('finalizados')}
+            >
+              Processos Finalizados
+              <span className={styles.tabCount}>{finalizados.length}</span>
+            </button>
           </div>
-          <div className={styles.filterGroup}>
-            {[{ v: 'todos', l: 'Todos' }, ...STATUS_COLS.map(s => ({ v: s.key, l: s.label }))].map(({ v, l }) => (
-              <button
-                key={v}
-                className={`${styles.filterBtn} ${filterStatus === v ? styles.filterActive : ''}`}
-                onClick={() => setFilterStatus(v)}
-              >
-                {l}{v !== 'todos' && counts[v] != null && <span className={styles.filterCount}>{counts[v]}</span>}
-              </button>
-            ))}
-          </div>
+
+          {tab === 'ativos' && (
+            <>
+              <div className={styles.searchWrap}>
+                <svg className={styles.searchIcon} viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.856a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
+                </svg>
+                <input
+                  className={styles.searchInput}
+                  type="text"
+                  placeholder="Buscar por título, cliente ou número..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
+              </div>
+              <div className={styles.filterGroup}>
+                {[{ v: 'todos', l: 'Todos' }, ...STATUS_COLS.map(s => ({ v: s.key, l: s.label }))].map(({ v, l }) => (
+                  <button
+                    key={v}
+                    className={`${styles.filterBtn} ${filterStatus === v ? styles.filterActive : ''}`}
+                    onClick={() => setFilterStatus(v)}
+                  >
+                    {l}{v !== 'todos' && counts[v] != null && <span className={styles.filterCount}>{counts[v]}</span>}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </>
       }
     >
-      {error
-        ? <div className={styles.emptyState}><p>Erro ao carregar casos.</p></div>
-        : loading
-          ? view === 'kanban'
-            ? <SkeletonKanban />
-            : <div className={styles.tableCard}><SkeletonTable rows={6} cols={7} /></div>
-          : view === 'kanban'
-            ? <KanbanView
-                cases={filtered}
-                situations={situations}
-                sitLoading={sitLoading}
-                onMoveSituation={handleMoveSituation}
-                onEditColumns={() => setEditColsOpen(true)}
-              />
-            : <ListView cases={filtered} onEdit={openDetail} />
+      {tab === 'finalizados'
+        ? <FinalizadosView cases={finalizados} loading={finLoading} />
+        : error
+          ? <div className={styles.emptyState}><p>Erro ao carregar casos.</p></div>
+          : loading
+            ? view === 'kanban'
+              ? <SkeletonKanban />
+              : <div className={styles.tableCard}><SkeletonTable rows={6} cols={7} /></div>
+            : view === 'kanban'
+              ? <KanbanView
+                  cases={filtered}
+                  situations={situations}
+                  sitLoading={sitLoading}
+                  onMoveSituation={handleMoveSituation}
+                  onEditColumns={() => setEditColsOpen(true)}
+                />
+              : <ListView cases={filtered} onEdit={openDetail} />
       }
 
       {formOpen && (
