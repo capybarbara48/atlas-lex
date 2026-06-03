@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/context/AuthContext'
 import { useKanbanSituations } from '@/hooks/useKanbanSituations'
 import { updateCaseSituation } from '@/hooks/useCases'
 import { useCaseNotes } from '@/hooks/useCaseNotes'
@@ -41,6 +42,207 @@ const STATUS_FIN = {
   pago:      { label: 'Pago',      cls: 'st-teal'   },
   pendente:  { label: 'Pendente',  cls: 'st-orange' },
   cancelado: { label: 'Cancelado', cls: 'st-gray'   },
+}
+
+/* ── PDF generation ─────────────────────────────────────────────────── */
+function generateCasePDF(caso, tasks, entries, lawyer) {
+  const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+
+  function fmtDate(iso) {
+    if (!iso) return '—'
+    try { return new Date(iso.length === 10 ? iso + 'T12:00:00' : iso).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' }) }
+    catch { return iso }
+  }
+
+  const fmtBRL = n => new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(Number(n) || 0)
+  const accent     = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#4361ee'
+  const officeName = lawyer?.firm_name || lawyer?.full_name || 'Advocacia'
+  const oabLine    = lawyer?.oab_number ? ` · OAB ${lawyer.oab_number}` : ''
+  const dateStr    = new Date().toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })
+
+  const caseStatusInfo = {
+    ativo:     { color: '#0ea5e9', label: 'Ativo',     desc: 'Processo em curso, com providências regulares sendo adotadas.' },
+    suspenso:  { color: '#f59e0b', label: 'Suspenso',  desc: 'Processo suspenso temporariamente — pode decorrer de decisão judicial, acordo entre as partes ou aguardo de prazo legal.' },
+    encerrado: { color: '#64748b', label: 'Encerrado', desc: 'Processo encerrado com resolução definitiva. As obrigações contratuais relacionadas a este caso foram cumpridas.' },
+    arquivado: { color: '#94a3b8', label: 'Arquivado', desc: 'Processo arquivado administrativamente. Não há movimentações ativas no momento.' },
+  }
+  const statusInfo  = caseStatusInfo[caso.status] ?? { color: '#94a3b8', label: caso.status, desc: '' }
+  const priMap      = { urgente:['#ef4444','Urgente'], alta:['#ef4444','Alta'], media:['#f59e0b','Média'], baixa:['#94a3b8','Baixa'] }
+  const taskStMap   = { pendente:['#f59e0b','Pendente'], em_andamento:['#3b82f6','Em andamento'], concluida:['#22c55e','Concluída'], cancelada:['#94a3b8','Cancelada'] }
+  const entryStMap  = { pago:['#22c55e','Pago'], pendente:['#f59e0b','Pendente'], cancelado:['#94a3b8','Cancelado'] }
+
+  const divider = label => `
+    <div style="display:flex;align-items:center;gap:1rem;margin:1.75rem 0 1.25rem;">
+      <div style="flex:1;height:1px;background:#dde4eb;"></div>
+      <div style="font-size:0.58rem;font-weight:800;text-transform:uppercase;letter-spacing:0.18em;color:#8a9bac;white-space:nowrap;">${esc(label)}</div>
+      <div style="flex:1;height:1px;background:#dde4eb;"></div>
+    </div>`
+
+  const thead = (...cols) => `<thead style="background:${accent};"><tr>${cols.map(c =>
+    `<th style="padding:0.65rem 1rem;font-size:0.58rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:rgba(255,255,255,0.85);text-align:left;">${esc(c)}</th>`
+  ).join('')}</tr></thead>`
+
+  const badge = (color, label) =>
+    `<span style="background:${color};color:#fff;border-radius:999px;padding:0.15rem 0.6rem;font-size:0.58rem;font-weight:700;white-space:nowrap;">${esc(label)}</span>`
+
+  // Dados do processo
+  const caseFields = [
+    caso.clients?.full_name && { l: 'Cliente',        v: caso.clients.full_name },
+    caso.area               && { l: 'Área',           v: caso.area },
+    caso.court              && { l: 'Tribunal',       v: caso.court },
+    caso.valor > 0          && { l: 'Valor da causa', v: fmtBRL(caso.valor) },
+    caso.description        && { l: 'Observações',    v: caso.description },
+  ].filter(Boolean)
+
+  const infoRows = caseFields.map((f, i) => `
+    <tr style="${i%2===0?'background:#f4f7fa;':''}">
+      <td style="padding:0.65rem 1.25rem;font-size:0.75rem;font-weight:600;color:#5a6a7a;width:160px;border-right:1px solid #dde4eb;">${esc(f.l)}</td>
+      <td style="padding:0.65rem 1.25rem;font-size:0.82rem;color:#1a1a2e;">${esc(f.v)}</td>
+    </tr>`).join('')
+
+  // Status
+  const statusHtml = `
+    ${divider('Status Atual do Processo')}
+    <div style="border:1px solid #dde4eb;border-radius:14px;padding:1.25rem 1.5rem;display:flex;gap:1.25rem;align-items:flex-start;margin-bottom:2rem;">
+      <span style="background:${statusInfo.color};color:#fff;border-radius:999px;padding:0.3rem 1rem;font-size:0.72rem;font-weight:700;white-space:nowrap;flex-shrink:0;">${esc(statusInfo.label)}</span>
+      <p style="font-size:0.82rem;color:#5a6a7a;line-height:1.55;margin:0.15rem 0 0;">${esc(statusInfo.desc)}</p>
+    </div>`
+
+  // Tarefas
+  let tasksHtml = ''
+  if (tasks.length > 0) {
+    const rows = tasks.map((t, i) => {
+      const [pc, pl] = priMap[t.priority]  ?? ['#94a3b8', t.priority]
+      const [sc, sl] = taskStMap[t.status] ?? ['#94a3b8', t.status]
+      return `<tr style="${i%2===0?'background:#f4f7fa;':''}">
+        <td style="padding:0.6rem 1rem;font-size:0.82rem;font-weight:500;color:#1a1a2e;">${esc(t.title)}</td>
+        <td style="padding:0.6rem 1rem;">${badge(pc, pl)}</td>
+        <td style="padding:0.6rem 1rem;">${badge(sc, sl)}</td>
+        <td style="padding:0.6rem 1rem;font-size:0.72rem;color:#5a6a7a;white-space:nowrap;">${esc(fmtDate(t.due_date))}</td>
+      </tr>`
+    }).join('')
+    tasksHtml = `
+      ${divider('Tarefas')}
+      <div style="border:1px solid #dde4eb;border-radius:14px;overflow:hidden;margin-bottom:2rem;">
+        <table style="width:100%;border-collapse:collapse;">${thead('Tarefa','Prioridade','Status','Prazo')}<tbody>${rows}</tbody></table>
+      </div>`
+  }
+
+  // Financeiro
+  let entriesHtml = ''
+  if (entries.length > 0) {
+    const totRec  = entries.filter(e => e.type === 'receita' && e.status === 'pago').reduce((s, e) => s + Number(e.amount), 0)
+    const totDesp = entries.filter(e => e.type === 'despesa' && e.status === 'pago').reduce((s, e) => s + Number(e.amount), 0)
+    const saldo   = totRec - totDesp
+    const rows = entries.map((e, i) => {
+      const [sc, sl] = entryStMap[e.status] ?? ['#94a3b8', e.status]
+      return `<tr style="${i%2===0?'background:#f4f7fa;':''}">
+        <td style="padding:0.6rem 1rem;font-size:0.82rem;font-weight:500;color:#1a1a2e;">${esc(e.description || '—')}</td>
+        <td style="padding:0.6rem 1rem;">${badge(e.type === 'receita' ? '#22c55e' : '#ef4444', e.type === 'receita' ? 'Receita' : 'Despesa')}</td>
+        <td style="padding:0.6rem 1rem;">${badge(sc, sl)}</td>
+        <td style="padding:0.6rem 1rem;font-size:0.8rem;font-weight:700;text-align:right;color:${e.type === 'receita' ? '#1a9e43' : '#e03c3c'};">${e.type === 'receita' ? '+' : '−'}${esc(fmtBRL(e.amount))}</td>
+        <td style="padding:0.6rem 1rem;font-size:0.72rem;color:#5a6a7a;white-space:nowrap;">${esc(fmtDate(e.due_date))}</td>
+      </tr>`
+    }).join('')
+    entriesHtml = `
+      ${divider('Financeiro')}
+      <div style="border:1px solid #dde4eb;border-radius:14px;overflow:hidden;margin-bottom:1.5rem;">
+        <table style="width:100%;border-collapse:collapse;">${thead('Descrição','Tipo','Status','Valor','Data')}<tbody>${rows}</tbody></table>
+      </div>
+      <div style="display:flex;background:#f4f7fa;border:1px solid #dde4eb;border-radius:12px;overflow:hidden;margin-bottom:2rem;">
+        ${[['Receitas','#1a9e43',fmtBRL(totRec)],['Despesas','#e03c3c',fmtBRL(totDesp)],['Saldo',saldo>=0?'#1a9e43':'#e03c3c',fmtBRL(saldo)]].map((item, idx) => `
+          ${idx > 0 ? '<div style="width:1px;background:#dde4eb;"></div>' : ''}
+          <div style="flex:1;text-align:center;padding:1rem;">
+            <div style="font-size:0.58rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#8a9bac;margin-bottom:0.35rem;">${esc(item[0])}</div>
+            <div style="font-size:1rem;font-weight:700;color:${item[1]};">${esc(item[2])}</div>
+          </div>`).join('')}
+      </div>`
+  }
+
+  const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Ficha do Processo — ${esc(caso.title)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html{font-size:15px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:100vh;padding:2rem;}
+  .page{max-width:900px;margin:0 auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 8px 60px rgba(0,0,0,0.12);}
+  .pdf-header{background:${accent};padding:2.5rem 3rem;position:relative;overflow:hidden;}
+  .pdf-header::before{content:'';position:absolute;top:-30%;right:-5%;width:380px;height:380px;border-radius:50%;background:rgba(255,255,255,0.05);pointer-events:none;}
+  .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;position:relative;z-index:1;}
+  .office-brand{display:flex;align-items:center;gap:0.875rem;}
+  .office-logo{width:46px;height:46px;background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.3);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .office-logo svg{width:23px;height:23px;stroke:#fff;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+  .office-name-main{font-size:1rem;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:#fff;}
+  .office-name-sub{font-size:0.58rem;color:rgba(255,255,255,0.55);letter-spacing:0.12em;text-transform:uppercase;margin-top:0.15rem;}
+  .header-doc-info{text-align:right;}
+  .doc-label{font-size:0.55rem;font-weight:700;text-transform:uppercase;letter-spacing:0.15em;color:rgba(255,255,255,0.45);}
+  .doc-date{font-size:0.78rem;color:rgba(255,255,255,0.8);font-weight:500;margin-top:0.2rem;}
+  .header-body{position:relative;z-index:1;}
+  .prop-badge{display:inline-block;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);border-radius:999px;padding:0.28rem 0.85rem;font-size:0.6rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:0.7rem;}
+  .prop-title{font-size:1.65rem;font-weight:800;color:#fff;letter-spacing:-0.02em;line-height:1.2;margin-bottom:0.3rem;}
+  .prop-sub{font-size:0.82rem;color:rgba(255,255,255,0.65);}
+  .pdf-body{padding:2rem 3rem 2.5rem;}
+  .pdf-footer{background:${accent};padding:1.25rem 3rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;}
+  .pdf-footer-brand{font-size:0.7rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.65);}
+  .pdf-footer-note{font-size:0.62rem;color:rgba(255,255,255,0.45);text-align:right;line-height:1.5;}
+  @media print{html{font-size:13px;}body{background:#fff;padding:0;}.page{border-radius:0;box-shadow:none;max-width:100%;}.no-print{display:none!important;}@page{margin:0;size:A4;}}
+</style>
+</head>
+<body>
+<div class="no-print" style="text-align:center;margin-bottom:1.5rem;">
+  <button onclick="window.print()" style="background:${accent};color:#fff;border:none;border-radius:10px;padding:0.7rem 2rem;font-size:0.88rem;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:0.6rem;box-shadow:0 4px 20px rgba(0,0,0,0.18);">
+    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    Imprimir / Salvar como PDF
+  </button>
+</div>
+<div class="page">
+  <div class="pdf-header">
+    <div class="header-top">
+      <div class="office-brand">
+        <div class="office-logo">
+          <svg viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21H3"/><path d="M21 21h-4"/><path d="M11 21h2"/><line x1="7" y1="5" x2="17" y2="5"/><line x1="12" y1="2" x2="12" y2="21"/></svg>
+        </div>
+        <div>
+          <div class="office-name-main">${esc(officeName)}</div>
+          <div class="office-name-sub">Advocacia${oabLine}</div>
+        </div>
+      </div>
+      <div class="header-doc-info">
+        <div class="doc-label">Data de Emissão</div>
+        <div class="doc-date">${dateStr}</div>
+      </div>
+    </div>
+    <div class="header-body">
+      <div class="prop-badge">Ficha do Processo</div>
+      <div class="prop-title">${esc(caso.title)}</div>
+      ${caso.case_number ? `<div class="prop-sub">${esc(caso.case_number)}</div>` : ''}
+    </div>
+  </div>
+  <div class="pdf-body">
+    ${divider('Dados do Processo')}
+    <div style="border:1px solid #dde4eb;border-radius:14px;overflow:hidden;margin-bottom:2rem;">
+      <table style="width:100%;border-collapse:collapse;"><tbody>${infoRows}</tbody></table>
+    </div>
+    ${statusHtml}
+    ${tasksHtml}
+    ${entriesHtml}
+  </div>
+  <div class="pdf-footer">
+    <div class="pdf-footer-brand">${esc(officeName)}</div>
+    <div class="pdf-footer-note">Gerado em ${dateStr}<br>Uso interno · Confidencial</div>
+  </div>
+</div>
+</body>
+</html>`
+
+  const win = window.open('', '_blank')
+  if (!win) { alert('Permita pop-ups nesta página para gerar o PDF.'); return }
+  win.document.write(html)
+  win.document.close()
 }
 
 // ── Note colours (mirrors Notes.jsx palette) ─────────────────────
@@ -252,6 +454,7 @@ function CaseNotesSection({ caseId, lawyerId }) {
 export default function CaseDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { lawyer } = useAuth()
 
   const [caso,    setCaso]    = useState(null)
   const [tasks,   setTasks]   = useState([])
@@ -377,6 +580,14 @@ export default function CaseDetail() {
         </div>
 
         <div className={styles.headerActions}>
+          <button className={styles.pdfBtn} onClick={() => generateCasePDF(caso, tasks, entries, lawyer)}>
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
+              <polyline points="4 6 4 1.5 12 1.5 12 6"/>
+              <path d="M4 11.5H2.5a1.5 1.5 0 0 1-1.5-1.5V6a1.5 1.5 0 0 1 1.5-1.5h11A1.5 1.5 0 0 1 14 6v4a1.5 1.5 0 0 1-1.5 1.5H11"/>
+              <rect x="4" y="9" width="8" height="5.5" rx="0.5"/>
+            </svg>
+            PDF
+          </button>
           <button className={styles.editBtn} onClick={() => setEditing(true)}>Editar</button>
         </div>
       </div>
@@ -392,7 +603,6 @@ export default function CaseDetail() {
         )}
         <InfoRow label="Área"       value={caso.area} />
         <InfoRow label="Tribunal"   value={caso.court} />
-        <InfoRow label="Abertura"   value={fmt(caso.opened_at)} />
         <InfoRow label="Valor da causa" value={caso.valor > 0 ? brl(caso.valor) : null} />
         <InfoRow label="Situação" value={
           situations.length > 0 ? (
@@ -402,14 +612,12 @@ export default function CaseDetail() {
               onChange={handleSituationChange}
             >
               <option value="">— Não categorizado —</option>
-              {situations.map(sit => {
-                const col = sit.color ?? '#888'
-                return <option key={sit.id} value={sit.id}>{sit.value}</option>
-              })}
+              {situations.map(sit => (
+                <option key={sit.id} value={sit.id}>{sit.value}</option>
+              ))}
             </select>
           ) : null
         } />
-        <InfoRow label="Encerramento"   value={fmt(caso.closed_at)} />
         {caso.description && (
           <div className={`${styles.infoRow} ${styles.infoRowFull}`}>
             <span className={styles.infoLabel}>Descrição</span>
@@ -422,24 +630,26 @@ export default function CaseDetail() {
       <Section title="Tarefas" count={tasks.length} onAdd={() => setNewTask(true)} addLabel="+ Tarefa">
         {tasks.length === 0
           ? <Empty text="Nenhuma tarefa vinculada" />
-          : tasks.map(t => {
-              const ts = STATUS_TASK[t.status] ?? { label: t.status, cls: 'st-gray' }
-              const pr = PRIORITY[t.priority]  ?? { label: t.priority, cls: 'st-gray' }
-              const overdue = !['concluida','cancelada'].includes(t.status) && t.due_date && t.due_date < new Date().toISOString()
-              return (
-                <div key={t.id} className={`${styles.listItem} ${overdue ? styles.listItemOverdue : ''}`}>
-                  <div className={styles.listMain}>
-                    <span className={styles.listTitle}>{t.title}</span>
-                    {t.description && <span className={styles.listSub}>{t.description}</span>}
+          : <div className={tasks.length > 10 ? styles.taskScrollWrap : undefined}>
+              {tasks.map(t => {
+                const ts = STATUS_TASK[t.status] ?? { label: t.status, cls: 'st-gray' }
+                const pr = PRIORITY[t.priority]  ?? { label: t.priority, cls: 'st-gray' }
+                const overdue = !['concluida','cancelada'].includes(t.status) && t.due_date && t.due_date < new Date().toISOString()
+                return (
+                  <div key={t.id} className={`${styles.listItem} ${overdue ? styles.listItemOverdue : ''}`}>
+                    <div className={styles.listMain}>
+                      <span className={styles.listTitle}>{t.title}</span>
+                      {t.description && <span className={styles.listSub}>{t.description}</span>}
+                    </div>
+                    <div className={styles.listMeta}>
+                      <span className={`badge ${pr.cls}`}>{pr.label}</span>
+                      <span className={`badge ${ts.cls}`}>{ts.label}</span>
+                      {t.due_date && <span className={`${styles.listDate} ${overdue ? styles.dateOverdue : ''}`}>{fmt(t.due_date)}</span>}
+                    </div>
                   </div>
-                  <div className={styles.listMeta}>
-                    <span className={`badge ${pr.cls}`}>{pr.label}</span>
-                    <span className={`badge ${ts.cls}`}>{ts.label}</span>
-                    {t.due_date && <span className={`${styles.listDate} ${overdue ? styles.dateOverdue : ''}`}>{fmt(t.due_date)}</span>}
-                  </div>
-                </div>
-              )
-            })
+                )
+              })}
+            </div>
         }
       </Section>
 
