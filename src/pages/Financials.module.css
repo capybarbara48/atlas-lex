@@ -32,6 +32,42 @@
 .dateCell { font-size: 0.78rem; color: var(--text-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .emptyRow { text-align: center; padding: 2.5rem; color: var(--text-2); font-size: 0.85rem; }
 
+/* ── Tab bar ───────────────────────────────────────────────────── */
+.tabBar { display: flex; gap: 0.25rem; background: var(--bg); border: var(--border); border-radius: var(--radius-sm); padding: 0.25rem; width: fit-content; }
+.tabBtn { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.4rem 0.9rem; border-radius: calc(var(--radius-sm) - 2px); font-size: 0.8rem; font-weight: 600; color: var(--text-2); background: transparent; border: none; cursor: pointer; font-family: inherit; transition: all 0.15s; white-space: nowrap; }
+.tabBtn:hover { color: var(--text); background: var(--card); }
+.tabBtnActive { background: var(--card) !important; color: var(--accent) !important; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.tabCount { font-size: 0.65rem; font-weight: 700; background: rgba(var(--accent-rgb),0.12); color: var(--accent); border-radius: 999px; padding: 0.08rem 0.4rem; line-height: 1.5; }
+
+/* ── Quota-Litis view ──────────────────────────────────────────── */
+.qlWrap { display: flex; flex-direction: column; gap: 1.25rem; }
+.qlTop  { display: flex; justify-content: flex-start; }
+.qlChartCard { background: var(--card); border: var(--border); border-radius: var(--radius); padding: 1.5rem 1.75rem; display: flex; flex-direction: column; gap: 0.875rem; min-width: 340px; }
+.qlChartTitle { font-size: 0.82rem; font-weight: 700; color: var(--text); }
+.qlChartInner { display: flex; align-items: center; gap: 1.75rem; flex-wrap: wrap; }
+.qlLegend { display: flex; flex-direction: column; gap: 0.5rem; flex: 1; min-width: 160px; }
+.qlLegendRow { display: flex; align-items: center; gap: 0.5rem; }
+.qlLegendDot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.qlLegendLabel { flex: 1; font-size: 0.78rem; color: var(--text-2); font-weight: 500; }
+.qlLegendCount { font-size: 0.8rem; font-weight: 700; color: var(--text); min-width: 18px; text-align: right; }
+.qlLegendVal { font-size: 0.78rem; color: var(--text-3); font-variant-numeric: tabular-nums; min-width: 90px; text-align: right; }
+.qlLegendTotal { display: flex; justify-content: space-between; align-items: center; padding-top: 0.5rem; border-top: var(--border); font-size: 0.82rem; color: var(--text-2); }
+.qlLegendTotal strong { color: var(--text); font-variant-numeric: tabular-nums; }
+.qlTableCard { background: var(--card); border: var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.qlRowReceived td { opacity: 0.55; }
+.qlCaseLink { font-weight: 600; color: var(--accent); text-decoration: none; transition: opacity 0.15s; }
+.qlCaseLink:hover { opacity: 0.7; text-decoration: underline; }
+.qlCaseNumber { font-size: 0.68rem; color: var(--text-3); font-family: monospace; }
+.qlPending { color: #b45309; }
+.qlReceivedBadge { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.7rem; font-weight: 700; color: var(--green); background: rgba(34,197,94,0.1); border-radius: 999px; padding: 0.18rem 0.55rem; white-space: nowrap; }
+.qlPendingBadge  { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.7rem; font-weight: 700; color: #b45309; background: rgba(245,158,11,0.1); border-radius: 999px; padding: 0.18rem 0.55rem; white-space: nowrap; }
+.qlConfirmBtn { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.3rem 0.7rem; border-radius: 6px; border: 1px solid rgba(34,197,94,0.35); background: rgba(34,197,94,0.08); color: var(--green); font-size: 0.72rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.15s; white-space: nowrap; }
+.qlConfirmBtn:hover { background: var(--green); color: #fff; border-color: var(--green); }
+.qlUndoBtn { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.3rem 0.7rem; border-radius: 6px; border: var(--border); background: var(--bg); color: var(--text-3); font-size: 0.72rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; white-space: nowrap; }
+.qlUndoBtn:hover { border-color: var(--accent); color: var(--accent); }
+.qlEmpty { text-align: center; padding: 3rem 1rem; color: var(--text-2); background: var(--card); border: var(--border); border-radius: var(--radius); }
+.qlEmptyIcon { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.3; }
+
 /* ── Monthly chart ─────────────────────────────────────────────── */
 .chartCard {
   background: var(--card);

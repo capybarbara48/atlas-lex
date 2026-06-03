@@ -9,6 +9,12 @@ import Modal from '@/components/ui/Modal'
 import ClientForm from './ClientForm'
 import s from './Form.module.css'
 
+const DEFAULT_QUOTA_LITIS = ['5%','10%','15%','20%','25%','30%','35%']
+
+function fmtBRL(v) {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v) || 0)
+}
+
 const HEARING_TYPES = [
   'Audiência de Conciliação',
   'Audiência de Instrução e Julgamento',
@@ -145,6 +151,7 @@ export default function CaseForm({ initial, onSave, onClose }) {
     situation:        initial?.situation        ?? '',
     valor:            initial?.valor       != null ? String(initial.valor)            : '',
     description:      initial?.description      ?? '',
+    quota_litis_pct:  initial?.quota_litis_pct  ?? '',
   })
   const [clients,       setClients]       = useState([])
   const [saving,        setSaving]        = useState(false)
@@ -175,9 +182,10 @@ export default function CaseForm({ initial, onSave, onClose }) {
       court:            f.court.trim() || null,
       area:             f.area        || null,
       status:           f.status,
-      situation:        f.situation   || null,
+      situation:        f.situation        || null,
       valor:            parseFloat(f.valor) || 0,
       description:      f.description.trim() || null,
+      quota_litis_pct:  f.quota_litis_pct  || null,
     }
     const { error } = initial
       ? await supabase.from('cases').update(payload).eq('id', initial.id)
@@ -356,6 +364,22 @@ export default function CaseForm({ initial, onSave, onClose }) {
           <label className={s.label}>Valor da causa (R$)</label>
           <input className={s.input} type="number" min="0" step="0.01"
             value={f.valor} onChange={e => set('valor', e.target.value)} placeholder="0,00" />
+        </div>
+
+        <div className={s.field}>
+          <label className={s.label}>Quota-Litis</label>
+          <select className={s.select} value={f.quota_litis_pct} onChange={e => set('quota_litis_pct', e.target.value)}>
+            <option value="">— Sem quota-litis —</option>
+            {(lawyer?.preferences?.quota_litis_options?.length
+              ? lawyer.preferences.quota_litis_options
+              : DEFAULT_QUOTA_LITIS
+            ).map(q => <option key={q} value={q}>{q}</option>)}
+          </select>
+          {f.quota_litis_pct && f.valor && (
+            <span className={s.hint}>
+              Valor esperado: {fmtBRL(parseFloat(f.valor) * parseFloat(f.quota_litis_pct) / 100)}
+            </span>
+          )}
         </div>
 
         <div className={`${s.field} ${s.span2}`}>

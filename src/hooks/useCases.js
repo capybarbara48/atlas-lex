@@ -9,6 +9,7 @@ export function useCases({ status, limit } = {}) {
         id, title, case_number, status, situation, area, court, valor,
         opened_at, updated_at, created_at, client_id,
         outcome, outcome_reason, finalizado_at,
+        quota_litis_pct, quota_litis_received,
         clients ( id, full_name )
       `)
       .order('updated_at', { ascending: false })
@@ -16,6 +17,18 @@ export function useCases({ status, limit } = {}) {
     if (limit)  q = q.limit(limit)
     return q
   }, [status, limit])
+}
+
+export function useQuotaLitisCases() {
+  return useSupabaseQuery(async () => {
+    return supabase
+      .from('cases')
+      .select('id, title, case_number, valor, quota_litis_pct, quota_litis_received, client_id, clients(id, full_name)')
+      .not('quota_litis_pct', 'is', null)
+      .neq('quota_litis_pct', '')
+      .neq('status', 'finalizado')
+      .order('valor', { ascending: false })
+  }, [])
 }
 
 export function useFinalisedCases() {
@@ -71,6 +84,15 @@ export async function finalizeCase(caseId, outcome, outcomeReason) {
       finalizado_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
+    .eq('id', caseId)
+  return { error }
+}
+
+/** Toggle quota-litis received state */
+export async function toggleQuotaLitisReceived(caseId, received) {
+  const { error } = await supabase
+    .from('cases')
+    .update({ quota_litis_received: received, updated_at: new Date().toISOString() })
     .eq('id', caseId)
   return { error }
 }

@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { useAllEntries } from '@/hooks/useFinancials'
+import { useQuotaLitisCases, toggleQuotaLitisReceived } from '@/hooks/useCases'
 import PageShell from '@/components/ui/PageShell'
 import Modal from '@/components/ui/Modal'
 import EntryForm from '@/components/forms/EntryForm'
@@ -113,8 +115,151 @@ function MonthlyChart({ entries }) {
   )
 }
 
+/* ── Quota-Litis helpers ────────────────────────────────────────────── */
+function calcQL(c) {
+  const pct = parseFloat(c.quota_litis_pct) || 0
+  return (Number(c.valor) || 0) * pct / 100
+}
+
+function QLDonut({ pending, received }) {
+  const total = pending + received
+  const r = 52, cx = 68, cy = 68, sw = 22
+  const circ = 2 * Math.PI * r
+  const pPct = total > 0 ? pending / total : 0
+  const rPct = total > 0 ? received / total : 0
+  const pendDash  = pPct * circ
+  const recvDash  = rPct * circ
+  const recvOffset = -(pPct) * circ
+
+  return (
+    <svg width="136" height="136" viewBox="0 0 136 136">
+      {total === 0
+        ? <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--border-color,#e2e8f0)" strokeWidth={sw} />
+        : <>
+            {pPct > 0 && (
+              <circle cx={cx} cy={cy} r={r} fill="none" stroke="#f59e0b" strokeWidth={sw}
+                strokeDasharray={`${pendDash} ${circ - pendDash}`}
+                transform={`rotate(-90 ${cx} ${cy})`} />
+            )}
+            {rPct > 0 && (
+              <circle cx={cx} cy={cy} r={r} fill="none" stroke="#22c55e" strokeWidth={sw}
+                strokeDasharray={`${recvDash} ${circ - recvDash}`}
+                strokeDashoffset={recvOffset}
+                transform={`rotate(-90 ${cx} ${cy})`} />
+            )}
+          </>
+      }
+      <text x={cx} y={cy - 6}  textAnchor="middle" fontSize="18" fontWeight="800" fill="var(--text)">{total}</text>
+      <text x={cx} y={cy + 12} textAnchor="middle" fontSize="9"  fill="var(--text-3)" fontWeight="500">casos</text>
+    </svg>
+  )
+}
+
+function QuotaLitisView({ cases, loading, onToggle }) {
+  if (loading) return <div className={styles.qlEmpty}><p>Carregando…</p></div>
+
+  if (cases.length === 0) return (
+    <div className={styles.qlEmpty}>
+      <div className={styles.qlEmptyIcon}>%</div>
+      <p>Nenhum processo ativo com quota-litis cadastrada</p>
+    </div>
+  )
+
+  const pending  = cases.filter(c => !c.quota_litis_received)
+  const received = cases.filter(c => c.quota_litis_received)
+  const totalPending  = pending.reduce((s, c)  => s + calcQL(c), 0)
+  const totalReceived = received.reduce((s, c) => s + calcQL(c), 0)
+  const totalAll      = totalPending + totalReceived
+
+  return (
+    <div className={styles.qlWrap}>
+      {/* ── top: donut + stats ── */}
+      <div className={styles.qlTop}>
+        <div className={styles.qlChartCard}>
+          <div className={styles.qlChartTitle}>Quota-Litis Previstas</div>
+          <div className={styles.qlChartInner}>
+            <QLDonut pending={pending.length} received={received.length} />
+            <div className={styles.qlLegend}>
+              <div className={styles.qlLegendRow}>
+                <span className={styles.qlLegendDot} style={{ background: '#f59e0b' }} />
+                <span className={styles.qlLegendLabel}>A receber</span>
+                <span className={styles.qlLegendCount}>{pending.length}</span>
+                <span className={styles.qlLegendVal}>{brl(totalPending)}</span>
+              </div>
+              <div className={styles.qlLegendRow}>
+                <span className={styles.qlLegendDot} style={{ background: '#22c55e' }} />
+                <span className={styles.qlLegendLabel}>Recebido</span>
+                <span className={styles.qlLegendCount}>{received.length}</span>
+                <span className={styles.qlLegendVal}>{brl(totalReceived)}</span>
+              </div>
+              <div className={styles.qlLegendTotal}>
+                <span>Total previsto</span>
+                <strong>{brl(totalAll)}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── list: pending first, then received ── */}
+      <div className={styles.qlTableCard}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>Processo</th>
+              <th>Cliente</th>
+              <th>Valor da causa</th>
+              <th>%</th>
+              <th>Valor esperado</th>
+              <th>Situação</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {[...pending, ...received].map(c => {
+              const qlVal = calcQL(c)
+              const recv  = c.quota_litis_received
+              return (
+                <tr key={c.id} className={`${styles.tableRow} ${recv ? styles.qlRowReceived : ''}`}>
+                  <td>
+                    <Link to={`/painel/casos/${c.id}`} className={styles.qlCaseLink}>
+                      {c.title}
+                    </Link>
+                    {c.case_number && <div className={styles.qlCaseNumber}>{c.case_number}</div>}
+                  </td>
+                  <td className={styles.caseCell}>{c.clients?.full_name ?? '—'}</td>
+                  <td className={styles.valorCell}>{brl(c.valor)}</td>
+                  <td><span className={`badge st-blue`}>{c.quota_litis_pct}</span></td>
+                  <td className={`${styles.valorCell} ${recv ? styles.positive : styles.qlPending}`}>
+                    {brl(qlVal)}
+                  </td>
+                  <td>
+                    {recv
+                      ? <span className={styles.qlReceivedBadge}>✓ Recebida</span>
+                      : <span className={styles.qlPendingBadge}>A receber</span>
+                    }
+                  </td>
+                  <td>
+                    <button
+                      className={recv ? styles.qlUndoBtn : styles.qlConfirmBtn}
+                      onClick={() => onToggle(c.id, !recv)}
+                    >
+                      {recv ? 'Desfazer' : 'Confirmar recebimento'}
+                    </button>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 /* ── page ───────────────────────────────────────────────────────────── */
 export default function Financials() {
+  const [tab, setTab]                   = useState('lancamentos')
   const [filterTipo, setFilterTipo]     = useState('todos')
   const [filterStatus, setFilterStatus] = useState('todos')
   const [search, setSearch]             = useState('')
@@ -122,6 +267,12 @@ export default function Financials() {
   const [editing,  setEditing]          = useState(null)
 
   const { data: rawEntries, loading, error, refetch } = useAllEntries()
+  const { data: qlCases, loading: qlLoading, refetch: qlRefetch } = useQuotaLitisCases()
+
+  async function handleQLToggle(caseId, received) {
+    await toggleQuotaLitisReceived(caseId, received)
+    qlRefetch()
+  }
   const entries = useMemo(() => (rawEntries ?? []).map(mapEntry), [rawEntries])
 
   const rawById = useMemo(() =>
@@ -164,77 +315,104 @@ export default function Financials() {
       }
       filters={
         <>
-          <div className={styles.searchWrap}>
-            <svg className={styles.searchIcon} viewBox="0 0 16 16" fill="currentColor">
-              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.856a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
-            </svg>
-            <input
-              className={styles.searchInput}
-              type="text"
-              placeholder="Buscar lançamento ou caso..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
+          <div className={styles.tabBar}>
+            <button
+              className={`${styles.tabBtn} ${tab === 'lancamentos' ? styles.tabBtnActive : ''}`}
+              onClick={() => setTab('lancamentos')}
+            >
+              Lançamentos
+            </button>
+            <button
+              className={`${styles.tabBtn} ${tab === 'quota' ? styles.tabBtnActive : ''}`}
+              onClick={() => setTab('quota')}
+            >
+              Quota-Litis
+              {(qlCases ?? []).filter(c => !c.quota_litis_received).length > 0 && (
+                <span className={styles.tabCount}>{(qlCases ?? []).filter(c => !c.quota_litis_received).length}</span>
+              )}
+            </button>
           </div>
-          <div className={styles.filterGroup}>
-            {[{ v: 'todos', l: 'Tudo' }, { v: 'receita', l: 'Receitas' }, { v: 'despesa', l: 'Despesas' }].map(({ v, l }) => (
-              <button key={v} className={`${styles.filterBtn} ${filterTipo === v ? styles.filterActive : ''}`} onClick={() => setFilterTipo(v)}>{l}</button>
-            ))}
-          </div>
-          <div className={styles.filterGroup}>
-            {[{ v: 'todos', l: 'Todos' }, { v: 'pago', l: 'Pago' }, { v: 'pendente', l: 'Pendente' }].map(({ v, l }) => (
-              <button key={v} className={`${styles.filterBtn} ${filterStatus === v ? styles.filterActive : ''}`} onClick={() => setFilterStatus(v)}>{l}</button>
-            ))}
-          </div>
+
+          {tab === 'lancamentos' && (
+            <>
+              <div className={styles.searchWrap}>
+                <svg className={styles.searchIcon} viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.099zm-5.242 1.856a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z"/>
+                </svg>
+                <input
+                  className={styles.searchInput}
+                  type="text"
+                  placeholder="Buscar lançamento ou caso..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
+              </div>
+              <div className={styles.filterGroup}>
+                {[{ v: 'todos', l: 'Tudo' }, { v: 'receita', l: 'Receitas' }, { v: 'despesa', l: 'Despesas' }].map(({ v, l }) => (
+                  <button key={v} className={`${styles.filterBtn} ${filterTipo === v ? styles.filterActive : ''}`} onClick={() => setFilterTipo(v)}>{l}</button>
+                ))}
+              </div>
+              <div className={styles.filterGroup}>
+                {[{ v: 'todos', l: 'Todos' }, { v: 'pago', l: 'Pago' }, { v: 'pendente', l: 'Pendente' }].map(({ v, l }) => (
+                  <button key={v} className={`${styles.filterBtn} ${filterStatus === v ? styles.filterActive : ''}`} onClick={() => setFilterStatus(v)}>{l}</button>
+                ))}
+              </div>
+            </>
+          )}
         </>
       }
     >
-      {/* Summary cards */}
-      <div className={styles.summaryRow}>
-        <SummaryCard label="Receitas recebidas" value={brl(receitas)}  sub={`${nReceitas} lançamentos`}          color="var(--green)" />
-        <SummaryCard label="Despesas pagas"      value={brl(despesas)}  sub={`${nDespesas} lançamentos`}          color="var(--red)" />
-        <SummaryCard label="Saldo"               value={brl(saldo)}                                               color={saldo >= 0 ? 'var(--green)' : 'var(--red)'} />
-        <SummaryCard label="A receber"           value={brl(pendentes)} sub={`${nPendentes} lançamentos pendentes`} color="var(--blue)" />
-      </div>
+      {tab === 'quota'
+        ? <QuotaLitisView cases={qlCases ?? []} loading={qlLoading} onToggle={handleQLToggle} />
+        : <>
+            {/* Summary cards */}
+            <div className={styles.summaryRow}>
+              <SummaryCard label="Receitas recebidas" value={brl(receitas)}  sub={`${nReceitas} lançamentos`}          color="var(--green)" />
+              <SummaryCard label="Despesas pagas"      value={brl(despesas)}  sub={`${nDespesas} lançamentos`}          color="var(--red)" />
+              <SummaryCard label="Saldo"               value={brl(saldo)}                                               color={saldo >= 0 ? 'var(--green)' : 'var(--red)'} />
+              <SummaryCard label="A receber"           value={brl(pendentes)} sub={`${nPendentes} lançamentos pendentes`} color="var(--blue)" />
+            </div>
 
-      {/* Monthly chart */}
-      {!loading && !error && entries.length > 0 && <MonthlyChart entries={entries} />}
+            {/* Monthly chart */}
+            {!loading && !error && entries.length > 0 && <MonthlyChart entries={entries} />}
 
-      {/* Entries table */}
-      <div className={styles.tableCard}>
-        <table className={styles.table}>
-          <thead>
-            <tr><th>Descrição</th><th>Caso</th><th>Tipo</th><th>Status</th><th>Valor</th><th>Data</th></tr>
-          </thead>
-          <tbody>
-            {loading
-              ? <tr><td colSpan={6} className={styles.emptyRow}>Carregando…</td></tr>
-              : error
-              ? <tr><td colSpan={6} className={styles.emptyRow}>Erro ao carregar lançamentos.</td></tr>
-              : filtered.length === 0
-              ? <tr><td colSpan={6} className={styles.emptyRow}>Nenhum lançamento encontrado</td></tr>
-              : filtered.map(e => (
-                  <tr key={e.id} className={styles.tableRow} onClick={() => openEdit(e.id)} style={{ cursor: 'pointer' }}>
-                    <td className={styles.descCell}>{e.desc}</td>
-                    <td className={styles.caseCell}>{e.caso ?? '—'}</td>
-                    <td><span className={`badge badge-${e.tipo}`}>{e.tipo === 'receita' ? 'Receita' : 'Despesa'}</span></td>
-                    <td>
-                      <span className={styles.entryStatus} style={{ color: e.status === 'pago' ? 'var(--green)' : '#b45309' }}>
-                        {e.status === 'pago' ? '✓ Pago' : '⏳ Pendente'}
-                      </span>
-                    </td>
-                    <td className={`${styles.valorCell} ${e.tipo === 'despesa' ? styles.negative : styles.positive}`}>
-                      {e.tipo === 'despesa' ? '−' : '+'}{brl(e.valor)}
-                    </td>
-                    <td className={styles.dateCell}>
-                      {e.data ? new Date(e.data + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—'}
-                    </td>
-                  </tr>
-                ))
-            }
-          </tbody>
-        </table>
-      </div>
+            {/* Entries table */}
+            <div className={styles.tableCard}>
+              <table className={styles.table}>
+                <thead>
+                  <tr><th>Descrição</th><th>Caso</th><th>Tipo</th><th>Status</th><th>Valor</th><th>Data</th></tr>
+                </thead>
+                <tbody>
+                  {loading
+                    ? <tr><td colSpan={6} className={styles.emptyRow}>Carregando…</td></tr>
+                    : error
+                    ? <tr><td colSpan={6} className={styles.emptyRow}>Erro ao carregar lançamentos.</td></tr>
+                    : filtered.length === 0
+                    ? <tr><td colSpan={6} className={styles.emptyRow}>Nenhum lançamento encontrado</td></tr>
+                    : filtered.map(e => (
+                        <tr key={e.id} className={styles.tableRow} onClick={() => openEdit(e.id)} style={{ cursor: 'pointer' }}>
+                          <td className={styles.descCell}>{e.desc}</td>
+                          <td className={styles.caseCell}>{e.caso ?? '—'}</td>
+                          <td><span className={`badge badge-${e.tipo}`}>{e.tipo === 'receita' ? 'Receita' : 'Despesa'}</span></td>
+                          <td>
+                            <span className={styles.entryStatus} style={{ color: e.status === 'pago' ? 'var(--green)' : '#b45309' }}>
+                              {e.status === 'pago' ? '✓ Pago' : '⏳ Pendente'}
+                            </span>
+                          </td>
+                          <td className={`${styles.valorCell} ${e.tipo === 'despesa' ? styles.negative : styles.positive}`}>
+                            {e.tipo === 'despesa' ? '−' : '+'}{brl(e.valor)}
+                          </td>
+                          <td className={styles.dateCell}>
+                            {e.data ? new Date(e.data + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—'}
+                          </td>
+                        </tr>
+                      ))
+                  }
+                </tbody>
+              </table>
+            </div>
+          </>
+      }
 
       {formOpen && (
         <Modal title={editing ? 'Editar lançamento' : 'Novo lançamento'} onClose={() => setFormOpen(false)}>

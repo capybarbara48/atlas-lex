@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { useKanbanSituations } from '@/hooks/useKanbanSituations'
-import { updateCaseSituation, finalizeCase, deleteCase } from '@/hooks/useCases'
+import { updateCaseSituation, finalizeCase, deleteCase, toggleQuotaLitisReceived } from '@/hooks/useCases'
 import { useCaseNotes } from '@/hooks/useCaseNotes'
 import { PROCESS_PHASES } from '@/lib/processPhases'
 import Modal from '@/components/ui/Modal'
@@ -801,6 +801,34 @@ export default function CaseDetail() {
         <InfoRow label="Área"       value={caso.area} />
         <InfoRow label="Tribunal"   value={caso.court} />
         <InfoRow label="Valor da causa" value={caso.valor > 0 ? brl(caso.valor) : null} />
+        {caso.quota_litis_pct && (
+          <div className={styles.infoRow}>
+            <span className={styles.infoLabel}>Quota-Litis</span>
+            <span className={styles.infoValue} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+              <span className="badge st-blue">{caso.quota_litis_pct}</span>
+              <span style={{ fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+                → {brl(Number(caso.valor) * parseFloat(caso.quota_litis_pct) / 100)}
+              </span>
+              <button
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                  padding: '0.25rem 0.65rem', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
+                  ...(caso.quota_litis_received
+                    ? { background: 'rgba(34,197,94,0.1)', color: 'var(--green)', border: '1px solid rgba(34,197,94,0.35)' }
+                    : { background: 'rgba(245,158,11,0.08)', color: '#b45309', border: '1px solid rgba(245,158,11,0.35)' }
+                  )
+                }}
+                onClick={async () => {
+                  await toggleQuotaLitisReceived(caso.id, !caso.quota_litis_received)
+                  setCaso(prev => ({ ...prev, quota_litis_received: !prev.quota_litis_received }))
+                }}
+              >
+                {caso.quota_litis_received ? '✓ Recebida — desfazer' : 'Confirmar recebimento'}
+              </button>
+            </span>
+          </div>
+        )}
         <InfoRow label="Situação" value={
           situations.length > 0 ? (
             <select
