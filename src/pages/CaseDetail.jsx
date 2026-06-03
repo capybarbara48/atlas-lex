@@ -79,9 +79,36 @@ function generateCasePDF(caso, tasks, entries, lawyer, phase) {
   const badge = (color, label) =>
     `<span style="background:${color};color:#fff;border-radius:999px;padding:0.15rem 0.6rem;font-size:0.58rem;font-weight:700;white-space:nowrap;">${esc(label)}</span>`
 
+  // Dados do cliente
+  const cli = caso.clients
+  const clientFields = cli ? [
+    { l: 'Tipo',       v: cli.tipo === 'PJ' ? 'Pessoa Jurídica' : 'Pessoa Física' },
+    cli.cpf_cnpj && { l: 'CPF/CNPJ', v: cli.cpf_cnpj },
+    cli.phone    && { l: 'Telefone', v: cli.phone },
+    cli.email    && { l: 'E-mail',   v: cli.email },
+    (cli.cidade || cli.estado) && { l: 'Cidade', v: [cli.cidade, cli.estado].filter(Boolean).join(' / ') },
+  ].filter(Boolean) : []
+
+  const clientRows = clientFields.map((f, i) => `
+    <tr style="${i%2===0?'background:#f4f7fa;':''}">
+      <td style="padding:0.65rem 1.25rem;font-size:0.75rem;font-weight:600;color:#5a6a7a;width:160px;border-right:1px solid #dde4eb;">${esc(f.l)}</td>
+      <td style="padding:0.65rem 1.25rem;font-size:0.82rem;color:#1a1a2e;">${esc(f.v)}</td>
+    </tr>`).join('')
+
+  const clientHtml = cli ? `
+    ${divider('Dados do Cliente')}
+    <div style="background:#f4f7fa;border:1px solid #dde4eb;border-radius:14px;overflow:hidden;margin-bottom:0.75rem;">
+      <div style="padding:1rem 1.25rem;border-bottom:1px solid #dde4eb;display:flex;align-items:center;gap:0.75rem;">
+        <div style="width:36px;height:36px;background:${accent};border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div style="font-size:1rem;font-weight:700;color:#1a1a2e;">${esc(cli.full_name)}</div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;"><tbody>${clientRows}</tbody></table>
+    </div>` : ''
+
   // Dados do processo
   const caseFields = [
-    caso.clients?.full_name && { l: 'Cliente',        v: caso.clients.full_name },
     caso.area               && { l: 'Área',           v: caso.area },
     caso.court              && { l: 'Tribunal',       v: caso.court },
     caso.valor > 0          && { l: 'Valor da causa', v: fmtBRL(caso.valor) },
@@ -221,10 +248,12 @@ function generateCasePDF(caso, tasks, entries, lawyer, phase) {
     </div>
   </div>
   <div class="pdf-body">
+    ${clientHtml}
+    ${caseFields.length > 0 ? `
     ${divider('Dados do Processo')}
     <div style="border:1px solid #dde4eb;border-radius:14px;overflow:hidden;margin-bottom:2rem;">
       <table style="width:100%;border-collapse:collapse;"><tbody>${infoRows}</tbody></table>
-    </div>
+    </div>` : ''}
     ${statusHtml}
     ${tasksHtml}
     ${entriesHtml}
@@ -558,7 +587,7 @@ export default function CaseDetail() {
     const [caseRes, tasksRes, entriesRes] = await Promise.all([
       supabase
         .from('cases')
-        .select('*, clients(id, full_name, email, phone)')
+        .select('*, clients(id, full_name, email, phone, cpf_cnpj, cidade, estado, tipo)')
         .eq('id', id)
         .single(),
       supabase
