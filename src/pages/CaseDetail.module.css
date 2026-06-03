@@ -314,3 +314,311 @@
   .infoCard { grid-template-columns: 1fr 1fr; }
   .listItem { flex-direction: column; align-items: flex-start; }
 }
+
+/* ══════════════════════════════════════════
+   Case Notes Section
+   ══════════════════════════════════════════ */
+
+/* Add form */
+.noteAddForm {
+  padding: 1rem 1.5rem;
+  border-bottom: var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.noteAddTitle {
+  width: 100%;
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.7rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.noteAddTitle:focus { border-color: var(--accent); }
+.noteAddTitle::placeholder { color: var(--text-3); font-weight: 400; }
+
+.noteColorPicker {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.noteColorDot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: transform 0.12s;
+}
+.noteColorDot:hover { transform: scale(1.15); }
+.noteColorDotActive { transform: scale(1.2); box-shadow: 0 0 0 2px var(--accent); }
+
+.noteAddBody {
+  width: 100%;
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.7rem;
+  font-size: 0.82rem;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--bg);
+  resize: vertical;
+  min-height: 70px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.noteAddBody:focus { border-color: var(--accent); }
+
+.noteAddFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.noteAddCancel {
+  background: none;
+  border: var(--border);
+  border-radius: 7px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-2);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.noteAddCancel:hover { background: var(--card-hover); }
+
+.noteAddSave {
+  background: var(--accent);
+  border: none;
+  border-radius: 7px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.noteAddSave:hover { background: var(--accent-dark); }
+.noteAddSave:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Note cards grid */
+.noteGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+}
+
+.noteCard {
+  background: var(--card);
+  border: var(--border);
+  border-left: 3px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: box-shadow 0.15s, transform 0.12s;
+}
+.noteCard:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.08); transform: translateY(-1px); }
+.noteCardPinned { box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.25); }
+
+.noteCardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+}
+
+.noteCardDate {
+  font-size: 0.64rem;
+  color: var(--text-3);
+}
+
+.noteCardActions {
+  display: flex;
+  gap: 0.15rem;
+}
+
+.noteIconBtn {
+  background: none;
+  border: none;
+  padding: 0.2rem;
+  cursor: pointer;
+  color: var(--text-3);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.12s, background 0.12s;
+}
+.noteIconBtn svg { width: 11px; height: 11px; }
+.noteIconBtn:hover { background: rgba(0,0,0,0.06); color: var(--text); }
+.noteIconActive { color: var(--accent) !important; }
+.noteDelBtn:hover { color: #ef4444 !important; }
+
+.noteCardTitle {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.noteCardNoTitle { color: var(--text-3); font-weight: 400; }
+
+.noteCardBody {
+  font-size: 0.72rem;
+  color: var(--text-2);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Expand overlay */
+.noteExpandOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  padding: 1rem;
+}
+
+.noteExpandCard {
+  background: var(--card);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 560px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
+}
+
+.noteExpandHead {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: var(--border);
+}
+
+.noteExpandTitle {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--text);
+}
+.noteExpandTitle::placeholder { color: var(--text-3); font-weight: 400; }
+
+.noteExpandActions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.noteExpandBtn {
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s, color 0.12s;
+}
+.noteExpandBtn svg { width: 15px; height: 15px; }
+.noteExpandBtn:hover { background: var(--card-hover); color: var(--text); }
+.noteExpandClose:hover { background: #fee2e2; color: #ef4444; }
+
+.noteExpandColorBar {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  padding: 0.6rem 1rem;
+  border-bottom: var(--border);
+}
+
+.noteClearColor {
+  background: none;
+  border: var(--border);
+  border-radius: 4px;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.68rem;
+  font-family: inherit;
+  color: var(--text-2);
+  cursor: pointer;
+  margin-left: 0.25rem;
+  transition: background 0.12s;
+}
+.noteClearColor:hover { background: var(--card-hover); }
+
+.noteExpandBody {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.84rem;
+  color: var(--text);
+  line-height: 1.6;
+  padding: 0.75rem 1rem;
+  resize: none;
+  min-height: 180px;
+}
+
+.noteExpandFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1rem;
+  border-top: var(--border);
+}
+
+.noteCharCount {
+  font-size: 0.67rem;
+  color: var(--text-3);
+}
+
+.noteExpandSave {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.noteExpandSave:hover { background: var(--accent-dark); }
+.noteExpandSave:disabled { opacity: 0.5; cursor: not-allowed; }
+
+@media (max-width: 640px) {
+  .noteGrid { grid-template-columns: 1fr; padding: 0.75rem 1rem; }
+}
