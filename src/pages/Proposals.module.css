@@ -722,6 +722,245 @@
   font-weight: 500;
 }
 
+/* ── Card action buttons ─────────────────────────────────────────────── */
+
+.cardActionsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.cardBtns {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  flex-shrink: 0;
+}
+
+.cardIconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-3);
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.cardIconBtn:hover {
+  background: var(--bg);
+  border-color: var(--border-color, rgba(0,0,0,0.08));
+  color: var(--accent);
+}
+.cardDeleteBtn:hover { color: #dc2626 !important; background: #fee2e2 !important; border-color: #fca5a5 !important; }
+
+/* ── Inline delete confirmation ─────────────────────────────────────── */
+
+.confirmDeleteInline {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.confirmDeleteRow {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  justify-content: flex-end;
+}
+
+.confirmDeleteLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.confirmYesBtn {
+  padding: 0.2rem 0.55rem;
+  border-radius: 5px;
+  background: #dc2626;
+  color: #fff;
+  border: none;
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.confirmYesBtn:hover { background: #b91c1c; }
+
+.confirmNoBtn {
+  padding: 0.2rem 0.55rem;
+  border-radius: 5px;
+  background: var(--bg);
+  color: var(--text-2);
+  border: var(--border);
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.confirmNoBtn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Expiry warning ─────────────────────────────────────────────────── */
+
+.colPurgeNote {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.65rem;
+  color: #b45309;
+  font-weight: 500;
+  padding: 0.2rem 0.5rem 0.4rem;
+  opacity: 0.8;
+}
+
+.pipelineCardExpiring {
+  border-color: rgba(245,158,11,0.35) !important;
+  background: rgba(254,243,199,0.35) !important;
+}
+
+.expiryChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.expiryInline {
+  margin-left: 0.4rem;
+  font-size: 0.75rem;
+  cursor: help;
+  opacity: 0.7;
+}
+
+.tableRowExpiring td { background: rgba(254,243,199,0.25) !important; }
+
+/* ── Edit modal ─────────────────────────────────────────────────────── */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(3px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.modal {
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: var(--border);
+  flex-shrink: 0;
+}
+
+.modalTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.modalClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-3);
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.modalClose:hover { background: var(--bg); color: var(--text); }
+
+.modalBody {
+  padding: 1.25rem 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.modalFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding: 1rem 1.5rem;
+  border-top: var(--border);
+  flex-shrink: 0;
+}
+
+.modalCancel {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text-2);
+  border: var(--border);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.modalCancel:hover { border-color: var(--accent); color: var(--accent); }
+
+.modalSave {
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.modalSave:hover { filter: brightness(1.08); }
+.modalSave:disabled { opacity: 0.6; cursor: default; }
+
+.linkedNote {
+  font-weight: 400;
+  font-size: 0.72rem;
+  color: var(--text-3);
+}
+
 /* ── Responsive ─────────────────────────────────────────────────────── */
 
 @media (max-width: 900px) {

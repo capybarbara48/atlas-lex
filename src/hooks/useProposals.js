@@ -53,6 +53,17 @@ export async function updateProposalStatus(id, status) {
   return { data, error }
 }
 
+export async function updateProposal(id, fields) {
+  const patch = { ...fields, updated_at: new Date().toISOString() }
+  const { data, error } = await supabase
+    .from('proposals')
+    .update(patch)
+    .eq('id', id)
+    .select('id')
+    .single()
+  return { data, error }
+}
+
 export async function deleteProposal(id) {
   const { error } = await supabase.from('proposals').delete().eq('id', id)
   return { error }

@@ -1,6 +1,6 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { useAuth } from '@/context/AuthContext'
-import { useProposals, saveProposal, updateProposalStatus } from '@/hooks/useProposals'
+import { useProposals, saveProposal, updateProposalStatus, updateProposal, deleteProposal } from '@/hooks/useProposals'
 import { useToast } from '@/context/ToastContext'
 import { supabase } from '@/lib/supabase'
 import PageShell from '@/components/ui/PageShell'
@@ -29,6 +29,15 @@ function shortDate(iso) {
   return new Date(iso.includes('T') ? iso : iso + 'T12:00:00').toLocaleDateString('pt-BR')
 }
 
+function daysSince(iso) {
+  if (!iso) return 0
+  const d = new Date(iso.includes('T') ? iso : iso + 'T12:00:00')
+  return Math.floor((Date.now() - d) / (1000 * 60 * 60 * 24))
+}
+
+const MONTHS_6 = 180
+const MONTHS_5 = 150
+
 const PIPELINE_COLS = [
   { key: 'enviada',  label: 'Enviadas',  color: '#d97706', bg: '#fef3c7' },
   { key: 'aceita',   label: 'Aceitas',   color: '#16a34a', bg: '#dcfce7' },
@@ -44,7 +53,7 @@ const STATUS_BADGE = {
   expirada: { cls: 'badge st-red',   label: 'Expirada' },
 }
 
-/* ── PDF generator (inline, extended from proposalPDF.js paradigm) ─── */
+/* ── PDF generator ────────────────────────────────────────────────────── */
 
 function darken(hex, amount = 0.15) {
   const n = parseInt(hex.replace('#', ''), 16)
@@ -362,6 +371,26 @@ function PdfIcon() {
   )
 }
 
+function EditIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+    </svg>
+  )
+}
+
+function TrashIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
+      <polyline points="3 6 5 6 21 6"/>
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+      <path d="M10 11v6"/><path d="M14 11v6"/>
+      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+    </svg>
+  )
+}
+
 function ChevronDown() {
   return (
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" width="12" height="12">
@@ -400,9 +429,149 @@ function StatusSelect({ proposalId, current, onChanged }) {
   )
 }
 
+/* ── EditModal ──────────────────────────────────────────────────────── */
+
+function EditModal({ proposal, serviceTypes, quotaOptions, onSave, onClose, toast }) {
+  const isLinked = !proposal.client_name_override && !!proposal.clients?.full_name
+  const initName = proposal.client_name_override || proposal.clients?.full_name || ''
+
+  const [clientName, setClientName]       = useState(initName)
+  const [serviceType, setServiceType]     = useState(proposal.service_type || '')
+  const [valorStr, setValorStr]           = useState(
+    proposal.fee_amount
+      ? Number(proposal.fee_amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+      : ''
+  )
+  const [participacaoPct, setParticipacaoPct] = useState(proposal.participacao_pct || '')
+  const [notes, setNotes]                 = useState(proposal.body || '')
+  const [status, setStatus]               = useState(proposal.status || 'enviada')
+  const [saving, setSaving]               = useState(false)
+
+  async function handleSave() {
+    if (!clientName.trim()) { toast.error('Informe o nome do cliente.'); return }
+    setSaving(true)
+    const newVal = parseBRL(valorStr)
+    const { error } = await updateProposal(proposal.id, {
+      client_name_override: clientName.trim(),
+      service_type: serviceType || null,
+      fee_amount: newVal || null,
+      fee_type: newVal ? 'fixo' : (proposal.fee_type || 'fixo'),
+      participacao_pct: participacaoPct || null,
+      body: notes || null,
+      status,
+      title: `${serviceType || proposal.title || '—'} — ${clientName.trim()}`,
+    })
+    setSaving(false)
+    if (error) {
+      toast.error('Erro ao salvar alterações.')
+    } else {
+      toast.success('Proposta atualizada.')
+      onSave()
+    }
+  }
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modal} onClick={e => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <h3 className={styles.modalTitle}>Editar Proposta</h3>
+          <button className={styles.modalClose} onClick={onClose} aria-label="Fechar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="15" height="15">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <div className={styles.modalBody}>
+          <div className={styles.fieldGroup}>
+            <label className={styles.fieldLabel}>
+              Cliente
+              {isLinked && <span className={styles.linkedNote}> · vinculado ao cadastro</span>}
+            </label>
+            <input
+              className={styles.input}
+              type="text"
+              value={clientName}
+              onChange={e => setClientName(e.target.value)}
+              placeholder="Nome do cliente"
+            />
+          </div>
+
+          <div className={styles.fieldGroup}>
+            <label className={styles.fieldLabel}>Tipo de Serviço</label>
+            {serviceTypes.length > 0 ? (
+              <select className={styles.select} value={serviceType} onChange={e => setServiceType(e.target.value)}>
+                <option value="">Selecionar…</option>
+                {serviceTypes.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            ) : (
+              <input className={styles.input} type="text" value={serviceType} onChange={e => setServiceType(e.target.value)} placeholder="Ex.: Ação Trabalhista" />
+            )}
+          </div>
+
+          <div className={styles.fieldGroup}>
+            <label className={styles.fieldLabel}>Valor dos Honorários</label>
+            <div className={styles.currencyWrap}>
+              <span className={styles.currencyPrefix}>R$</span>
+              <input
+                className={`${styles.input} ${styles.currencyInput}`}
+                type="text"
+                inputMode="decimal"
+                value={valorStr}
+                onChange={e => setValorStr(e.target.value)}
+                onBlur={e => setValorStr(formatCurrencyInput(e.target.value))}
+                placeholder="0,00"
+              />
+            </div>
+          </div>
+
+          {quotaOptions.length > 0 && (
+            <div className={styles.fieldGroup}>
+              <label className={styles.fieldLabel}>Participação Final de Êxito</label>
+              <select className={styles.select} value={participacaoPct} onChange={e => setParticipacaoPct(e.target.value)}>
+                <option value="">Sem participação de êxito</option>
+                {quotaOptions.map(q => <option key={q} value={q}>{q}</option>)}
+              </select>
+            </div>
+          )}
+
+          <div className={styles.fieldGroup}>
+            <label className={styles.fieldLabel}>Status</label>
+            <select className={styles.select} value={status} onChange={e => setStatus(e.target.value)}>
+              <option value="enviada">Enviada</option>
+              <option value="aceita">Aceita</option>
+              <option value="recusada">Recusada</option>
+              <option value="rascunho">Rascunho</option>
+              <option value="expirada">Expirada</option>
+            </select>
+          </div>
+
+          <div className={styles.fieldGroup}>
+            <label className={styles.fieldLabel}>Observações</label>
+            <textarea
+              className={styles.textarea}
+              rows={3}
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="Condições adicionais, prazos…"
+            />
+          </div>
+        </div>
+
+        <div className={styles.modalFooter}>
+          <button className={styles.modalCancel} onClick={onClose}>Cancelar</button>
+          <button className={styles.modalSave} onClick={handleSave} disabled={saving}>
+            {saving ? 'Salvando…' : 'Salvar alterações'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /* ── Pipeline (history tab) ─────────────────────────────────────────── */
 
-function PipelineView({ proposals, onPDF, onStatusChange }) {
+function PipelineView({ proposals, onPDF, onEdit, onDeleteRequest, onDeleteConfirm, confirmDeleteId, onStatusChange }) {
   return (
     <div className={styles.pipelineWrapper}>
       <div className={styles.pipeline}>
@@ -419,13 +588,32 @@ function PipelineView({ proposals, onPDF, onStatusChange }) {
                 </span>
                 <span className={styles.pipelineColCount}>{items.length}</span>
               </div>
+              {col.key === 'recusada' && (
+                <div className={styles.colPurgeNote}>
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="10" height="10">
+                    <circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><circle cx="8" cy="11" r="0.5" fill="currentColor"/>
+                  </svg>
+                  Purge automático após 6 meses
+                </div>
+              )}
               <div className={styles.pipelineItems}>
                 {items.length === 0
                   ? <div className={styles.pipelineEmpty}>Nenhuma proposta</div>
                   : items.map(p => {
                       const clientName = p.client_name_override || p.clients?.full_name || '—'
+                      const age = daysSince(p.created_at)
+                      const nearExpiry = p.status === 'recusada' && age >= MONTHS_5
+                      const isConfirming = confirmDeleteId === p.id
                       return (
-                        <div key={p.id} className={styles.pipelineCard}>
+                        <div key={p.id} className={`${styles.pipelineCard} ${nearExpiry ? styles.pipelineCardExpiring : ''}`}>
+                          {nearExpiry && (
+                            <div className={styles.expiryChip}>
+                              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" width="10" height="10">
+                                <path d="M8 1L1 14h14L8 1z"/><line x1="8" y1="6" x2="8" y2="9"/><circle cx="8" cy="12" r="0.5" fill="currentColor"/>
+                              </svg>
+                              {age >= MONTHS_6 ? 'Aguardando remoção' : 'Expira em breve'}
+                            </div>
+                          )}
                           <div className={styles.pipelineCardClient}>{clientName}</div>
                           {p.service_type && (
                             <div className={styles.pipelineCardService}>{p.service_type}</div>
@@ -433,17 +621,40 @@ function PipelineView({ proposals, onPDF, onStatusChange }) {
                           <div className={styles.pipelineCardFee}>
                             {Number(p.fee_amount) > 0 ? fmtBRL(p.fee_amount) : '—'}
                           </div>
-                          <div className={styles.pipelineCardMeta}>
+
+                          <div className={styles.cardActionsRow}>
                             <span className={styles.pipelineCardDate}>{shortDate(p.created_at)}</span>
-                            <button
-                              className={styles.pdfIconBtn}
-                              title="Gerar PDF"
-                              onClick={() => onPDF(p)}
-                            >
-                              <PdfIcon />
-                              PDF
-                            </button>
+                            {isConfirming ? (
+                              <div className={styles.confirmDeleteInline}>
+                                <span className={styles.confirmDeleteLabel}>Excluir?</span>
+                                <button
+                                  className={styles.confirmYesBtn}
+                                  onClick={() => onDeleteConfirm(p.id)}
+                                >
+                                  Sim
+                                </button>
+                                <button
+                                  className={styles.confirmNoBtn}
+                                  onClick={() => onDeleteRequest(null)}
+                                >
+                                  Não
+                                </button>
+                              </div>
+                            ) : (
+                              <div className={styles.cardBtns}>
+                                <button className={styles.cardIconBtn} title="Gerar PDF" onClick={() => onPDF(p)}>
+                                  <PdfIcon />
+                                </button>
+                                <button className={styles.cardIconBtn} title="Editar" onClick={() => onEdit(p)}>
+                                  <EditIcon />
+                                </button>
+                                <button className={`${styles.cardIconBtn} ${styles.cardDeleteBtn}`} title="Excluir" onClick={() => onDeleteRequest(p.id)}>
+                                  <TrashIcon />
+                                </button>
+                              </div>
+                            )}
                           </div>
+
                           <div className={styles.pipelineCardFooter}>
                             <StatusSelect
                               proposalId={p.id}
@@ -466,7 +677,7 @@ function PipelineView({ proposals, onPDF, onStatusChange }) {
 
 /* ── List view (history tab) ─────────────────────────────────────────── */
 
-function ListView({ proposals, onPDF, onStatusChange }) {
+function ListView({ proposals, onPDF, onEdit, onDeleteRequest, onDeleteConfirm, confirmDeleteId, onStatusChange }) {
   if (proposals.length === 0) {
     return (
       <div className={styles.emptyState}>
@@ -500,21 +711,39 @@ function ListView({ proposals, onPDF, onStatusChange }) {
           {proposals.map(p => {
             const clientName = p.client_name_override || p.clients?.full_name || '—'
             const badge = STATUS_BADGE[p.status] ?? STATUS_BADGE.rascunho
+            const age = daysSince(p.created_at)
+            const nearExpiry = p.status === 'recusada' && age >= MONTHS_5
+            const isConfirming = confirmDeleteId === p.id
             return (
-              <tr key={p.id} className={styles.tableRow}>
-                <td className={styles.clientCell}>{clientName}</td>
+              <tr key={p.id} className={`${styles.tableRow} ${nearExpiry ? styles.tableRowExpiring : ''}`}>
+                <td className={styles.clientCell}>
+                  {clientName}
+                  {nearExpiry && (
+                    <span className={styles.expiryInline} title={age >= MONTHS_6 ? 'Aguardando remoção automática' : 'Será removida em breve'}>
+                      ⚠
+                    </span>
+                  )}
+                </td>
                 <td className={styles.serviceCell}>{p.service_type || '—'}</td>
                 <td className={styles.valorCell}>
                   {Number(p.fee_amount) > 0 ? fmtBRL(p.fee_amount) : '—'}
                 </td>
-                <td>
-                  <span className={badge.cls}>{badge.label}</span>
-                </td>
+                <td><span className={badge.cls}>{badge.label}</span></td>
                 <td className={styles.dateCell}>{shortDate(p.created_at)}</td>
                 <td onClick={e => e.stopPropagation()} className={styles.actionsCell}>
-                  <button className={styles.pdfIconBtn} title="Gerar PDF" onClick={() => onPDF(p)}>
-                    <PdfIcon />
-                  </button>
+                  {isConfirming ? (
+                    <div className={styles.confirmDeleteRow}>
+                      <span className={styles.confirmDeleteLabel}>Excluir?</span>
+                      <button className={styles.confirmYesBtn} onClick={() => onDeleteConfirm(p.id)}>Sim</button>
+                      <button className={styles.confirmNoBtn} onClick={() => onDeleteRequest(null)}>Não</button>
+                    </div>
+                  ) : (
+                    <div className={styles.cardBtns}>
+                      <button className={styles.cardIconBtn} title="PDF" onClick={() => onPDF(p)}><PdfIcon /></button>
+                      <button className={styles.cardIconBtn} title="Editar" onClick={() => onEdit(p)}><EditIcon /></button>
+                      <button className={`${styles.cardIconBtn} ${styles.cardDeleteBtn}`} title="Excluir" onClick={() => onDeleteRequest(p.id)}><TrashIcon /></button>
+                    </div>
+                  )}
                 </td>
               </tr>
             )
@@ -609,10 +838,28 @@ export default function Proposals() {
   const { lawyer, refreshLawyer } = useAuth()
   const toast = useToast()
 
-  const [tab, setTab] = useState('nova')
+  const [tab, setTab]           = useState('nova')
   const [histView, setHistView] = useState('pipeline')
 
   const { data: rawProposals, loading, error, refetch } = useProposals()
+
+  /* edit / delete state */
+  const [editingProposal, setEditingProposal] = useState(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
+
+  /* auto-purge recusadas older than 6 months */
+  const purgedRef = useRef(false)
+  useEffect(() => {
+    if (purgedRef.current || !rawProposals || rawProposals.length === 0) return
+    const stale = rawProposals.filter(p => p.status === 'recusada' && daysSince(p.created_at) >= MONTHS_6)
+    if (stale.length === 0) { purgedRef.current = true; return }
+    purgedRef.current = true
+    Promise.all(stale.map(p => deleteProposal(p.id))).then(() => {
+      const n = stale.length
+      toast.info(`${n} proposta${n > 1 ? 's' : ''} recusada${n > 1 ? 's' : ''} com mais de 6 meses ${n > 1 ? 'foram removidas' : 'foi removida'} automaticamente.`)
+      refetch()
+    })
+  }, [rawProposals])
 
   /* form state */
   const serviceTypes = lawyer?.preferences?.service_types ?? []
@@ -640,9 +887,9 @@ export default function Proposals() {
     setDbClients(data ?? [])
   }, [dbClients])
 
-  const baseValor = useMemo(() => parseBRL(valorStr), [valorStr])
+  const baseValor  = useMemo(() => parseBRL(valorStr), [valorStr])
   const finalValor = useMemo(() => isPartner ? baseValor * 1.3 : baseValor, [baseValor, isPartner])
-  const pixValor  = useMemo(() => finalValor * 0.9, [finalValor])
+  const pixValor   = useMemo(() => finalValor * 0.9, [finalValor])
 
   const resolvedClientName = useMemo(() => {
     if (clientMode === 'free') return clientFreeText.trim() || ''
@@ -705,6 +952,17 @@ export default function Proposals() {
       lawyer,
     })
     if (!ok) toast.error('Permita pop-ups no navegador para gerar o PDF.')
+  }
+
+  async function handleDeleteConfirm(id) {
+    const { error: delErr } = await deleteProposal(id)
+    setConfirmDeleteId(null)
+    if (delErr) {
+      toast.error('Erro ao excluir proposta.')
+    } else {
+      toast.success('Proposta excluída.')
+      refetch()
+    }
   }
 
   const proposalCount = (rawProposals ?? []).length
@@ -953,16 +1211,35 @@ export default function Proposals() {
             <PipelineView
               proposals={rawProposals ?? []}
               onPDF={handleHistPDF}
+              onEdit={setEditingProposal}
+              onDeleteRequest={setConfirmDeleteId}
+              onDeleteConfirm={handleDeleteConfirm}
+              confirmDeleteId={confirmDeleteId}
               onStatusChange={refetch}
             />
           ) : (
             <ListView
               proposals={rawProposals ?? []}
               onPDF={handleHistPDF}
+              onEdit={setEditingProposal}
+              onDeleteRequest={setConfirmDeleteId}
+              onDeleteConfirm={handleDeleteConfirm}
+              confirmDeleteId={confirmDeleteId}
               onStatusChange={refetch}
             />
           )}
         </div>
+      )}
+
+      {editingProposal && (
+        <EditModal
+          proposal={editingProposal}
+          serviceTypes={serviceTypes}
+          quotaOptions={quotaOptions}
+          toast={toast}
+          onSave={async () => { setEditingProposal(null); await refetch() }}
+          onClose={() => setEditingProposal(null)}
+        />
       )}
     </PageShell>
   )
