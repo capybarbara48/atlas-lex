@@ -62,3 +62,8 @@ export async function updateTaskStatus(taskId, newStatus) {
   const { error } = await supabase.from('tasks').update(updates).eq('id', taskId)
   return { error }
 }
+
+export async function updateTaskAssignee(taskId, assignedTo) {
+  const { error } = await supabase.from('tasks').update({ assigned_to: assignedTo }).eq('id', taskId)
+  return { error }
+}

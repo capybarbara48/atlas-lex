@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useAuth } from '@/context/AuthContext'
-import { useAllTasks, updateTaskStatus } from '@/hooks/useTasks'
+import { useAllTasks, updateTaskStatus, updateTaskAssignee } from '@/hooks/useTasks'
 import PageShell from '@/components/ui/PageShell'
 import styles from './Interns.module.css'
 
@@ -53,7 +53,7 @@ function MemberCard({ name, tasks, onClick }) {
 }
 
 /* ── Task row ───────────────────────────────────────────────────────── */
-function TaskRow({ task, showMember, onStatusChange }) {
+function TaskRow({ task, showMember, onStatusChange, responsaveis, onCycleAssignee }) {
   const overdue = isOverdue(task)
   return (
     <div className={`${styles.taskRow} ${overdue ? styles.taskRowOverdue : ''}`}>
@@ -67,7 +67,12 @@ function TaskRow({ task, showMember, onStatusChange }) {
       </div>
       <div className={styles.taskRowMeta}>
         {showMember && task.assigned_to && (
-          <span className="badge st-teal">{task.assigned_to}</span>
+          <span
+            className="badge st-teal"
+            style={{ cursor: responsaveis?.length > 0 ? 'pointer' : 'default' }}
+            title={responsaveis?.length > 0 ? 'Clique para mudar responsável' : task.assigned_to}
+            onClick={e => { e.stopPropagation(); onCycleAssignee?.(task.id, task.assigned_to) }}
+          >{task.assigned_to}</span>
         )}
         <span className={`badge ${PRI_CSS[task.priority]}`}>{PRI_LABELS[task.priority]}</span>
         <select
@@ -121,6 +126,14 @@ export default function Interns() {
 
   async function handleStatusChange(taskId, newStatus) {
     await updateTaskStatus(taskId, newStatus)
+    refetch()
+  }
+
+  async function handleCycleAssignee(taskId, currentAssignee) {
+    if (responsaveis.length === 0) return
+    const idx = responsaveis.indexOf(currentAssignee)
+    const next = responsaveis[(idx + 1) % responsaveis.length]
+    await updateTaskAssignee(taskId, next)
     refetch()
   }
 
@@ -243,6 +256,8 @@ export default function Interns() {
                 task={t}
                 showMember={member === 'todos' || member === 'sem_atribuicao'}
                 onStatusChange={handleStatusChange}
+                responsaveis={responsaveis}
+                onCycleAssignee={handleCycleAssignee}
               />
             ))}
           </div>

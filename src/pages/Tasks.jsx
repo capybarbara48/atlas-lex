@@ -1,7 +1,7 @@
 import { useState, useMemo, Fragment } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
-import { useAllTasks, updateTaskStatus, updateTaskOrder } from '@/hooks/useTasks'
+import { useAllTasks, updateTaskStatus, updateTaskOrder, updateTaskAssignee } from '@/hooks/useTasks'
 import { useUpcomingHearings } from '@/hooks/useHearings'
 import { useToast } from '@/context/ToastContext'
 import { supabase } from '@/lib/supabase'
@@ -172,7 +172,7 @@ function RespPills({ responsaveis, value, onChange }) {
   )
 }
 
-function AgendaTaskRow({ t, todayISO, responsaveis, onClick, onCheck, onOrderChange, onDragStart, onDragEnd, isDragging }) {
+function AgendaTaskRow({ t, todayISO, responsaveis, onClick, onCheck, onOrderChange, onDragStart, onDragEnd, isDragging, onCycleAssignee }) {
   const overdue = t.due_date && t.due_date.split('T')[0] < todayISO && !['concluida','cancelada'].includes(t.status)
   const done    = t.status === 'concluida'
   return (
@@ -207,7 +207,10 @@ function AgendaTaskRow({ t, todayISO, responsaveis, onClick, onCheck, onOrderCha
           style={{
             background: respColor(t.assigned_to, responsaveis) + '22',
             color: respColor(t.assigned_to, responsaveis),
+            cursor: responsaveis.length > 0 ? 'pointer' : 'default',
           }}
+          title={responsaveis.length > 0 ? 'Clique para mudar responsável' : t.assigned_to}
+          onClick={e => { e.stopPropagation(); onCycleAssignee?.(t.id, t.assigned_to) }}
         >
           {t.assigned_to.split(' ')[0]}
         </span>
@@ -217,7 +220,7 @@ function AgendaTaskRow({ t, todayISO, responsaveis, onClick, onCheck, onOrderCha
 }
 
 /* ── Agenda view ────────────────────────────────────────────────────── */
-function AgendaView({ rawTasks, responsaveis, filterResp, session, onEdit, onNewWithDate, refetch }) {
+function AgendaView({ rawTasks, responsaveis, filterResp, session, onEdit, onNewWithDate, refetch, onCycleAssignee }) {
   const today    = new Date()
   const todayISO = toISO(today)
   const tomorrowISO = toISO(addDays(today, 1))
@@ -352,7 +355,7 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, onEdit, onNew
           {todayTasks.length === 0
             ? <div className={styles.agendaEmpty}>Nenhuma tarefa neste dia</div>
             : todayTasks.map(t => (
-                <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} onDragStart={handleDragStart} onDragEnd={handleDragEnd} isDragging={draggingId === t.id} />
+                <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} onDragStart={handleDragStart} onDragEnd={handleDragEnd} isDragging={draggingId === t.id} onCycleAssignee={onCycleAssignee} />
               ))
           }
         </div>
@@ -385,7 +388,7 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, onEdit, onNew
           {noDateTasks.length === 0
             ? <div className={styles.agendaEmpty}>Nenhuma tarefa sem prazo</div>
             : noDateTasks.map(t => (
-                <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} onDragStart={handleDragStart} onDragEnd={handleDragEnd} isDragging={draggingId === t.id} />
+                <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} onDragStart={handleDragStart} onDragEnd={handleDragEnd} isDragging={draggingId === t.id} onCycleAssignee={onCycleAssignee} />
               ))
           }
         </div>
@@ -414,7 +417,7 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, onEdit, onNew
           {tomorrowTasks.length === 0
             ? <div className={styles.agendaEmpty}>Nenhuma tarefa para amanhã</div>
             : tomorrowTasks.map(t => (
-                <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} onDragStart={handleDragStart} onDragEnd={handleDragEnd} isDragging={draggingId === t.id} />
+                <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} onDragStart={handleDragStart} onDragEnd={handleDragEnd} isDragging={draggingId === t.id} onCycleAssignee={onCycleAssignee} />
               ))
           }
         </div>
@@ -487,7 +490,7 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, onEdit, onNew
                     </div>
                     <div className={styles.weekCellTasks}>
                       {tasks.map(t => (
-                        <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} onDragStart={handleDragStart} onDragEnd={handleDragEnd} isDragging={draggingId === t.id} />
+                        <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} onDragStart={handleDragStart} onDragEnd={handleDragEnd} isDragging={draggingId === t.id} onCycleAssignee={onCycleAssignee} />
                       ))}
                     </div>
                   </div>
@@ -822,6 +825,14 @@ export default function Tasks() {
     savePreferences(lawyer?.id, { tarefas_view: v })
   }
 
+  async function handleCycleAssignee(taskId, currentAssignee) {
+    if (responsaveis.length === 0) return
+    const idx = responsaveis.indexOf(currentAssignee)
+    const next = responsaveis[(idx + 1) % responsaveis.length]
+    await updateTaskAssignee(taskId, next)
+    refetch()
+  }
+
   function openNewWithDate(dateISO, assignedTo) {
     setEditing({
       due_date:    dateISO ? dateISO + 'T12:00:00' : null,
@@ -896,6 +907,7 @@ export default function Tasks() {
               onEdit={openEdit}
               onNewWithDate={openNewWithDate}
               refetch={refetch}
+              onCycleAssignee={handleCycleAssignee}
             />
           : view === 'kanban'
             ? <KanbanView tasks={filtered} onEdit={openEdit} />

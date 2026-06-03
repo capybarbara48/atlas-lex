@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { useKanbanSituations } from '@/hooks/useKanbanSituations'
 import { updateCaseSituation, finalizeCase, deleteCase, toggleQuotaLitisReceived } from '@/hooks/useCases'
+import { updateTaskAssignee } from '@/hooks/useTasks'
 import { useCaseNotes } from '@/hooks/useCaseNotes'
 import { PROCESS_PHASES } from '@/lib/processPhases'
 import Modal from '@/components/ui/Modal'
@@ -691,6 +692,15 @@ export default function CaseDetail() {
 
   useEffect(() => { load() }, [id])
 
+  async function handleCycleAssignee(taskId, currentAssignee) {
+    const responsaveis = lawyer?.preferences?.responsaveis ?? []
+    if (responsaveis.length === 0) return
+    const idx = responsaveis.indexOf(currentAssignee)
+    const next = responsaveis[(idx + 1) % responsaveis.length]
+    await updateTaskAssignee(taskId, next)
+    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, assigned_to: next } : t))
+  }
+
   if (loading) return (
     <div className={styles.page}>
       <div className={styles.header}>
@@ -863,6 +873,7 @@ export default function CaseDetail() {
                 const ts = STATUS_TASK[t.status] ?? { label: t.status, cls: 'st-gray' }
                 const pr = PRIORITY[t.priority]  ?? { label: t.priority, cls: 'st-gray' }
                 const overdue = !['concluida','cancelada'].includes(t.status) && t.due_date && t.due_date < new Date().toISOString()
+                const responsaveis = lawyer?.preferences?.responsaveis ?? []
                 return (
                   <div key={t.id} className={`${styles.listItem} ${overdue ? styles.listItemOverdue : ''}`}>
                     <div className={styles.listMain}>
@@ -870,6 +881,14 @@ export default function CaseDetail() {
                       {t.description && <span className={styles.listSub}>{t.description}</span>}
                     </div>
                     <div className={styles.listMeta}>
+                      {t.assigned_to && (
+                        <span
+                          className="badge st-teal"
+                          style={{ cursor: responsaveis.length > 0 ? 'pointer' : 'default' }}
+                          title={responsaveis.length > 0 ? 'Clique para mudar responsável' : t.assigned_to}
+                          onClick={() => handleCycleAssignee(t.id, t.assigned_to)}
+                        >{t.assigned_to.split(' ')[0]}</span>
+                      )}
                       <span className={`badge ${pr.cls}`}>{pr.label}</span>
                       <span className={`badge ${ts.cls}`}>{ts.label}</span>
                       {t.due_date && <span className={`${styles.listDate} ${overdue ? styles.dateOverdue : ''}`}>{fmt(t.due_date)}</span>}
