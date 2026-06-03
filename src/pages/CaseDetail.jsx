@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { useKanbanSituations } from '@/hooks/useKanbanSituations'
 import { updateCaseSituation } from '@/hooks/useCases'
 import { useCaseNotes } from '@/hooks/useCaseNotes'
+import { PROCESS_PHASES } from '@/lib/processPhases'
 import Modal from '@/components/ui/Modal'
 import CaseForm from '@/components/forms/CaseForm'
 import TaskForm from '@/components/forms/TaskForm'
@@ -45,7 +46,7 @@ const STATUS_FIN = {
 }
 
 /* ── PDF generation ─────────────────────────────────────────────────── */
-function generateCasePDF(caso, tasks, entries, lawyer) {
+function generateCasePDF(caso, tasks, entries, lawyer, phase) {
   const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
 
   function fmtDate(iso) {
@@ -60,13 +61,6 @@ function generateCasePDF(caso, tasks, entries, lawyer) {
   const oabLine    = lawyer?.oab_number ? ` · OAB ${lawyer.oab_number}` : ''
   const dateStr    = new Date().toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })
 
-  const caseStatusInfo = {
-    ativo:     { color: '#0ea5e9', label: 'Ativo',     desc: 'Processo em curso, com providências regulares sendo adotadas.' },
-    suspenso:  { color: '#f59e0b', label: 'Suspenso',  desc: 'Processo suspenso temporariamente — pode decorrer de decisão judicial, acordo entre as partes ou aguardo de prazo legal.' },
-    encerrado: { color: '#64748b', label: 'Encerrado', desc: 'Processo encerrado com resolução definitiva. As obrigações contratuais relacionadas a este caso foram cumpridas.' },
-    arquivado: { color: '#94a3b8', label: 'Arquivado', desc: 'Processo arquivado administrativamente. Não há movimentações ativas no momento.' },
-  }
-  const statusInfo  = caseStatusInfo[caso.status] ?? { color: '#94a3b8', label: caso.status, desc: '' }
   const priMap      = { urgente:['#ef4444','Urgente'], alta:['#ef4444','Alta'], media:['#f59e0b','Média'], baixa:['#94a3b8','Baixa'] }
   const taskStMap   = { pendente:['#f59e0b','Pendente'], em_andamento:['#3b82f6','Em andamento'], concluida:['#22c55e','Concluída'], cancelada:['#94a3b8','Cancelada'] }
   const entryStMap  = { pago:['#22c55e','Pago'], pendente:['#f59e0b','Pendente'], cancelado:['#94a3b8','Cancelado'] }
@@ -100,13 +94,17 @@ function generateCasePDF(caso, tasks, entries, lawyer) {
       <td style="padding:0.65rem 1.25rem;font-size:0.82rem;color:#1a1a2e;">${esc(f.v)}</td>
     </tr>`).join('')
 
-  // Status
-  const statusHtml = `
-    ${divider('Status Atual do Processo')}
-    <div style="border:1px solid #dde4eb;border-radius:14px;padding:1.25rem 1.5rem;display:flex;gap:1.25rem;align-items:flex-start;margin-bottom:2rem;">
-      <span style="background:${statusInfo.color};color:#fff;border-radius:999px;padding:0.3rem 1rem;font-size:0.72rem;font-weight:700;white-space:nowrap;flex-shrink:0;">${esc(statusInfo.label)}</span>
-      <p style="font-size:0.82rem;color:#5a6a7a;line-height:1.55;margin:0.15rem 0 0;">${esc(statusInfo.desc)}</p>
-    </div>`
+  // Situação atual do processo (fase selecionada pelo advogado)
+  const statusHtml = phase ? `
+    ${divider('Situação Atual do Processo')}
+    <div style="background:#f4f7fa;border:1px solid #dde4eb;border-radius:14px;padding:1.75rem 2rem;margin-bottom:2rem;">
+      <div style="display:flex;align-items:center;gap:0.875rem;margin-bottom:1.1rem;">
+        <div style="background:${accent};color:#fff;border-radius:7px;padding:0.28rem 0.7rem;font-size:0.62rem;font-weight:800;letter-spacing:0.06em;white-space:nowrap;flex-shrink:0;">${esc(phase.id)}</div>
+        <div style="font-size:0.95rem;font-weight:700;color:#1a1a2e;line-height:1.3;">${esc(phase.titulo)}</div>
+      </div>
+      <div style="font-size:0.875rem;color:#3a4a5a;line-height:1.8;border-left:3px solid ${accent};padding-left:1.25rem;">${esc(phase.explicacao)}</div>
+      <div style="margin-top:1rem;font-size:0.6rem;color:#8a9bac;text-transform:uppercase;letter-spacing:0.1em;font-weight:700;">${esc(phase.grupo)} · ${phase.tipo === 'aguardando' ? 'Situação de Espera' : 'Fase Processual'}</div>
+    </div>` : ''
 
   // Tarefas
   let tasksHtml = ''
@@ -451,6 +449,85 @@ function CaseNotesSection({ caseId, lawyerId }) {
   )
 }
 
+function CasePhasePicker({ casoTitle, onClose, onConfirm, onSkip }) {
+  const [search,     setSearch]     = useState('')
+  const [selectedId, setSelectedId] = useState(null)
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim()
+    if (!q) return PROCESS_PHASES
+    return PROCESS_PHASES.filter(p =>
+      p.titulo.toLowerCase().includes(q) ||
+      p.grupo.toLowerCase().includes(q) ||
+      p.explicacao.toLowerCase().includes(q)
+    )
+  }, [search])
+
+  const groups = useMemo(() => {
+    const g = {}
+    for (const p of filtered) {
+      if (!g[p.grupo]) g[p.grupo] = []
+      g[p.grupo].push(p)
+    }
+    return g
+  }, [filtered])
+
+  const selectedPhase = PROCESS_PHASES.find(p => p.id === selectedId) ?? null
+
+  function handleSelect(id) {
+    setSelectedId(prev => prev === id ? null : id)
+  }
+
+  return (
+    <div className={styles.phasePicker}>
+      <p className={styles.phasePickerSub}>PDF · {casoTitle}</p>
+      <input
+        className={styles.phaseSearch}
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        placeholder="Filtrar fases ou situações…"
+        autoFocus
+      />
+      <div className={styles.phaseList}>
+        {Object.keys(groups).length === 0 && (
+          <div className={styles.phaseEmpty}>Nenhuma fase encontrada.</div>
+        )}
+        {Object.entries(groups).map(([grupo, items]) => (
+          <div key={grupo}>
+            <div className={styles.phaseGroupLabel}>{grupo}</div>
+            {items.map(p => (
+              <div
+                key={p.id}
+                className={`${styles.phaseItem} ${selectedId === p.id ? styles.phaseItemSelected : ''}`}
+                onClick={() => handleSelect(p.id)}
+              >
+                <span className={styles.phaseItemId}>{p.id}</span>
+                <div className={styles.phaseItemBody}>
+                  <div className={styles.phaseItemTitle}>{p.titulo}</div>
+                  <div className={styles.phaseItemType}>
+                    {p.tipo === 'aguardando' ? 'Situação de Espera' : 'Fase Processual'}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+      <div className={styles.phasePickerFooter}>
+        <button className={styles.phasePickerCancel} onClick={onClose}>Cancelar</button>
+        <button className={styles.phasePickerSkip} onClick={onSkip}>Gerar sem fase</button>
+        <button
+          className={styles.phasePickerConfirm}
+          onClick={() => onConfirm(selectedPhase)}
+          disabled={!selectedId}
+        >
+          Gerar PDF
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function CaseDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -461,9 +538,10 @@ export default function CaseDetail() {
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState(null)
-  const [editing,   setEditing]   = useState(false)
-  const [newTask,   setNewTask]   = useState(false)
-  const [newEntry,  setNewEntry]  = useState(false)
+  const [editing,       setEditing]       = useState(false)
+  const [newTask,       setNewTask]       = useState(false)
+  const [newEntry,      setNewEntry]      = useState(false)
+  const [phasePickerOpen, setPhasePickerOpen] = useState(false)
 
   const { situations } = useKanbanSituations()
 
@@ -580,7 +658,7 @@ export default function CaseDetail() {
         </div>
 
         <div className={styles.headerActions}>
-          <button className={styles.pdfBtn} onClick={() => generateCasePDF(caso, tasks, entries, lawyer)}>
+          <button className={styles.pdfBtn} onClick={() => setPhasePickerOpen(true)}>
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
               <polyline points="4 6 4 1.5 12 1.5 12 6"/>
               <path d="M4 11.5H2.5a1.5 1.5 0 0 1-1.5-1.5V6a1.5 1.5 0 0 1 1.5-1.5h11A1.5 1.5 0 0 1 14 6v4a1.5 1.5 0 0 1-1.5 1.5H11"/>
@@ -691,6 +769,17 @@ export default function CaseDetail() {
 
       {/* ── Notas ── */}
       <CaseNotesSection caseId={caso.id} lawyerId={caso.lawyer_id} />
+
+      {phasePickerOpen && (
+        <Modal title="Situação Atual do Processo" onClose={() => setPhasePickerOpen(false)} size="lg">
+          <CasePhasePicker
+            casoTitle={caso.title}
+            onClose={() => setPhasePickerOpen(false)}
+            onConfirm={phase => { setPhasePickerOpen(false); generateCasePDF(caso, tasks, entries, lawyer, phase) }}
+            onSkip={() => { setPhasePickerOpen(false); generateCasePDF(caso, tasks, entries, lawyer, null) }}
+          />
+        </Modal>
+      )}
 
       {editing && (
         <Modal title="Editar processo" onClose={() => setEditing(false)} size="lg">

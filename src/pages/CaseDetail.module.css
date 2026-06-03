@@ -651,3 +651,171 @@
 @media (max-width: 640px) {
   .noteGrid { grid-template-columns: 1fr; padding: 0.75rem 1rem; }
 }
+
+/* ══════════════════════════════════════════
+   Phase Picker (PDF)
+   ══════════════════════════════════════════ */
+
+.phasePicker {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.phasePickerSub {
+  font-size: 0.72rem;
+  color: var(--text-3);
+  padding: 0 0 0.75rem;
+  margin: 0;
+}
+
+.phaseSearch {
+  width: 100%;
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.85rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  transition: border-color 0.15s;
+  margin-bottom: 0.75rem;
+}
+.phaseSearch:focus { border-color: var(--accent); }
+.phaseSearch::placeholder { color: var(--text-3); }
+
+.phaseList {
+  max-height: 380px;
+  overflow-y: auto;
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 1rem;
+  overscroll-behavior: contain;
+}
+.phaseList::-webkit-scrollbar { width: 5px; }
+.phaseList::-webkit-scrollbar-track { background: transparent; }
+.phaseList::-webkit-scrollbar-thumb { background: var(--border-color, #dde4eb); border-radius: 99px; }
+.phaseList::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
+.phaseGroupLabel {
+  padding: 0.45rem 0.85rem;
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-3);
+  background: var(--card);
+  border-bottom: var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.phaseItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-bottom: var(--border);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.phaseItem:last-child { border-bottom: none; }
+.phaseItem:hover { background: var(--card-hover); }
+
+.phaseItemSelected {
+  background: rgba(var(--accent-rgb), 0.08);
+  border-left: 3px solid var(--accent);
+}
+.phaseItemSelected:hover { background: rgba(var(--accent-rgb), 0.12); }
+
+.phaseItemId {
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #fff;
+  background: var(--accent);
+  border-radius: 5px;
+  padding: 0.18rem 0.5rem;
+  margin-top: 0.1rem;
+}
+
+.phaseItemBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.phaseItemTitle {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.phaseItemType {
+  font-size: 0.65rem;
+  color: var(--text-3);
+  font-weight: 500;
+}
+
+.phaseEmpty {
+  padding: 1.5rem;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--text-3);
+}
+
+.phasePickerFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.phasePickerCancel {
+  background: none;
+  border: var(--border);
+  border-radius: 8px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-2);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+  margin-right: auto;
+}
+.phasePickerCancel:hover { background: var(--card-hover); }
+
+.phasePickerSkip {
+  background: none;
+  border: var(--border);
+  border-radius: 8px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-2);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.phasePickerSkip:hover { background: var(--card-hover); }
+
+.phasePickerConfirm {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.45rem 1.1rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.phasePickerConfirm:hover { background: var(--accent-dark); }
+.phasePickerConfirm:disabled { opacity: 0.4; cursor: not-allowed; }
