@@ -21,12 +21,6 @@ function fmt(iso) {
   return new Date(iso + (iso.length === 10 ? 'T12:00:00' : '')).toLocaleDateString('pt-BR')
 }
 
-const STATUS_CASE = {
-  ativo:      { label: 'Ativo',      cls: 'st-teal'   },
-  encerrado:  { label: 'Encerrado',  cls: 'st-gray'   },
-  arquivado:  { label: 'Arquivado',  cls: 'st-gray'   },
-  suspenso:   { label: 'Suspenso',   cls: 'st-orange'  },
-}
 const STATUS_TASK = {
   pendente:     { label: 'Pendente',     cls: 'st-orange' },
   em_andamento: { label: 'Em andamento', cls: 'st-blue'   },
@@ -738,7 +732,6 @@ export default function CaseDetail() {
 
   if (!caso) return null
 
-  const st = STATUS_CASE[caso.status] ?? { label: caso.status, cls: 'st-gray' }
   const receita = entries.filter(e => e.type === 'receita' && e.status === 'pago').reduce((s, e) => s + Number(e.amount), 0)
   const despesa = entries.filter(e => e.type === 'despesa' && e.status === 'pago').reduce((s, e) => s + Number(e.amount), 0)
   const saldo   = receita - despesa
@@ -762,7 +755,6 @@ export default function CaseDetail() {
           <div>
             <div className={styles.caseName}>
               {caso.title}
-              <span className={`badge ${st.cls}`}>{st.label}</span>
               {overdueTasks.length > 0 && (
                 <span className={`badge st-red`}>{overdueTasks.length} atrasada{overdueTasks.length > 1 ? 's' : ''}</span>
               )}

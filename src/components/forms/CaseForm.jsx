@@ -147,8 +147,6 @@ export default function CaseForm({ initial, onSave, onClose }) {
     situation:        initial?.situation        ?? '',
     valor:            initial?.valor       != null ? String(initial.valor)            : '',
     description:      initial?.description      ?? '',
-    final_fees:       initial?.final_fees  != null ? String(initial.final_fees)       : '',
-    sucumbencia_fees: initial?.sucumbencia_fees != null ? String(initial.sucumbencia_fees) : '',
   })
   const [clients,       setClients]       = useState([])
   const [saving,        setSaving]        = useState(false)
@@ -182,8 +180,6 @@ export default function CaseForm({ initial, onSave, onClose }) {
       situation:        f.situation   || null,
       valor:            parseFloat(f.valor) || 0,
       description:      f.description.trim() || null,
-      final_fees:       f.status === 'encerrado' ? (parseFloat(f.final_fees)       || null) : null,
-      sucumbencia_fees: f.status === 'encerrado' ? (parseFloat(f.sucumbencia_fees) || null) : null,
     }
     const { error } = initial
       ? await supabase.from('cases').update(payload).eq('id', initial.id)
@@ -349,16 +345,6 @@ export default function CaseForm({ initial, onSave, onClose }) {
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Status</label>
-          <select className={s.select} value={f.status} onChange={e => set('status', e.target.value)}>
-            <option value="ativo">Ativo</option>
-            <option value="suspenso">Suspenso</option>
-            <option value="encerrado">Encerrado</option>
-            <option value="arquivado">Arquivado</option>
-          </select>
-        </div>
-
-        <div className={s.field}>
           <label className={s.label}>Situação no Kanban</label>
           <select className={s.select} value={f.situation} onChange={e => set('situation', e.target.value)}>
             <option value="">— Não categorizado —</option>
@@ -380,22 +366,6 @@ export default function CaseForm({ initial, onSave, onClose }) {
             onChange={e => set('description', e.target.value)}
             placeholder="Detalhes adicionais sobre o processo…" />
         </div>
-
-        {f.status === 'encerrado' && <>
-          <div className={s.field}>
-            <label className={s.label}>Honorários finais recebidos (R$)</label>
-            <input className={s.input} type="number" min="0" step="0.01"
-              value={f.final_fees} onChange={e => set('final_fees', e.target.value)}
-              placeholder="0,00" />
-          </div>
-
-          <div className={s.field}>
-            <label className={s.label}>Honorários sucumbenciais (R$)</label>
-            <input className={s.input} type="number" min="0" step="0.01"
-              value={f.sucumbencia_fees} onChange={e => set('sucumbencia_fees', e.target.value)}
-              placeholder="0,00" />
-          </div>
-        </>}
 
         {initial?.id && (
           <HearingsSection caseId={initial.id} lawyerId={session.user.id} />

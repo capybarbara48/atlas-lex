@@ -41,16 +41,6 @@ function mapCase(c) {
   }
 }
 
-/* ── constants ──────────────────────────────────────────────────────── */
-const STATUS_COLS = [
-  { key: 'ativo',     label: 'Ativo',     color: 'st-green' },
-  { key: 'suspenso',  label: 'Suspenso',  color: 'st-gold' },
-  { key: 'encerrado', label: 'Encerrado', color: 'st-blue' },
-  { key: 'arquivado', label: 'Arquivado', color: 'st-dark' },
-]
-
-const STATUS_CSS = { ativo: 'badge-ativo', suspenso: 'badge-suspenso', encerrado: 'badge-encerrado', arquivado: 'badge-arquivado' }
-
 function brl(v) {
   if (!v) return '—'
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
@@ -238,13 +228,13 @@ function KanbanView({ cases, situations, sitLoading, onMoveSituation, onEditColu
 
       <div className={styles.kanbanBoard}>
         {sitLoading
-          ? STATUS_COLS.map(col => (
-              <div key={col.key} className={styles.kanbanCol}>
+          ? [1,2,3,4].map(i => (
+              <div key={i} className={styles.kanbanCol}>
                 <div className={styles.kanbanColHeader}>
-                  <span className={`${styles.kanbanColTitle} ${col.color}`}>{col.label}</span>
+                  <span className={styles.kanbanColTitle} style={{ background: 'var(--bg)', color: 'var(--text-3)' }}>—</span>
                 </div>
                 <div className={styles.kanbanItems}>
-                  {[1, 2, 3].map(i => <SkeletonKanbanCard key={i} />)}
+                  {[1, 2, 3].map(j => <SkeletonKanbanCard key={j} />)}
                 </div>
               </div>
             ))
@@ -307,13 +297,13 @@ function SkeletonKanban() {
   return (
     <div className={styles.kanbanWrapper}>
       <div className={styles.kanbanBoard}>
-        {STATUS_COLS.map(col => (
-          <div key={col.key} className={styles.kanbanCol}>
+        {[1,2,3,4].map(i => (
+          <div key={i} className={styles.kanbanCol}>
             <div className={styles.kanbanColHeader}>
-              <span className={`${styles.kanbanColTitle} ${col.color}`}>{col.label}</span>
+              <span className={styles.kanbanColTitle} style={{ background: 'var(--bg)', color: 'var(--text-3)' }}>—</span>
             </div>
             <div className={styles.kanbanItems}>
-              {[1, 2, 3].map(i => <SkeletonKanbanCard key={i} />)}
+              {[1, 2, 3].map(j => <SkeletonKanbanCard key={j} />)}
             </div>
           </div>
         ))}
@@ -340,7 +330,6 @@ function ListView({ cases, onEdit }) {
             <th>Tipo</th>
             <th>Tribunal</th>
             <th>Valor</th>
-            <th>Status</th>
             <th>Atualizado</th>
           </tr>
         </thead>
@@ -359,7 +348,6 @@ function ListView({ cases, onEdit }) {
               <td><span className="badge st-teal">{c.tipo}</span></td>
               <td><span className={`badge ${c.trib_color}`}>{c.tribunal}</span></td>
               <td className={styles.valorCell}>{brl(c.valor)}</td>
-              <td><span className={`badge ${STATUS_CSS[c.status]}`}>{c.status}</span></td>
               <td className={styles.dateCell}>
                 {c.atualizado ? new Date(c.atualizado + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—'}
               </td>
@@ -519,7 +507,6 @@ export default function Cases() {
   const [tab, setTab]                 = useState('ativos')
   const [view, setView]               = useState(prefs.casos_view ?? 'kanban')
   const [search, setSearch]           = useState('')
-  const [filterStatus, setFilterStatus] = useState('todos')
   const [formOpen, setFormOpen]       = useState(false)
   const [editing,  setEditing]        = useState(null)
   const [editColsOpen, setEditColsOpen] = useState(false)
@@ -553,22 +540,14 @@ export default function Cases() {
   }
 
   const filtered = useMemo(() => {
-    let list = cases
-    if (filterStatus !== 'todos') list = list.filter(c => c.status === filterStatus)
-    if (search.trim()) {
-      const q = search.toLowerCase()
-      list = list.filter(c =>
-        c.titulo.toLowerCase().includes(q) ||
-        c.cliente.toLowerCase().includes(q) ||
-        c.numero.includes(q)
-      )
-    }
-    return list
-  }, [cases, search, filterStatus])
-
-  const counts = useMemo(() =>
-    Object.fromEntries(STATUS_COLS.map(col => [col.key, cases.filter(c => c.status === col.key).length]))
-  , [cases])
+    if (!search.trim()) return cases
+    const q = search.toLowerCase()
+    return cases.filter(c =>
+      c.titulo.toLowerCase().includes(q) ||
+      c.cliente.toLowerCase().includes(q) ||
+      c.numero.includes(q)
+    )
+  }, [cases, search])
 
   return (
     <PageShell
@@ -615,17 +594,6 @@ export default function Cases() {
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                 />
-              </div>
-              <div className={styles.filterGroup}>
-                {[{ v: 'todos', l: 'Todos' }, ...STATUS_COLS.map(s => ({ v: s.key, l: s.label }))].map(({ v, l }) => (
-                  <button
-                    key={v}
-                    className={`${styles.filterBtn} ${filterStatus === v ? styles.filterActive : ''}`}
-                    onClick={() => setFilterStatus(v)}
-                  >
-                    {l}{v !== 'todos' && counts[v] != null && <span className={styles.filterCount}>{counts[v]}</span>}
-                  </button>
-                ))}
               </div>
             </>
           )}
