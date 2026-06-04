@@ -181,25 +181,25 @@ function PomodoroCard() {
 /* ═══════════════════════════════════════════════════════════════════ */
 /* Hoje em Foco                                                        */
 /* ═══════════════════════════════════════════════════════════════════ */
-function TodayFocusCard() {
+function TodayFocusCard({ isIntern, internName }) {
   const [tasks,   setTasks]   = useState([])
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
     setLoading(true)
     const today = isoDate()
-    const { data } = await supabase
+    let q = supabase
       .from('tasks')
       .select('id, title, assigned_to, due_date')
       .lte('due_date', today + 'T23:59:59')
       .not('status', 'in', '("concluida","cancelada")')
       .order('due_date', { ascending: true })
       .limit(12)
+    if (isIntern && internName) q = q.eq('assigned_to', internName)
+    const { data } = await q
     setTasks(data ?? [])
     setLoading(false)
-  }, [])
-
-  useEffect(() => { load() }, [load])
+  }, [isIntern, internName])
 
   async function markDone(id) {
     await supabase.from('tasks').update({ status: 'concluida' }).eq('id', id)
@@ -254,11 +254,11 @@ function TodayFocusCard() {
 /* ═══════════════════════════════════════════════════════════════════ */
 /* Weekly Grid                                                         */
 /* ═══════════════════════════════════════════════════════════════════ */
-function WeeklyGrid({ lawyerId }) {
+function WeeklyGrid({ lawyerId, isIntern, internName }) {
   const [monday,   setMonday]   = useState(weekMonday)
-  const [allTasks, setAllTasks] = useState({})
+  const [tasks,    setTasks]    = useState([])
+  const [hearings, setHearings] = useState([])
   const [modes,    setModes]    = useState({})
-  const [inputs,   setInputs]   = useState({})
 
   const dates = useMemo(() => weekDates(monday), [monday])
   const today = isoDate()
@@ -268,64 +268,45 @@ function WeeklyGrid({ lawyerId }) {
     const from = isoDate(dates[0])
     const to   = isoDate(dates[4])
 
-    supabase.from('workspace_day_tasks')
-      .select('id, date, text, done, sort_order')
-      .gte('date', from).lte('date', to)
-      .order('sort_order')
-      .then(({ data }) => {
-        const grouped = {}
-        ;(data ?? []).forEach(t => {
-          const k = t.date
-          if (!grouped[k]) grouped[k] = []
-          grouped[k].push(t)
-        })
-        setAllTasks(grouped)
-      })
+    let taskQ = supabase
+      .from('tasks')
+      .select('id, title, status, priority, assigned_to, due_date')
+      .gte('due_date', from + 'T00:00:00')
+      .lte('due_date', to + 'T23:59:59')
+      .not('status', 'eq', 'cancelada')
+      .order('due_date')
+    if (isIntern && internName) taskQ = taskQ.eq('assigned_to', internName)
 
-    supabase.from('workspace_day_modes')
-      .select('date, mode')
-      .gte('date', from).lte('date', to)
-      .then(({ data }) => {
-        const m = {}
-        ;(data ?? []).forEach(r => { m[r.date] = r.mode })
-        setModes(m)
-      })
-  }, [lawyerId, monday])
+    Promise.all([
+      taskQ,
+      supabase.from('hearings')
+        .select('id, title, date, time, location')
+        .gte('date', from).lte('date', to)
+        .order('date'),
+      supabase.from('workspace_day_modes')
+        .select('date, mode')
+        .gte('date', from).lte('date', to),
+    ]).then(([{ data: td }, { data: hd }, { data: md }]) => {
+      setTasks(td ?? [])
+      setHearings(hd ?? [])
+      const m = {}
+      ;(md ?? []).forEach(r => { m[r.date] = r.mode })
+      setModes(m)
+    })
+  }, [lawyerId, monday, isIntern, internName])
 
-  async function addTask(date) {
-    const key  = isoDate(date)
-    const text = (inputs[key] ?? '').trim()
-    if (!text || !lawyerId) return
-    const sortOrder = (allTasks[key] ?? []).length
-    const { data } = await supabase.from('workspace_day_tasks')
-      .insert({ lawyer_id: lawyerId, date: key, text, done: false, sort_order: sortOrder })
-      .select('id, date, text, done, sort_order')
-      .single()
-    if (data) {
-      setAllTasks(p => ({ ...p, [key]: [...(p[key] ?? []), data] }))
-      setInputs(p => ({ ...p, [key]: '' }))
-    }
-  }
-
-  async function toggleTask(key, id) {
-    const task = (allTasks[key] ?? []).find(t => t.id === id)
-    if (!task) return
-    const newDone = !task.done
-    setAllTasks(p => ({ ...p, [key]: (p[key] ?? []).map(t => t.id === id ? { ...t, done: newDone } : t) }))
-    await supabase.from('workspace_day_tasks').update({ done: newDone }).eq('id', id)
-  }
-
-  async function removeTask(key, id) {
-    setAllTasks(p => ({ ...p, [key]: (p[key] ?? []).filter(t => t.id !== id) }))
-    await supabase.from('workspace_day_tasks').delete().eq('id', id)
+  async function toggleTask(id, currentStatus) {
+    const next = currentStatus === 'concluida' ? 'pendente' : 'concluida'
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, status: next } : t))
+    await supabase.from('tasks').update({ status: next }).eq('id', id)
   }
 
   async function toggleMode(key) {
-    const current = modes[key] ?? 'presencial'
-    const newMode = current === 'virtual' ? 'presencial' : 'virtual'
-    setModes(p => ({ ...p, [key]: newMode }))
+    const cur  = modes[key] ?? 'presencial'
+    const next = cur === 'virtual' ? 'presencial' : 'virtual'
+    setModes(p => ({ ...p, [key]: next }))
     await supabase.from('workspace_day_modes').upsert(
-      { lawyer_id: lawyerId, date: key, mode: newMode },
+      { lawyer_id: lawyerId, date: key, mode: next },
       { onConflict: 'lawyer_id,date' }
     )
   }
@@ -348,10 +329,11 @@ function WeeklyGrid({ lawyerId }) {
 
       <div className={s.weekGrid}>
         {dates.map((date, i) => {
-          const key      = isoDate(date)
-          const dayTasks = allTasks[key] ?? []
-          const mode     = modes[key] ?? 'presencial'
-          const isToday  = key === today
+          const key         = isoDate(date)
+          const dayTasks    = tasks.filter(t => t.due_date?.slice(0, 10) === key)
+          const dayHearings = hearings.filter(h => h.date === key)
+          const mode        = modes[key] ?? 'presencial'
+          const isToday     = key === today
 
           return (
             <div key={key} className={`${s.dayCol} ${isToday ? s.dayToday : ''}`}>
@@ -361,6 +343,7 @@ function WeeklyGrid({ lawyerId }) {
                   <span className={s.dayNum}>{date.getDate()}</span>
                 </div>
               </div>
+
               <div className={s.dayModeRow}>
                 <button
                   className={s.modeToggle}
@@ -384,28 +367,49 @@ function WeeklyGrid({ lawyerId }) {
                 </button>
               </div>
 
-              <div className={s.dayTasks}>
-                {dayTasks.map(t => (
-                  <div key={t.id} className={`${s.dayTask} ${t.done ? s.dayTaskDone : ''}`}>
-                    <button className={s.dayCheck} onClick={() => toggleTask(key, t.id)}>
-                      {t.done
-                        ? <svg viewBox="0 0 12 12" width="10" height="10"><circle cx="6" cy="6" r="5" fill="var(--accent)"/><path d="M3.5 6l2 2 3-3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
-                        : <svg viewBox="0 0 12 12" fill="none" stroke="var(--border)" strokeWidth="1.5" width="10" height="10"><circle cx="6" cy="6" r="5"/></svg>
-                      }
-                    </button>
-                    <span className={s.dayTaskText}>{t.text}</span>
-                    <button className={s.dayDel} onClick={() => removeTask(key, t.id)}>×</button>
+              <div className={s.dayEvents}>
+                {dayHearings.map(h => (
+                  <div key={'h' + h.id} className={s.dayHearing}>
+                    <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" width="10" height="10" style={{ flexShrink: 0, marginTop: 1, color: '#f59e0b' }}>
+                      <path d="M1.5 13.5h11"/>
+                      <rect x="2.5" y="9" width="9" height="4" rx="0.5"/>
+                      <path d="M4 9V7.5M7 9V7.5M10 9V7.5"/>
+                      <path d="M2.5 7.5h9"/>
+                      <path d="M7 2l4.5 5.5H2.5L7 2z"/>
+                    </svg>
+                    <div className={s.dayEventBody}>
+                      <span className={s.dayEventTitle}>{h.title}</span>
+                      {(h.time || h.location) && (
+                        <span className={s.dayEventMeta}>
+                          {h.time ? h.time.slice(0, 5) : ''}
+                          {h.location ? (h.time ? ' · ' : '') + h.location : ''}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ))}
-              </div>
 
-              <input
-                className={s.dayInput}
-                value={inputs[key] ?? ''}
-                onChange={e => setInputs(p => ({ ...p, [key]: e.target.value }))}
-                onKeyDown={e => e.key === 'Enter' && addTask(date)}
-                placeholder="+ adicionar"
-              />
+                {dayTasks.map(t => (
+                  <div key={'t' + t.id} className={`${s.dayTask} ${t.status === 'concluida' ? s.dayTaskDone : ''}`}>
+                    <button className={s.dayCheck} onClick={() => toggleTask(t.id, t.status)} title={t.status === 'concluida' ? 'Reabrir' : 'Concluir'}>
+                      {t.status === 'concluida'
+                        ? <svg viewBox="0 0 12 12" width="11" height="11"><circle cx="6" cy="6" r="5" fill="var(--accent)"/><path d="M3.5 6l2 2 3-3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
+                        : <svg viewBox="0 0 12 12" fill="none" stroke="var(--border)" strokeWidth="1.5" width="11" height="11"><circle cx="6" cy="6" r="5"/></svg>
+                      }
+                    </button>
+                    <div className={s.dayEventBody}>
+                      <span className={s.dayTaskText}>{t.title}</span>
+                      {t.assigned_to && !isIntern && (
+                        <span className={s.dayTaskResp}>{t.assigned_to.split(' ')[0]}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                {dayTasks.length === 0 && dayHearings.length === 0 && (
+                  <span className={s.dayEmpty}>—</span>
+                )}
+              </div>
             </div>
           )
         })}
@@ -616,7 +620,7 @@ function StatsRow({ lawyerId }) {
 /* ═══════════════════════════════════════════════════════════════════ */
 /* Histórico — navegação mês a mês, retenção 24 meses                 */
 /* ═══════════════════════════════════════════════════════════════════ */
-function HistoryCard({ lawyerId }) {
+function HistoryCard({ lawyerId, isIntern, internName }) {
   const { lawyer }           = useAuth()
   const responsaveis         = lawyer?.preferences?.responsaveis ?? []
 
@@ -633,17 +637,22 @@ function HistoryCard({ lawyerId }) {
     const next = new Date(month.getFullYear(), month.getMonth() + 1, 1)
     const to   = isoDate(next)
 
+    let taskQ = supabase.from('tasks').select('id, title, updated_at, assigned_to')
+      .eq('status', 'concluida')
+      .gte('updated_at', from).lt('updated_at', to)
+      .order('updated_at', { ascending: false })
+      .limit(200)
+    if (isIntern && internName) taskQ = taskQ.eq('assigned_to', internName)
+
     Promise.all([
-      supabase.from('tasks').select('id, title, updated_at, assigned_to')
-        .eq('status', 'concluida')
-        .gte('updated_at', from).lt('updated_at', to)
-        .order('updated_at', { ascending: false })
-        .limit(200),
-      supabase.from('workspace_despachos').select('id, case_title, tipo, notas, done_at')
-        .eq('status', 'concluido')
-        .gte('done_at', from).lt('done_at', to)
-        .order('done_at', { ascending: false })
-        .limit(200),
+      taskQ,
+      isIntern
+        ? Promise.resolve({ data: [] })
+        : supabase.from('workspace_despachos').select('id, case_title, tipo, notas, done_at')
+            .eq('status', 'concluido')
+            .gte('done_at', from).lt('done_at', to)
+            .order('done_at', { ascending: false })
+            .limit(200),
     ]).then(([{ data: taskData }, { data: despData }]) => {
       setTasks(taskData ?? [])
       setDesps(despData ?? [])
@@ -681,7 +690,7 @@ function HistoryCard({ lawyerId }) {
         {combined.length > 0 && <span className="badge st-gray">{combined.length}</span>}
       </div>
 
-      {responsaveis.length > 0 && (
+      {!isIntern && responsaveis.length > 0 && (
         <div className={s.histFilter}>
           <button
             className={`${s.histFilterBtn} ${!personFilter ? s.histFilterActive : ''}`}
@@ -732,9 +741,11 @@ function HistoryCard({ lawyerId }) {
 /* Page                                                                */
 /* ═══════════════════════════════════════════════════════════════════ */
 export default function Workspace() {
-  const { lawyer, session, memberName } = useAuth()
-  const lawyerId  = lawyer?.id ?? session?.user?.id
-  const firstName = (memberName ?? lawyer?.full_name)?.split(' ')[0]
+  const { lawyer, session, memberName, memberLinkedResp, teamRole } = useAuth()
+  const lawyerId   = lawyer?.id ?? session?.user?.id
+  const isIntern   = teamRole === 'estagiario'
+  const internName = memberLinkedResp || memberName || ''
+  const firstName  = (memberName ?? lawyer?.full_name)?.split(' ')[0]
     ?? session?.user?.email?.split('@')[0]
     ?? 'você'
 
@@ -756,15 +767,15 @@ export default function Workspace() {
 
       <div className={s.topRow}>
         <PomodoroCard />
-        <TodayFocusCard />
+        <TodayFocusCard isIntern={isIntern} internName={internName} />
       </div>
 
       <div className={s.midRow}>
-        <WeeklyGrid lawyerId={lawyerId} />
+        <WeeklyGrid lawyerId={lawyerId} isIntern={isIntern} internName={internName} />
         <DespachosCard lawyerId={lawyerId} />
       </div>
 
-      <HistoryCard lawyerId={lawyerId} />
+      <HistoryCard lawyerId={lawyerId} isIntern={isIntern} internName={internName} />
     </div>
   )
 }
