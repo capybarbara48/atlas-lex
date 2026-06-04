@@ -75,6 +75,32 @@ export function AuthProvider({ children }) {
       }
     }
 
+    // 3. Existing auth user with a pending invite — claim it and retry
+    const { data: claimed } = await supabase.rpc('claim_team_invite')
+    if (claimed) {
+      const { data: claimedMember } = await supabase
+        .from('team_members')
+        .select('lawyer_id, role, full_name, linked_responsavel')
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .maybeSingle()
+      if (claimedMember) {
+        const { data: firmRow } = await supabase
+          .from('lawyers')
+          .select('*')
+          .eq('id', claimedMember.lawyer_id)
+          .maybeSingle()
+        if (firmRow) {
+          setLawyer(firmRow)
+          setMemberRole(claimedMember.role)
+          setMemberName(claimedMember.full_name)
+          setMemberLinkedResp(claimedMember.linked_responsavel ?? null)
+          setLoading(false)
+          return
+        }
+      }
+    }
+
     // No lawyers row and no team_members record — new user not yet onboarded
     setLawyer(null)
     setMemberRole(null)
