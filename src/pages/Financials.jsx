@@ -145,19 +145,27 @@ const CHART_PERIODS = [
   { label: '6a',  months: 72 },
 ]
 
-function barLabel(date, periodMonths, index) {
-  const freq =
-    periodMonths <= 12 ? 1 :
-    periodMonths <= 24 ? 3 :
-    periodMonths <= 36 ? 4 :
-    periodMonths <= 48 ? 6 : 12
-  if (index % freq !== 0) return null
+function barLabel(date, periodMonths) {
   const m = date.getMonth()
-  const isYearMark = periodMonths > 12 && m === 0
-  return {
-    text: isYearMark ? String(date.getFullYear()).slice(2) : monthShort(m),
-    bold: isYearMark,
+  const y = date.getFullYear()
+
+  if (periodMonths <= 12) {
+    // Every month; highlight January
+    return { text: monthShort(m), bold: m === 0 }
   }
+  if (periodMonths <= 24) {
+    // Every quarter: Jan, Apr, Jul, Oct (m % 3 === 0)
+    if (m % 3 !== 0) return null
+    return { text: m === 0 ? String(y).slice(2) : monthShort(m), bold: m === 0 }
+  }
+  if (periodMonths <= 36) {
+    // Jan and Jul of each year
+    if (m !== 0 && m !== 6) return null
+    return { text: m === 0 ? String(y).slice(2) : monthShort(m), bold: m === 0 }
+  }
+  // 4a, 6a: January only — one label per year
+  if (m !== 0) return null
+  return { text: String(y).slice(2), bold: true }
 }
 
 function MonthlyChart({ entries, selYear, selMonth }) {
@@ -250,7 +258,7 @@ function MonthlyChart({ entries, selYear, selMonth }) {
           )
         })}
         {months.map((m, i) => {
-          const lbl = barLabel(m.date, period, i)
+          const lbl = barLabel(m.date, period)
           if (!lbl) return null
           return (
             <text key={i}
