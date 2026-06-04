@@ -344,7 +344,7 @@ function SituationSelect({ caseId, currentSituation, situations, onMove }) {
 }
 
 function ListView({ cases, situations, onMoveSituation, onEdit }) {
-  const sorted = [...cases].sort((a, b) => a.title.localeCompare(b.title, 'pt-BR', { sensitivity: 'base' }))
+  const sorted = [...cases].sort((a, b) => a.titulo.localeCompare(b.titulo, 'pt-BR', { sensitivity: 'base' }))
   if (sorted.length === 0) return (
     <div className={styles.emptyState}>
       <div className={styles.emptyIcon}>⚖</div>
