@@ -51,7 +51,7 @@ function fmtShort(d) {
   return new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
 }
 
-/* ─── Web Audio beep ────────────────────────────────────────────────── */
+/* ─── Web Audio ─────────────────────────────────────────────────────── */
 function playDone() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)()
@@ -71,6 +71,24 @@ function playDone() {
   } catch {}
 }
 
+function playWarning() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    ;[0, 0.22, 0.44].forEach(t => {
+      const osc  = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.type = 'sine'
+      osc.frequency.value = 880
+      gain.gain.setValueAtTime(0.1, ctx.currentTime + t)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.14)
+      osc.start(ctx.currentTime + t)
+      osc.stop(ctx.currentTime + t + 0.14)
+    })
+  } catch {}
+}
+
 /* ═══════════════════════════════════════════════════════════════════ */
 /* Pomodoro                                                            */
 /* ═══════════════════════════════════════════════════════════════════ */
@@ -85,7 +103,10 @@ function PomodoroCard() {
     clearInterval(intRef.current)
     intRef.current = setInterval(() => {
       setSecs(s => {
-        if (s <= 1) {
+        // 10-second warning: 3 quick beeps at 880 Hz
+        if (s === 10) playWarning()
+        // End of session: transition (s === 0 = timer showed 0:00 for 1 s, then fires)
+        if (s === 0) {
           playDone()
           if (mode === 'focus') { setCycles(c => c + 1); setMode('break'); return BREAK_SECS }
           setMode('focus')
