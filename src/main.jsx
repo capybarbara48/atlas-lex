@@ -5,6 +5,7 @@ import { AuthProvider } from '@/context/AuthContext'
 import { ThemeProvider } from '@/context/ThemeContext'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import { ToastProvider } from '@/context/ToastContext'
+import { PomodoroProvider } from '@/context/PomodoroContext'
 import App from './App'
 import '@/styles/global.css'
 
@@ -15,7 +16,9 @@ createRoot(document.getElementById('root')).render(
         <AuthProvider>
           <ThemeProvider>
             <ToastProvider>
-              <App />
+              <PomodoroProvider>
+                <App />
+              </PomodoroProvider>
             </ToastProvider>
           </ThemeProvider>
         </AuthProvider>

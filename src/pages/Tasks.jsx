@@ -1,9 +1,10 @@
-import { useState, useMemo, Fragment, useEffect, useRef, useCallback } from 'react'
+import { useState, useMemo, Fragment, useEffect, useCallback } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
 import { useAllTasks, updateTaskStatus, updateTaskOrder, updateTaskAssignee } from '@/hooks/useTasks'
 import { useUpcomingHearings } from '@/hooks/useHearings'
 import { useToast } from '@/context/ToastContext'
+import { usePomodoroContext, FOCUS_SECS } from '@/context/PomodoroContext'
 import { supabase } from '@/lib/supabase'
 import PageShell from '@/components/ui/PageShell'
 import ViewToggle from '@/components/ui/ViewToggle'
@@ -72,36 +73,6 @@ const DESP_TIPOS = [
   'Conclusão para Decisão', 'Conclusão para Julgamento', 'Conclusão para Sentença',
   'Vista ao Ministério Público', 'Cumprimento de Diligência', 'Juntada de Petição', 'Outros',
 ]
-const FOCUS_SECS = 30 * 60
-const BREAK_SECS = 5  * 60
-const CIRC       = 2 * Math.PI * 54
-
-function playDone() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)()
-    ;[523, 659, 784].forEach((freq, i) => {
-      const osc = ctx.createOscillator(); const gain = ctx.createGain()
-      osc.connect(gain); gain.connect(ctx.destination)
-      osc.type = 'sine'; osc.frequency.value = freq
-      const t = ctx.currentTime + i * 0.18
-      gain.gain.setValueAtTime(0.15, t); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55)
-      osc.start(t); osc.stop(t + 0.55)
-    })
-  } catch {}
-}
-function playWarning() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)()
-    ;[0, 0.22, 0.44].forEach(t => {
-      const osc = ctx.createOscillator(); const gain = ctx.createGain()
-      osc.connect(gain); gain.connect(ctx.destination)
-      osc.type = 'sine'; osc.frequency.value = 880
-      gain.gain.setValueAtTime(0.1, ctx.currentTime + t)
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.14)
-      osc.start(ctx.currentTime + t); osc.stop(ctx.currentTime + t + 0.14)
-    })
-  } catch {}
-}
 
 /* ── Card icons ─────────────────────────────────────────────────────── */
 const ICON_TODAY = (
@@ -157,35 +128,12 @@ function CardIcon({ icon }) {
 
 /* ── Pomodoro (thin horizontal) ─────────────────────────────────────── */
 function PomodoroThin() {
-  const [mode,   setMode]   = useState('idle')
-  const [secs,   setSecs]   = useState(FOCUS_SECS)
-  const [cycles, setCycles] = useState(0)
-  const intRef = useRef(null)
-
-  useEffect(() => {
-    if (mode === 'idle') { clearInterval(intRef.current); return }
-    clearInterval(intRef.current)
-    intRef.current = setInterval(() => {
-      setSecs(s => {
-        if (s === 10) playWarning()
-        if (s === 0) {
-          playDone()
-          if (mode === 'focus') { setCycles(c => c + 1); setMode('break'); return BREAK_SECS }
-          setMode('focus'); return FOCUS_SECS
-        }
-        return s - 1
-      })
-    }, 1000)
-    return () => clearInterval(intRef.current)
-  }, [mode])
-
-  function startFocus() { setSecs(FOCUS_SECS); setMode('focus') }
-  function pauseTimer() { clearInterval(intRef.current); setMode('idle') }
-  function resetTimer() { clearInterval(intRef.current); setMode('idle'); setSecs(FOCUS_SECS) }
+  const { mode, secs, cycles, startFocus, resumeTimer, pauseTimer, resetTimer } = usePomodoroContext()
 
   const mins      = String(Math.floor(secs / 60)).padStart(2, '0')
   const ss        = String(secs % 60).padStart(2, '0')
   const running   = mode === 'focus' || mode === 'break'
+  const paused    = mode === 'idle' && secs < FOCUS_SECS
   const accentCol = mode === 'break' ? 'var(--green)' : 'var(--accent)'
 
   return (
@@ -212,9 +160,9 @@ function PomodoroThin() {
         </div>
         <div className={styles.pomThinActions}>
           {!running && (
-            <button className={styles.pomThinBtnPrimary} onClick={startFocus}>
+            <button className={styles.pomThinBtnPrimary} onClick={paused ? resumeTimer : startFocus}>
               <svg viewBox="0 0 14 14" fill="currentColor" width="10" height="10"><path d="M3 2v10l9-5z"/></svg>
-              {secs < FOCUS_SECS ? 'Retomar' : 'Iniciar'}
+              {paused ? 'Retomar' : 'Iniciar'}
             </button>
           )}
           {running && (
