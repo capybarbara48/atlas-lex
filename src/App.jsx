@@ -20,6 +20,7 @@ const Notes        = lazy(() => import('@/pages/Notes'))
 const Interns      = lazy(() => import('@/pages/Interns'))
 const Vitrine      = lazy(() => import('@/pages/Vitrine'))
 const Workspace    = lazy(() => import('@/pages/Workspace'))
+const Metrics      = lazy(() => import('@/pages/Metrics'))
 const DevSeed      = import.meta.env.DEV ? lazy(() => import('@/pages/DevSeed')) : null
 
 /* ── Admin chunks ───────────────────────────────────────────────────── */
@@ -132,6 +133,7 @@ export default function App() {
         <Route path="estagiarios"           element={<Interns />} />
         <Route path="vitrine"               element={<Vitrine />} />
         <Route path="workspace"             element={<Workspace />} />
+        <Route path="metricas"              element={<Metrics />} />
         {import.meta.env.DEV && DevSeed && <Route path="dev/seed" element={<DevSeed />} />}
       </Route>
     </Routes>

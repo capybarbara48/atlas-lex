@@ -81,6 +81,14 @@ const ICONS = {
       <circle cx="10" cy="10" r="1" fill="currentColor" stroke="none"/>
     </svg>
   ),
+  metricas: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="10" cy="10" r="7.5"/>
+      <path d="M10 10 L10 3"/>
+      <path d="M10 10 L16 13.5"/>
+      <path d="M10 10 L4.5 14.5"/>
+    </svg>
+  ),
   configs: (
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
       <path d="M3 5h14M3 10h14M3 15h14"/>
@@ -121,6 +129,7 @@ const ALL_NAV_ITEMS = [
   { to: '/painel/estagiarios',   label: 'Equipe',        end: false, icon: ICONS.equipe,     roles: ['advogado','estagiario'] },
   { to: '/painel/vitrine',       label: 'Vitrine',       end: false, icon: ICONS.vitrine,    roles: ['advogado','estagiario'] },
   { to: '/painel/workspace',     label: 'Espaço de Trabalho', end: false, icon: ICONS.workspace,  roles: ['advogado','estagiario'] },
+  { to: '/painel/metricas',      label: 'Métricas',      end: false, icon: ICONS.metricas,   roles: ['advogado'] },
   { to: '/painel/configuracoes', label: 'Configurações', end: false, icon: ICONS.configs,    roles: ['advogado'] },
 ]
 
@@ -136,6 +145,7 @@ const PAGE_TITLES = {
   '/painel/estagiarios':   'Equipe',
   '/painel/vitrine':       'Vitrine',
   '/painel/workspace':     'Espaço de Trabalho',
+  '/painel/metricas':      'Métricas',
 }
 
 /* ── Brand Header ───────────────────────────────────────────────────── */
