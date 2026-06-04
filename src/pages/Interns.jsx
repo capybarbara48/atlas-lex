@@ -124,20 +124,22 @@ function HistorySection({ lawyerId, responsaveis, selectedMember }) {
       taskQ = taskQ.eq('assigned_to', selectedMember)
     else if (selectedMember === 'sem_atribuicao')
       taskQ = taskQ.is('assigned_to', null)
-    Promise.all([
-      taskQ,
-      supabase.from('workspace_despachos').select('id, case_title, tipo, notas, done_at')
-        .eq('status', 'concluido').gte('done_at', from).lt('done_at', to)
-        .order('done_at', { ascending: false }).limit(200),
-    ]).then(([{ data: t }, { data: d }]) => { setTasks(t ?? []); setDesps(d ?? []); setLoading(false) })
+    let despQ = supabase.from('workspace_despachos')
+      .select('id, case_title, tipo, done_at, responsavel')
+      .eq('status', 'concluido').gte('done_at', from).lt('done_at', to)
+      .order('done_at', { ascending: false }).limit(200)
+    if (selectedMember !== 'todos' && selectedMember !== 'sem_atribuicao')
+      despQ = despQ.eq('responsavel', selectedMember)
+    Promise.all([taskQ, despQ])
+      .then(([{ data: t }, { data: d }]) => { setTasks(t ?? []); setDesps(d ?? []); setLoading(false) })
   }, [lawyerId, month, selectedMember])
 
   const combined = useMemo(() => {
-    const t = tasks.map(t => ({ key: 't'+t.id, type: 'task',     title: t.title,      sub: t.assigned_to, date: t.updated_at }))
-    const d = desps.map(d => ({ key: 'd'+d.id, type: 'despacho', title: d.case_title, sub: d.tipo,        date: d.done_at }))
+    const t = tasks.map(t => ({ key: 't'+t.id, type: 'task',     title: t.title,      sub: t.assigned_to, assignedTo: t.assigned_to, date: t.updated_at }))
+    const d = desps.map(d => ({ key: 'd'+d.id, type: 'despacho', title: d.case_title, sub: d.tipo,        assignedTo: d.responsavel, date: d.done_at }))
     const all = [...t, ...d].sort((a, b) => new Date(b.date) - new Date(a.date))
     if (!personFilter) return all
-    return all.filter(item => item.sub === personFilter)
+    return all.filter(item => item.assignedTo === personFilter)
   }, [tasks, desps, personFilter])
 
   const monthLabel = month.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
@@ -178,7 +180,10 @@ function HistorySection({ lawyerId, responsaveis, selectedMember }) {
                 {item.sub && <span className={styles.histSub}>{item.sub}</span>}
               </div>
               <div className={styles.histRight}>
-                <span className={`badge ${item.type === 'task' ? 'st-blue' : 'st-teal'}`} style={{ fontSize: '0.6rem' }}>
+                {item.type === 'despacho' && item.assignedTo && !personFilter && selectedMember === 'todos' && (
+                  <span className="badge st-teal" style={{ fontSize: '0.6rem' }}>{item.assignedTo}</span>
+                )}
+                <span className={`badge ${item.type === 'task' ? 'st-blue' : 'badge-media'}`} style={{ fontSize: '0.6rem' }}>
                   {item.type === 'task' ? 'Tarefa' : 'Despacho'}
                 </span>
                 <span className={styles.histDate}>{fmtD(item.date)}</span>
