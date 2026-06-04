@@ -6,16 +6,11 @@ import { useKanbanSituations } from '@/hooks/useKanbanSituations'
 import { useClientCount } from '@/hooks/useClients'
 import { useTodayTasks, updateTaskStatus } from '@/hooks/useTasks'
 import { useUpcomingHearings } from '@/hooks/useHearings'
-import { useMonthFinancials, useRecentEntries } from '@/hooks/useFinancials'
 import Modal from '@/components/ui/Modal'
 import CaseForm from '@/components/forms/CaseForm'
 import styles from './Dashboard.module.css'
 
 /* ── helpers ─────────────────────────────────────────────────────────── */
-function brl(v) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v ?? 0)
-}
-
 function greeting() {
   const h = new Date().getHours()
   if (h < 12) return 'Bom dia'
@@ -53,16 +48,6 @@ function mapDashTask(t) {
     prioridade: t.priority,
     concluida:  t.status === 'concluida',
     caso:       t.cases?.title ?? '—',
-  }
-}
-
-function mapDashEntry(e) {
-  return {
-    id:     e.id,
-    desc:   e.description ?? '—',
-    tipo:   e.type,
-    valor:  Number(e.amount) || 0,
-    status: e.status,
   }
 }
 
@@ -202,26 +187,6 @@ function TarefaItem({ t, onCheck }) {
   )
 }
 
-function EntradaItem({ e }) {
-  return (
-    <div className={styles.entryRow}>
-      <div className={styles.entryLeft}>
-        <span className={styles.entryDesc}>{e.desc}</span>
-        <div className={styles.entryMeta}>
-          <span className={`badge badge-${e.tipo}`}>{e.tipo === 'receita' ? 'Receita' : 'Despesa'}</span>
-          <span className={styles.entryStatus}
-            style={{ color: e.status === 'pago' ? 'var(--green)' : '#b45309' }}>
-            {e.status === 'pago' ? 'Pago' : 'Pendente'}
-          </span>
-        </div>
-      </div>
-      <span className={`${styles.entryVal} ${e.tipo === 'despesa' ? styles.negative : styles.positive}`}>
-        {e.tipo === 'despesa' ? '−' : '+'}{brl(e.valor)}
-      </span>
-    </div>
-  )
-}
-
 const WDAYS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
 
 function HearingEventItem({ h }) {
@@ -261,15 +226,11 @@ export default function Dashboard() {
   const { situations }                              = useKanbanSituations()
   const { data: clientesTotal }                     = useClientCount()
   const { data: rawTasks,   refetch: refetchTasks } = useTodayTasks()
-  const { data: finMonth }                          = useMonthFinancials()
-  const { data: rawEntries }                        = useRecentEntries({ limit: 6 })
   const { data: rawHearings }                       = useUpcomingHearings()
 
   /* derived data */
   const cases   = useMemo(() => (rawCases   ?? []).map(mapDashCase),  [rawCases])
   const tasks   = useMemo(() => (rawTasks   ?? []).map(mapDashTask),  [rawTasks])
-  const entries = useMemo(() => (rawEntries ?? []).map(mapDashEntry), [rawEntries])
-
   const today        = new Date().toISOString().split('T')[0]
   const overdueTasks = tasks.filter(t => t.prazo && t.prazo < today)
   const todayTasks   = tasks.filter(t => t.prazo === today)
@@ -278,10 +239,6 @@ export default function Dashboard() {
   const casosTotal  = caseStats?.total ?? '—'
   const casosAtivos = caseStats?.ativo ?? '—'
   const tarefasHoje = overdueTasks.length + todayTasks.length
-  const receita      = finMonth?.receita   ?? 0
-  const despesa      = finMonth?.despesa   ?? 0
-  const saldo        = finMonth?.saldo     ?? 0
-
   async function handleTaskCheck(taskId) {
     await updateTaskStatus(taskId, 'concluida')
     refetchTasks()
@@ -306,9 +263,7 @@ export default function Dashboard() {
         </div>
 
         <div className={styles.statsMini}>
-          <StatBox num={tarefasHoje}   label="Tarefas hoje" />
-          {teamRole !== 'estagiario' && <StatBox num={brl(receita)}  label="Receitas / mês" />}
-          {teamRole !== 'estagiario' && <StatBox num={brl(saldo)}    label="Saldo / mês" />}
+          <StatBox num={tarefasHoje} label="Tarefas hoje" />
         </div>
 
         <button className={styles.btnNovo} onClick={() => setCaseFormOpen(true)}>
@@ -389,46 +344,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── Card: Financeiro ── */}
-        {teamRole !== 'estagiario' && <div className={`${styles.card} ${styles.cardFinanceiro}`}>
-          <div className={styles.cardHeader}>
-            <div className={styles.cardTitleGroup}>
-              <div className={`${styles.cardIcon} ${styles.iconPurple}`}>💰</div>
-              <div>
-                <div className={styles.cardTitle}>Financeiro — mês corrente</div>
-                <div className={styles.cardSubtitle}>Resumo do mês</div>
-              </div>
-            </div>
-            <Link to="/painel/financeiro" className={styles.cardLink}>Ver mais →</Link>
-          </div>
-
-          {/* Mini stats row */}
-          <div className={styles.finStatsRow}>
-            <div className={styles.finStat}>
-              <span className={styles.finStatLabel}>Receitas</span>
-              <span className={`${styles.finStatVal} ${styles.positive}`}>{brl(receita)}</span>
-            </div>
-            <div className={styles.finStatDiv} />
-            <div className={styles.finStat}>
-              <span className={styles.finStatLabel}>Despesas</span>
-              <span className={`${styles.finStatVal} ${styles.negative}`}>{brl(despesa)}</span>
-            </div>
-            <div className={styles.finStatDiv} />
-            <div className={styles.finStat}>
-              <span className={styles.finStatLabel}>Saldo</span>
-              <span className={`${styles.finStatVal} ${saldo >= 0 ? styles.positive : styles.negative}`}>{brl(saldo)}</span>
-            </div>
-          </div>
-
-          {/* Lançamentos recentes */}
-          <div className={styles.recentTitle}>Lançamentos recentes</div>
-          <div className={styles.cardBody}>
-            {entries.length === 0
-              ? <div className={styles.emptyHint}>Nenhum lançamento registrado</div>
-              : entries.map(e => <EntradaItem key={e.id} e={e} />)
-            }
-          </div>
-        </div>}
 
       </div>
 
