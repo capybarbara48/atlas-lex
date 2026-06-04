@@ -291,8 +291,6 @@ export default function Vitrine() {
 
   return (
     <PageShell
-      title="Vitrine"
-      subtitle="Exibição em tempo real — dados reais do escritório"
       action={
         <button className={s.btnExpand} onClick={() => setFullscreen(true)}>
           ↗ Tela cheia
