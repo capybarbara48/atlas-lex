@@ -161,6 +161,8 @@ export default function CaseForm({ initial, onSave, onClose }) {
     return !activeGroups.some(g => g.items.includes(c))
   })
 
+  const parceiros = lawyer?.preferences?.parceiros ?? []
+
   const [f, setF] = useState({
     title:            initial?.title            ?? '',
     case_number:      initial?.case_number      ?? '',
@@ -172,6 +174,7 @@ export default function CaseForm({ initial, onSave, onClose }) {
     valor:            initial?.valor       != null ? String(initial.valor)            : '',
     description:      initial?.description      ?? '',
     quota_litis_pct:  initial?.quota_litis_pct  ?? '',
+    partner:          initial?.partner          ?? '',
   })
   const [clients,       setClients]       = useState([])
   const [saving,        setSaving]        = useState(false)
@@ -290,6 +293,7 @@ export default function CaseForm({ initial, onSave, onClose }) {
       valor:            parseFloat(f.valor) || 0,
       description:      f.description.trim() || null,
       quota_litis_pct:  f.quota_litis_pct  || null,
+      partner:          f.partner          || null,
     }
 
     let caseId
@@ -501,6 +505,14 @@ export default function CaseForm({ initial, onSave, onClose }) {
               Valor esperado: {fmtBRL(parseFloat(f.valor) * parseFloat(f.quota_litis_pct) / 100)}
             </span>
           )}
+        </div>
+
+        <div className={s.field}>
+          <label className={s.label}>Parceria</label>
+          <select className={s.select} value={f.partner} onChange={e => set('partner', e.target.value)}>
+            <option value="">— Sem parceria —</option>
+            {parceiros.map(p => <option key={p} value={p}>{p}</option>)}
+          </select>
         </div>
 
         {/* ── Honorários section ── */}

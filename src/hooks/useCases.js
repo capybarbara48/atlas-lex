@@ -9,7 +9,7 @@ export function useCases({ status, limit } = {}) {
         id, title, case_number, status, situation, area, court, valor,
         opened_at, updated_at, created_at, client_id,
         outcome, outcome_reason, finalizado_at,
-        quota_litis_pct, quota_litis_received,
+        quota_litis_pct, quota_litis_received, partner,
         clients ( id, full_name )
       `)
       .order('updated_at', { ascending: false })

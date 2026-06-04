@@ -262,9 +262,11 @@ export default function Settings() {
   const [quotaLitis,            setQuotaLitis]            = useState(DEFAULT_QUOTA_LITIS)
   const [tribunaisActiveGroups, setTribunaisActiveGroups] = useState(ALL_GROUP_KEYS)
   const [responsaveis,          setResponsaveis]          = useState([])
+  const [parceiros,             setParceiros]             = useState([])
   const [newServiceType,        setNewServiceType]        = useState('')
   const [newQuotaLitis,         setNewQuotaLitis]         = useState('')
   const [newResponsavel,        setNewResponsavel]        = useState('')
+  const [newParceiro,           setNewParceiro]           = useState('')
   const [listSaving,            setListSaving]            = useState(false)
 
   /* Font state */
@@ -296,6 +298,7 @@ export default function Settings() {
     if (prefs.quota_litis_options?.length)        setQuotaLitis(prefs.quota_litis_options)
     if (prefs.tribunais_active_groups?.length)    setTribunaisActiveGroups(prefs.tribunais_active_groups)
     if (prefs.responsaveis?.length)               setResponsaveis(prefs.responsaveis)
+    if (prefs.parceiros?.length)                  setParceiros(prefs.parceiros)
     if (prefs.font_heading)    setFontHeading(prefs.font_heading)
     if (prefs.font_body)       setFontBody(prefs.font_body)
     if (prefs.font_mono)       setFontMono(prefs.font_mono)
@@ -376,6 +379,7 @@ export default function Settings() {
         quota_litis_options:    quotaLitis,
         tribunais_active_groups: tribunaisActiveGroups,
         responsaveis,
+        parceiros,
       }})
       .eq('id', session.user.id)
     setListSaving(false)
@@ -433,6 +437,13 @@ export default function Settings() {
     if (!v || responsaveis.includes(v)) return
     setResponsaveis(prev => [...prev, v])
     setNewResponsavel('')
+  }
+
+  function addParceiro() {
+    const v = newParceiro.trim()
+    if (!v || parceiros.includes(v)) return
+    setParceiros(prev => [...prev, v])
+    setNewParceiro('')
   }
 
   async function handleAddArea() {
@@ -979,6 +990,39 @@ export default function Settings() {
                   placeholder="Ex: Dr. Elcimar Reis"
                 />
                 <button type="button" className={styles.btnListAdd} onClick={addResponsavel}>
+                  Adicionar
+                </button>
+              </div>
+            </div>
+
+            {/* Parceiros */}
+            <div className={styles.listBlock}>
+              <span className={styles.listBlockTitle}>Parceiros</span>
+              <div className={styles.listItems}>
+                {parceiros.length === 0
+                  ? <span style={{ fontSize: '0.78rem', color: 'var(--text-3)' }}>Nenhum parceiro cadastrado ainda.</span>
+                  : parceiros.map(item => (
+                    <span key={item} className={styles.listTag}>
+                      {item}
+                      <button
+                        type="button"
+                        className={styles.listTagDel}
+                        onClick={() => setParceiros(prev => prev.filter(i => i !== item))}
+                        title="Remover"
+                      >×</button>
+                    </span>
+                  ))
+                }
+              </div>
+              <div className={styles.listAddRow}>
+                <input
+                  className={styles.listInput}
+                  value={newParceiro}
+                  onChange={e => setNewParceiro(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addParceiro())}
+                  placeholder="Ex: Dr. João Parceiro"
+                />
+                <button type="button" className={styles.btnListAdd} onClick={addParceiro}>
                   Adicionar
                 </button>
               </div>
