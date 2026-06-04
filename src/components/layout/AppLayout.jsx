@@ -120,7 +120,7 @@ const ALL_NAV_ITEMS = [
   { to: '/painel/financeiro',    label: 'Financeiro',    end: false, icon: ICONS.financeiro, roles: ['advogado'] },
   { to: '/painel/estagiarios',   label: 'Equipe',        end: false, icon: ICONS.equipe,     roles: ['advogado','estagiario'] },
   { to: '/painel/vitrine',       label: 'Vitrine',       end: false, icon: ICONS.vitrine,    roles: ['advogado','estagiario'] },
-  { to: '/painel/workspace',     label: 'Workspace',     end: false, icon: ICONS.workspace,  roles: ['advogado','estagiario'] },
+  { to: '/painel/workspace',     label: 'Espaço de Trabalho', end: false, icon: ICONS.workspace,  roles: ['advogado','estagiario'] },
   { to: '/painel/configuracoes', label: 'Configurações', end: false, icon: ICONS.configs,    roles: ['advogado'] },
 ]
 
@@ -135,7 +135,7 @@ const PAGE_TITLES = {
   '/painel/configuracoes': 'Configurações',
   '/painel/estagiarios':   'Equipe',
   '/painel/vitrine':       'Vitrine',
-  '/painel/workspace':     'Workspace',
+  '/painel/workspace':     'Espaço de Trabalho',
 }
 
 /* ── Brand Header ───────────────────────────────────────────────────── */
