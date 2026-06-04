@@ -31,19 +31,32 @@ function mapCase(c) {
     cliente:    c.clients?.full_name ?? '—',
     clienteId:  c.clients?.id ?? c.client_id ?? null,
     status:     c.status,
-    situation:  c.situation ?? null,
-    tipo:       c.area ?? '—',
-    tribunal:   c.court ?? '—',
-    valor:      Number(c.valor) || 0,
-    aberto:     c.opened_at?.split('T')[0] ?? c.created_at?.split('T')[0],
-    atualizado: c.updated_at?.split('T')[0] ?? c.created_at?.split('T')[0],
-    trib_color: tribColor(c.court),
+    situation:          c.situation ?? null,
+    situationChangedAt: c.situation_changed_at ?? null,
+    tipo:               c.area ?? '—',
+    tribunal:           c.court ?? '—',
+    valor:              Number(c.valor) || 0,
+    aberto:             c.opened_at?.split('T')[0] ?? c.created_at?.split('T')[0],
+    atualizado:         c.updated_at?.split('T')[0] ?? c.created_at?.split('T')[0],
+    trib_color:         tribColor(c.court),
   }
 }
 
 function brl(v) {
   if (!v) return '—'
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
+}
+
+function daysSince(d) {
+  if (!d) return null
+  return Math.floor((Date.now() - new Date(d).getTime()) / 86400000)
+}
+
+function statusDaysStyle(n) {
+  if (n === null) return null
+  if (n < 30)  return { color: 'var(--text-3)',  bg: 'rgba(0,0,0,0.06)' }
+  if (n < 60)  return { color: '#ea580c',         bg: 'rgba(234,88,12,0.1)' }
+  return             { color: '#dc2626',           bg: 'rgba(220,38,38,0.1)' }
 }
 
 /* ── EditColumnsModal ───────────────────────────────────────────────── */
@@ -276,8 +289,18 @@ function KanbanView({ cases, situations, sitLoading, onMoveSituation, onEditColu
                               ? <Link to={`/painel/clientes/${c.clienteId}`} className={styles.kanbanCardClient} onClick={e => e.stopPropagation()}>{c.cliente}</Link>
                               : <div className={styles.kanbanCardClient}>{c.cliente}</div>}
                             <div className={styles.kanbanCardMeta}>
-                              <span className={`badge ${c.trib_color}`}>{c.tribunal}</span>
+                              <span className="badge" style={{ background: col + '22', color: col, border: `1px solid ${col}44` }}>{c.tribunal}</span>
                               {c.valor > 0 && <span className={styles.kanbanCardValor}>{brl(c.valor)}</span>}
+                              {(() => {
+                                const days = daysSince(c.situationChangedAt)
+                                const ds = statusDaysStyle(days)
+                                if (!ds) return null
+                                return (
+                                  <span style={{ marginLeft: 'auto', fontSize: '0.6rem', fontWeight: 700, padding: '0.1rem 0.35rem', borderRadius: 4, background: ds.bg, color: ds.color, whiteSpace: 'nowrap' }}>
+                                    {days}d
+                                  </span>
+                                )
+                              })()}
                             </div>
                           </div>
                         ))

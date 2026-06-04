@@ -642,8 +642,9 @@ export default function CaseDetail() {
 
   async function handleSituationChange(e) {
     const newSit = e.target.value || null
+    const now = new Date().toISOString()
     await updateCaseSituation(id, newSit)
-    setCaso(prev => ({ ...prev, situation: newSit }))
+    setCaso(prev => ({ ...prev, situation: newSit, situation_changed_at: now }))
   }
 
   async function handleDelete() {
@@ -841,16 +842,32 @@ export default function CaseDetail() {
         )}
         <InfoRow label="Situação" value={
           situations.length > 0 ? (
-            <select
-              className={styles.situationSelect}
-              value={caso.situation ?? ''}
-              onChange={handleSituationChange}
-            >
-              <option value="">— Não categorizado —</option>
-              {situations.map(sit => (
-                <option key={sit.id} value={sit.id}>{sit.value}</option>
-              ))}
-            </select>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <select
+                className={styles.situationSelect}
+                value={caso.situation ?? ''}
+                onChange={handleSituationChange}
+              >
+                <option value="">— Não categorizado —</option>
+                {situations.map(sit => (
+                  <option key={sit.id} value={sit.id}>{sit.value}</option>
+                ))}
+              </select>
+              {(() => {
+                if (!caso.situation_changed_at) return null
+                const days = Math.floor((Date.now() - new Date(caso.situation_changed_at).getTime()) / 86400000)
+                const style = days < 30
+                  ? { color: 'var(--text-3)', bg: 'rgba(0,0,0,0.06)' }
+                  : days < 60
+                    ? { color: '#ea580c', bg: 'rgba(234,88,12,0.1)' }
+                    : { color: '#dc2626', bg: 'rgba(220,38,38,0.1)' }
+                return (
+                  <span style={{ fontSize: '0.72rem', fontWeight: 600, padding: '0.2rem 0.6rem', borderRadius: 6, background: style.bg, color: style.color, whiteSpace: 'nowrap' }}>
+                    ⏳ {days}d neste status
+                  </span>
+                )
+              })()}
+            </div>
           ) : null
         } />
         {caso.description && (

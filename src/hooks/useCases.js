@@ -6,7 +6,7 @@ export function useCases({ status, limit } = {}) {
     let q = supabase
       .from('cases')
       .select(`
-        id, title, case_number, status, situation, area, court, valor,
+        id, title, case_number, status, situation, situation_changed_at, area, court, valor,
         opened_at, updated_at, created_at, client_id,
         outcome, outcome_reason, finalizado_at,
         quota_litis_pct, quota_litis_received, partner,
@@ -67,9 +67,10 @@ export async function updateCaseStatus(caseId, newStatus) {
 
 /** Persist a kanban drag — call this when a card is moved to a new situation column */
 export async function updateCaseSituation(caseId, situationId) {
+  const now = new Date().toISOString()
   const { error } = await supabase
     .from('cases')
-    .update({ situation: situationId, updated_at: new Date().toISOString() })
+    .update({ situation: situationId, situation_changed_at: now, updated_at: now })
     .eq('id', caseId)
   return { error }
 }
