@@ -123,12 +123,11 @@ const ALL_NAV_ITEMS = [
   { to: '/painel/casos',         label: 'Casos',         end: false, icon: ICONS.casos,      roles: ['advogado','estagiario'] },
   { to: '/painel/clientes',      label: 'Clientes',      end: false, icon: ICONS.clientes,   roles: ['advogado','estagiario'] },
   { to: '/painel/propostas',     label: 'Propostas',     end: false, icon: ICONS.propostas,  roles: ['advogado','estagiario'] },
-  { to: '/painel/tarefas',       label: 'Tarefas',       end: false, icon: ICONS.tarefas,    roles: ['advogado','estagiario'] },
+  { to: '/painel/tarefas',       label: 'Espaço de Trabalho', end: false, icon: ICONS.tarefas,    roles: ['advogado','estagiario'] },
   { to: '/painel/notas',         label: 'Notas',         end: false, icon: ICONS.notas,      roles: ['advogado','estagiario'] },
   { to: '/painel/financeiro',    label: 'Financeiro',    end: false, icon: ICONS.financeiro, roles: ['advogado'] },
   { to: '/painel/estagiarios',   label: 'Equipe',        end: false, icon: ICONS.equipe,     roles: ['advogado','estagiario'] },
   { to: '/painel/vitrine',       label: 'Vitrine',       end: false, icon: ICONS.vitrine,    roles: ['advogado','estagiario'] },
-  { to: '/painel/workspace',     label: 'Espaço de Trabalho', end: false, icon: ICONS.workspace,  roles: ['advogado','estagiario'] },
   { to: '/painel/metricas',      label: 'Métricas',      end: false, icon: ICONS.metricas,   roles: ['advogado'] },
   { to: '/painel/configuracoes', label: 'Configurações', end: false, icon: ICONS.configs,    roles: ['advogado'] },
 ]
@@ -138,13 +137,12 @@ const PAGE_TITLES = {
   '/painel/casos':         'Casos',
   '/painel/clientes':      'Clientes',
   '/painel/propostas':     'Propostas',
-  '/painel/tarefas':       'Tarefas',
+  '/painel/tarefas':       'Espaço de Trabalho',
   '/painel/notas':         'Notas',
   '/painel/financeiro':    'Financeiro',
   '/painel/configuracoes': 'Configurações',
   '/painel/estagiarios':   'Equipe',
   '/painel/vitrine':       'Vitrine',
-  '/painel/workspace':     'Espaço de Trabalho',
   '/painel/metricas':      'Métricas',
 }
 
@@ -330,10 +328,10 @@ export default function AppLayout() {
             >
               <span className={styles.navIcon}>{icon}</span>
               {!compact && <span className={styles.navLabel}>{label}</span>}
-              {!compact && label === 'Tarefas' && overdueCount > 0 && (
+              {!compact && to === '/painel/tarefas' && overdueCount > 0 && (
                 <span className={styles.navBadge}>{overdueCount > 99 ? '99+' : overdueCount}</span>
               )}
-              {compact && label === 'Tarefas' && overdueCount > 0 && (
+              {compact && to === '/painel/tarefas' && overdueCount > 0 && (
                 <span className={styles.navBadgeDot} />
               )}
             </NavLink>
@@ -447,7 +445,7 @@ export default function AppLayout() {
               >
                 <span className={styles.topNavIcon}>{icon}</span>
                 <span className={styles.topNavLabel}>{label}</span>
-                {label === 'Tarefas' && overdueCount > 0 && (
+                {to === '/painel/tarefas' && overdueCount > 0 && (
                   <span className={styles.navBadge}>{overdueCount > 99 ? '99+' : overdueCount}</span>
                 )}
               </NavLink>
@@ -512,7 +510,7 @@ export default function AppLayout() {
             >
               <span className={styles.dockTooltip}>{label}</span>
               <span className={styles.dockIcon}>{icon}</span>
-              {label === 'Tarefas' && overdueCount > 0 && (
+              {to === '/painel/tarefas' && overdueCount > 0 && (
                 <span className={styles.navBadgeDot} />
               )}
             </NavLink>

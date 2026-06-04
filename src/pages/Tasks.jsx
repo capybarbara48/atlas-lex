@@ -1,4 +1,4 @@
-import { useState, useMemo, Fragment } from 'react'
+import { useState, useMemo, Fragment, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
 import { useAllTasks, updateTaskStatus, updateTaskOrder, updateTaskAssignee } from '@/hooks/useTasks'
@@ -67,6 +67,42 @@ function fmtDate(d, opts) {
   return new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', opts)
 }
 
+/* ── Despachos / Pomodoro constants ────────────────────────────────── */
+const DESP_TIPOS = [
+  'Conclusão para Decisão', 'Conclusão para Julgamento', 'Conclusão para Sentença',
+  'Vista ao Ministério Público', 'Cumprimento de Diligência', 'Juntada de Petição', 'Outros',
+]
+const FOCUS_SECS = 30 * 60
+const BREAK_SECS = 5  * 60
+const CIRC       = 2 * Math.PI * 54
+
+function playDone() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    ;[523, 659, 784].forEach((freq, i) => {
+      const osc = ctx.createOscillator(); const gain = ctx.createGain()
+      osc.connect(gain); gain.connect(ctx.destination)
+      osc.type = 'sine'; osc.frequency.value = freq
+      const t = ctx.currentTime + i * 0.18
+      gain.gain.setValueAtTime(0.15, t); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55)
+      osc.start(t); osc.stop(t + 0.55)
+    })
+  } catch {}
+}
+function playWarning() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    ;[0, 0.22, 0.44].forEach(t => {
+      const osc = ctx.createOscillator(); const gain = ctx.createGain()
+      osc.connect(gain); gain.connect(ctx.destination)
+      osc.type = 'sine'; osc.frequency.value = 880
+      gain.gain.setValueAtTime(0.1, ctx.currentTime + t)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.14)
+      osc.start(ctx.currentTime + t); osc.stop(ctx.currentTime + t + 0.14)
+    })
+  } catch {}
+}
+
 /* ── Card icons ─────────────────────────────────────────────────────── */
 const ICON_TODAY = (
   <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round">
@@ -117,6 +153,263 @@ const ICON_HEARING = (
 
 function CardIcon({ icon }) {
   return <span className={styles.agendaCardIcon}>{icon}</span>
+}
+
+/* ── Pomodoro (thin horizontal) ─────────────────────────────────────── */
+function PomodoroThin() {
+  const [mode,   setMode]   = useState('idle')
+  const [secs,   setSecs]   = useState(FOCUS_SECS)
+  const [cycles, setCycles] = useState(0)
+  const intRef = useRef(null)
+
+  useEffect(() => {
+    if (mode === 'idle') { clearInterval(intRef.current); return }
+    clearInterval(intRef.current)
+    intRef.current = setInterval(() => {
+      setSecs(s => {
+        if (s === 10) playWarning()
+        if (s === 0) {
+          playDone()
+          if (mode === 'focus') { setCycles(c => c + 1); setMode('break'); return BREAK_SECS }
+          setMode('focus'); return FOCUS_SECS
+        }
+        return s - 1
+      })
+    }, 1000)
+    return () => clearInterval(intRef.current)
+  }, [mode])
+
+  function startFocus() { setSecs(FOCUS_SECS); setMode('focus') }
+  function pauseTimer() { clearInterval(intRef.current); setMode('idle') }
+  function resetTimer() { clearInterval(intRef.current); setMode('idle'); setSecs(FOCUS_SECS) }
+
+  const mins      = String(Math.floor(secs / 60)).padStart(2, '0')
+  const ss        = String(secs % 60).padStart(2, '0')
+  const running   = mode === 'focus' || mode === 'break'
+  const accentCol = mode === 'break' ? 'var(--green)' : 'var(--accent)'
+
+  return (
+    <div className={`${styles.agendaCard} ${styles.agendaCardFull} ${styles.pomThin}`}>
+      <div className={styles.pomThinInner}>
+        <div className={styles.pomThinLeft}>
+          <span className={styles.pomThinLabel}>
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" width="14" height="14">
+              <circle cx="8" cy="8" r="6.5"/>
+              <path d="M8 5v3.5l2.5 1.5"/>
+            </svg>
+            Pomodoro
+          </span>
+          <span className={`badge ${mode === 'focus' ? 'badge-alta' : mode === 'break' ? 'st-green' : 'st-gray'}`} style={{ fontSize: '0.6rem' }}>
+            {mode === 'focus' ? 'Foco' : mode === 'break' ? 'Pausa' : 'Parado'}
+          </span>
+          {cycles > 0 && (
+            <span className="badge st-teal" style={{ fontSize: '0.6rem' }}>{cycles} ciclo{cycles > 1 ? 's' : ''}</span>
+          )}
+        </div>
+        <div className={styles.pomThinTimer}>
+          <span className={styles.pomThinTime} style={{ color: accentCol }}>{mins}:{ss}</span>
+          <span className={styles.pomThinHint}>{mode === 'break' ? '☕ pausa' : '30 min foco · 5 min pausa'}</span>
+        </div>
+        <div className={styles.pomThinActions}>
+          {!running && (
+            <button className={styles.pomThinBtnPrimary} onClick={startFocus}>
+              <svg viewBox="0 0 14 14" fill="currentColor" width="10" height="10"><path d="M3 2v10l9-5z"/></svg>
+              {secs < FOCUS_SECS ? 'Retomar' : 'Iniciar'}
+            </button>
+          )}
+          {running && (
+            <button className={styles.pomThinBtnSecondary} onClick={pauseTimer}>
+              <svg viewBox="0 0 14 14" fill="currentColor" width="10" height="10">
+                <rect x="2.5" y="2" width="3" height="10"/>
+                <rect x="8.5" y="2" width="3" height="10"/>
+              </svg>
+              Pausar
+            </button>
+          )}
+          {secs !== FOCUS_SECS && (
+            <button className={styles.pomThinBtnGhost} onClick={resetTimer} title="Reiniciar">
+              <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" width="11" height="11">
+                <path d="M12 7A5 5 0 1 1 7 2M7 0v4h4"/>
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── Mode toggle pill ────────────────────────────────────────────────── */
+function ModeToggle({ mode, onToggle, mini }) {
+  const isPresencial = mode === 'presencial'
+  return (
+    <button
+      className={mini ? styles.modeToggleMini : styles.modeToggle}
+      style={{ background: isPresencial ? '#22a84a' : '#7c3aed' }}
+      onClick={e => { e.stopPropagation(); onToggle() }}
+      title="Clique para alternar modo do dia"
+    >
+      {isPresencial ? (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width={mini ? 7 : 9} height={mini ? 7 : 9}>
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      ) : (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width={mini ? 7 : 9} height={mini ? 7 : 9}>
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+          <line x1="8" y1="21" x2="16" y2="21"/>
+          <line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+      )}
+      {isPresencial ? 'Presencial' : 'Virtual'}
+    </button>
+  )
+}
+
+/* ── Despachos card ──────────────────────────────────────────────────── */
+function DespachosCard({ lawyerId }) {
+  const [cases,   setCases]   = useState([])
+  const [queue,   setQueue]   = useState([])
+  const [history, setHistory] = useState([])
+  const [selCase, setSelCase] = useState('')
+  const [tab,     setTab]     = useState('fila')
+
+  useEffect(() => {
+    supabase.from('cases').select('id, title')
+      .in('status', ['ativo', 'suspenso']).order('title')
+      .then(({ data }) => setCases(data ?? []))
+  }, [])
+
+  useEffect(() => {
+    if (!lawyerId) return
+    supabase.from('workspace_despachos')
+      .select('*').eq('status', 'pendente').order('created_at')
+      .then(({ data }) => setQueue(data ?? []))
+    supabase.from('workspace_despachos')
+      .select('*').eq('status', 'concluido')
+      .order('done_at', { ascending: false }).limit(30)
+      .then(({ data }) => setHistory(data ?? []))
+  }, [lawyerId])
+
+  async function addToQueue() {
+    const c = cases.find(c => c.id === selCase)
+    if (!c || !lawyerId) return
+    const { data } = await supabase.from('workspace_despachos')
+      .insert({ lawyer_id: lawyerId, case_id: c.id, case_title: c.title, local: 'Secretaria', tipo: DESP_TIPOS[0], notas: '', status: 'pendente' })
+      .select('*').single()
+    if (data) setQueue(prev => [...prev, data])
+    setSelCase('')
+  }
+
+  async function update(id, field, val) {
+    setQueue(prev => prev.map(d => d.id === id ? { ...d, [field]: val } : d))
+    await supabase.from('workspace_despachos').update({ [field]: val }).eq('id', id)
+  }
+
+  async function markDone(id) {
+    const doneAt = new Date().toISOString()
+    const { data } = await supabase.from('workspace_despachos')
+      .update({ status: 'concluido', done_at: doneAt }).eq('id', id).select('*').single()
+    setQueue(prev => prev.filter(d => d.id !== id))
+    if (data) setHistory(prev => [data, ...prev])
+  }
+
+  async function removeQ(id) {
+    setQueue(prev => prev.filter(d => d.id !== id))
+    await supabase.from('workspace_despachos').delete().eq('id', id)
+  }
+
+  function fmtD(d) {
+    if (!d) return '—'
+    return new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+  }
+
+  const ICON_DESP = (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round" width="15" height="15">
+      <path d="M1.5 14.5h13"/><rect x="2.5" y="10" width="11" height="4" rx="0.5"/>
+      <path d="M4.5 10V8M8 10V8M11.5 10V8"/>
+      <path d="M2.5 8h11"/><path d="M8 2.5l5.5 5.5H2.5L8 2.5z"/>
+    </svg>
+  )
+
+  return (
+    <div className={`${styles.agendaCard} ${styles.agendaCardFull}`}>
+      <div className={styles.agendaCardHeader}>
+        <span className={styles.agendaCardIcon}>{ICON_DESP}</span>
+        <span className={styles.agendaCardTitle}>Despachos</span>
+        {queue.length > 0 && <span className="badge badge-alta">{queue.length}</span>}
+      </div>
+      <div className={styles.dspInner}>
+        <div className={styles.dspTabs}>
+          <button className={`${styles.dspTab} ${tab === 'fila' ? styles.dspTabActive : ''}`} onClick={() => setTab('fila')}>
+            Fila {queue.length > 0 ? `(${queue.length})` : ''}
+          </button>
+          <button className={`${styles.dspTab} ${tab === 'hist' ? styles.dspTabActive : ''}`} onClick={() => setTab('hist')}>
+            Histórico {history.length > 0 ? `(${history.length})` : ''}
+          </button>
+        </div>
+        {tab === 'fila' && (
+          <>
+            <div className={styles.dspAddRow}>
+              <select className={styles.dspSelect} value={selCase} onChange={e => setSelCase(e.target.value)}>
+                <option value="">Selecionar processo…</option>
+                {cases.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+              </select>
+              <button className={styles.dspAddBtn} onClick={addToQueue} disabled={!selCase}>+</button>
+            </div>
+            {queue.length === 0
+              ? <div className={styles.dimMsg}>Fila vazia.</div>
+              : (
+                <div className={styles.dspQueue}>
+                  {queue.map(d => (
+                    <div key={d.id} className={styles.dspItem}>
+                      <div className={styles.dspItemHead}>
+                        <span className={styles.dspCaseTitle}>{d.case_title}</span>
+                        <button className={styles.dspXBtn} onClick={() => removeQ(d.id)}>×</button>
+                      </div>
+                      <div className={styles.dspLocalRow}>
+                        {['Secretaria', 'Gabinete'].map(loc => (
+                          <label key={loc} className={styles.dspRadioLabel}>
+                            <input type="radio" name={`local-${d.id}`} checked={d.local === loc} onChange={() => update(d.id, 'local', loc)} />
+                            {loc}
+                          </label>
+                        ))}
+                      </div>
+                      <select className={styles.dspTipoSel} value={d.tipo} onChange={e => update(d.id, 'tipo', e.target.value)}>
+                        {DESP_TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                      <textarea className={styles.dspNotes} value={d.notas} onChange={e => update(d.id, 'notas', e.target.value)} placeholder="Observações…" rows={2} />
+                      <button className={styles.dspDoneBtn} onClick={() => markDone(d.id)}>✓ Despacho Realizado</button>
+                    </div>
+                  ))}
+                </div>
+              )
+            }
+          </>
+        )}
+        {tab === 'hist' && (
+          <div className={styles.dspHistList}>
+            {history.length === 0
+              ? <div className={styles.dimMsg}>Nenhum despacho realizado.</div>
+              : history.map(d => (
+                <div key={d.id} className={styles.dspHistItem}>
+                  <div className={styles.dspHistTop}>
+                    <span className={styles.dspHistCase}>{d.case_title}</span>
+                    <span className={styles.dspHistDate}>{fmtD(d.done_at)}</span>
+                  </div>
+                  <div className={styles.dspHistMeta}>
+                    <span className="badge st-teal" style={{ fontSize: '0.6rem' }}>{d.local}</span>
+                    <span className={styles.dspHistTipo}>{d.tipo}</span>
+                  </div>
+                  {d.notas && <p className={styles.dspHistNotes}>{d.notas}</p>}
+                </div>
+              ))
+            }
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }
 
 function HearingEventItem({ h, todayISO }) {
@@ -220,7 +513,7 @@ function AgendaTaskRow({ t, todayISO, responsaveis, onClick, onCheck, onOrderCha
 }
 
 /* ── Agenda view ────────────────────────────────────────────────────── */
-function AgendaView({ rawTasks, responsaveis, filterResp, session, onEdit, onNewWithDate, refetch, onCycleAssignee }) {
+function AgendaView({ rawTasks, responsaveis, filterResp, session, lawyerId, onEdit, onNewWithDate, refetch, onCycleAssignee }) {
   const today    = new Date()
   const todayISO = toISO(today)
   const tomorrowISO = toISO(addDays(today, 1))
@@ -231,6 +524,27 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, onEdit, onNew
   const [addingQuick, setAddingQuick] = useState(false)
   const [draggingId, setDraggingId] = useState(null)
   const [dropTarget, setDropTarget] = useState(null)
+  const [dayModes, setDayModes] = useState({})
+
+  useEffect(() => {
+    if (!lawyerId) return
+    const from = toISO(addDays(today, -7))
+    const to   = toISO(addDays(today, 35))
+    supabase.from('workspace_day_modes')
+      .select('date, mode').gte('date', from).lte('date', to)
+      .then(({ data }) => {
+        const map = {}
+        data?.forEach(r => { map[r.date] = r.mode })
+        setDayModes(map)
+      })
+  }, [lawyerId])
+
+  async function toggleMode(dateISO) {
+    const next = (dayModes[dateISO] ?? 'virtual') === 'virtual' ? 'presencial' : 'virtual'
+    setDayModes(prev => ({ ...prev, [dateISO]: next }))
+    await supabase.from('workspace_day_modes')
+      .upsert({ lawyer_id: lawyerId, date: dateISO, mode: next }, { onConflict: 'lawyer_id,date' })
+  }
 
   const { data: rawHearings } = useUpcomingHearings()
 
@@ -286,7 +600,7 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, onEdit, onNew
   const tomorrowTasks = byOrder(byResp(active.filter(t => t.due_date?.split('T')[0] === tomorrowISO), filterResp))
 
   const weekDays = useMemo(() =>
-    Array.from({ length: 21 }, (_, i) => {
+    Array.from({ length: 28 }, (_, i) => {
       const d   = addDays(today, weekOffset + i)
       const iso = toISO(d)
       return {
@@ -327,6 +641,7 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, onEdit, onNew
 
   return (
     <div className={styles.agendaGrid}>
+      <PomodoroThin />
 
       {/* ── Card 1: Tarefas do Dia ── */}
       <div className={styles.agendaCard}>
@@ -345,6 +660,7 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, onEdit, onNew
             onClick={() => onNewWithDate(selectedISO, filterResp !== 'todos' ? filterResp : null)}
             title="Nova tarefa"
           >+</button>
+          <ModeToggle mode={dayModes[selectedISO] ?? 'virtual'} onToggle={() => toggleMode(selectedISO)} />
         </div>
         <div
           className={`${styles.agendaCardBody} ${dropTarget === 'today' ? styles.agendaCardBodyDrop : ''}`}
@@ -402,6 +718,7 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, onEdit, onNew
           <span className={styles.agendaCardSub}>
             {new Date(tomorrowISO + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'short' })}
           </span>
+          <ModeToggle mode={dayModes[tomorrowISO] ?? 'virtual'} onToggle={() => toggleMode(tomorrowISO)} />
           <button
             className={styles.agendaAddBtn}
             onClick={() => onNewWithDate(tomorrowISO, filterResp !== 'todos' ? filterResp : null)}
@@ -427,7 +744,7 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, onEdit, onNew
       <div className={`${styles.agendaCard} ${styles.agendaCardFull}`}>
         <div className={styles.agendaCardHeader}>
           <CardIcon icon={ICON_UPCOMING} />
-          <span className={styles.agendaCardTitle}>Próximos Dias</span>
+          <span className={styles.agendaCardTitle}>Visão Mensal</span>
           <div className={styles.weekOffsetToggle}>
             <button
               className={`${styles.weekOffsetBtn} ${weekOffset === 0 ? styles.weekOffsetBtnActive : ''}`}
@@ -463,7 +780,7 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, onEdit, onNew
           >+</button>
         </div>
         <div className={styles.weekGrid}>
-          {[0, 7, 14].map(rowStart => {
+          {[0, 7, 14, 21].map(rowStart => {
             const rowDays = weekDays.slice(rowStart, rowStart + 7)
             const f = rowDays[0]?.d, l = rowDays[6]?.d
             const label = f && l
@@ -487,6 +804,7 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, onEdit, onNew
                     <div className={styles.weekCellHeader}>
                       <span className={styles.weekDayWkd}>{WEEKDAYS_SHORT[d.getDay()]}</span>
                       <span className={`${styles.weekDayNum} ${isToday ? styles.weekDayNumToday : ''}`}>{d.getDate()}</span>
+                      <ModeToggle mode={dayModes[iso] ?? 'virtual'} onToggle={() => toggleMode(iso)} mini />
                     </div>
                     <div className={styles.weekCellTasks}>
                       {tasks.map(t => (
@@ -500,6 +818,8 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, onEdit, onNew
           })}
         </div>
       </div>
+
+      <DespachosCard lawyerId={lawyerId} />
 
       {/* ── Card 5: Audiências ── */}
       <div className={`${styles.agendaCard} ${styles.agendaCardFull}`}>
@@ -862,7 +1182,7 @@ export default function Tasks() {
 
   return (
     <PageShell
-      title="Tarefas"
+      title="Espaço de Trabalho"
       subtitle={loading ? 'Carregando…' : `${tasks.length} tarefas · ${pendentes} pendentes`}
       viewToggle={<ViewToggle value={view} onChange={handleViewChange} showCalendar showAgenda />}
       action={
@@ -911,6 +1231,7 @@ export default function Tasks() {
               responsaveis={responsaveis}
               filterResp={effectiveFilterResp}
               session={session}
+              lawyerId={lawyer?.id}
               onEdit={openEdit}
               onNewWithDate={openNewWithDate}
               refetch={refetch}

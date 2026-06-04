@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useAllTasks, updateTaskStatus, updateTaskAssignee } from '@/hooks/useTasks'
+import { supabase } from '@/lib/supabase'
 import PageShell from '@/components/ui/PageShell'
 import styles from './Interns.module.css'
 
@@ -90,6 +91,102 @@ function TaskRow({ task, showMember, onStatusChange, responsaveis, onCycleAssign
           {overdue && <span className={styles.overdueTag}>Atrasada</span>}
         </span>
       </div>
+    </div>
+  )
+}
+
+/* ── Monthly history section ────────────────────────────────────────── */
+function HistorySection({ lawyerId, responsaveis, selectedMember }) {
+  const [month,        setMonth]        = useState(() => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), 1) })
+  const [tasks,        setTasks]        = useState([])
+  const [desps,        setDesps]        = useState([])
+  const [loading,      setLoading]      = useState(false)
+  const [personFilter, setPersonFilter] = useState(null)
+
+  useEffect(() => {
+    setPersonFilter(selectedMember !== 'todos' && selectedMember !== 'sem_atribuicao' ? selectedMember : null)
+  }, [selectedMember])
+
+  function toISO(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+  }
+
+  useEffect(() => {
+    if (!lawyerId) return
+    setLoading(true)
+    const from = toISO(month)
+    const next = new Date(month.getFullYear(), month.getMonth() + 1, 1)
+    const to   = toISO(next)
+    let taskQ = supabase.from('tasks').select('id, title, updated_at, assigned_to')
+      .eq('status', 'concluida').gte('updated_at', from).lt('updated_at', to)
+      .order('updated_at', { ascending: false }).limit(200)
+    if (selectedMember !== 'todos' && selectedMember !== 'sem_atribuicao')
+      taskQ = taskQ.eq('assigned_to', selectedMember)
+    else if (selectedMember === 'sem_atribuicao')
+      taskQ = taskQ.is('assigned_to', null)
+    Promise.all([
+      taskQ,
+      supabase.from('workspace_despachos').select('id, case_title, tipo, notas, done_at')
+        .eq('status', 'concluido').gte('done_at', from).lt('done_at', to)
+        .order('done_at', { ascending: false }).limit(200),
+    ]).then(([{ data: t }, { data: d }]) => { setTasks(t ?? []); setDesps(d ?? []); setLoading(false) })
+  }, [lawyerId, month, selectedMember])
+
+  const combined = useMemo(() => {
+    const t = tasks.map(t => ({ key: 't'+t.id, type: 'task',     title: t.title,      sub: t.assigned_to, date: t.updated_at }))
+    const d = desps.map(d => ({ key: 'd'+d.id, type: 'despacho', title: d.case_title, sub: d.tipo,        date: d.done_at }))
+    const all = [...t, ...d].sort((a, b) => new Date(b.date) - new Date(a.date))
+    if (!personFilter) return all
+    return all.filter(item => item.sub === personFilter)
+  }, [tasks, desps, personFilter])
+
+  const monthLabel = month.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+  const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - 23); cutoff.setDate(1); cutoff.setHours(0,0,0,0)
+  const atLimit = month <= cutoff
+  function fmtD(d) { if (!d) return '—'; return new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) }
+
+  return (
+    <div className={styles.histSection}>
+      <div className={styles.histSectionHead}>
+        <span className={styles.histSectionTitle}>Histórico de Atividade</span>
+        <div className={styles.histNav}>
+          <button className={styles.histNavBtn} onClick={() => setMonth(m => new Date(m.getFullYear(), m.getMonth()-1, 1))} disabled={atLimit}>‹</button>
+          <span className={styles.histNavLabel} style={{ textTransform: 'capitalize' }}>{monthLabel}</span>
+          <button className={styles.histNavBtn} onClick={() => setMonth(m => new Date(m.getFullYear(), m.getMonth()+1, 1))}>›</button>
+        </div>
+        {combined.length > 0 && <span className="badge st-gray">{combined.length}</span>}
+      </div>
+      {selectedMember === 'todos' && responsaveis.length > 0 && (
+        <div className={styles.histFilter}>
+          <button className={`${styles.histFilterBtn} ${!personFilter ? styles.histFilterActive : ''}`} onClick={() => setPersonFilter(null)}>Todos</button>
+          {responsaveis.map(p => (
+            <button key={p} className={`${styles.histFilterBtn} ${personFilter === p ? styles.histFilterActive : ''}`} onClick={() => setPersonFilter(prev => prev === p ? null : p)}>{p}</button>
+          ))}
+        </div>
+      )}
+      {loading ? (
+        <div className={styles.histEmpty}>Carregando…</div>
+      ) : combined.length === 0 ? (
+        <div className={styles.histEmpty}>Nenhuma atividade registrada neste mês.</div>
+      ) : (
+        <div className={styles.histList}>
+          {combined.map(item => (
+            <div key={item.key} className={styles.histItem}>
+              <div className={styles.histDot} style={{ background: item.type === 'task' ? 'var(--accent)' : 'var(--green)' }} />
+              <div className={styles.histBody}>
+                <span className={styles.histTitle}>{item.title}</span>
+                {item.sub && <span className={styles.histSub}>{item.sub}</span>}
+              </div>
+              <div className={styles.histRight}>
+                <span className={`badge ${item.type === 'task' ? 'st-blue' : 'st-teal'}`} style={{ fontSize: '0.6rem' }}>
+                  {item.type === 'task' ? 'Tarefa' : 'Despacho'}
+                </span>
+                <span className={styles.histDate}>{fmtD(item.date)}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -263,6 +360,8 @@ export default function Interns() {
           </div>
         )}
       </div>
+
+      <HistorySection lawyerId={lawyer?.id} responsaveis={responsaveis} selectedMember={member} />
     </PageShell>
   )
 }
