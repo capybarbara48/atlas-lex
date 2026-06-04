@@ -258,7 +258,13 @@ export default function Notes() {
       <div className={s.controls}>
         <div className={s.tabs}>
           <button className={`${s.tab} ${tab === 'todas'   ? s.tabActive : ''}`} onClick={() => setTab('todas')}>Todas</button>
-          <button className={`${s.tab} ${tab === 'fixadas' ? s.tabActive : ''}`} onClick={() => setTab('fixadas')}>⭐ Fixadas</button>
+          <button className={`${s.tab} ${tab === 'fixadas' ? s.tabActive : ''}`} onClick={() => setTab('fixadas')}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0,verticalAlign:'-1px'}}>
+              <line x1="12" y1="17" x2="12" y2="22"/>
+              <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/>
+            </svg>
+            Fixadas
+          </button>
         </div>
         <div className={s.searchWrap}>
           <svg className={s.searchIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
