@@ -307,8 +307,8 @@ export default function Dashboard() {
 
         <div className={styles.statsMini}>
           <StatBox num={tarefasHoje}   label="Tarefas hoje" />
-          <StatBox num={brl(receita)}  label="Receitas / mês" />
-          <StatBox num={brl(saldo)}    label="Saldo / mês" />
+          {teamRole !== 'estagiario' && <StatBox num={brl(receita)}  label="Receitas / mês" />}
+          {teamRole !== 'estagiario' && <StatBox num={brl(saldo)}    label="Saldo / mês" />}
         </div>
 
         <button className={styles.btnNovo} onClick={() => setCaseFormOpen(true)}>
