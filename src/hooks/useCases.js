@@ -6,7 +6,7 @@ export function useCases({ status, limit } = {}) {
     let q = supabase
       .from('cases')
       .select(`
-        id, title, case_number, status, situation, situation_changed_at, area, court, valor,
+        id, title, case_number, status, situation, situation_changed_at, despacho_attempts, area, court, valor,
         opened_at, updated_at, created_at, client_id,
         outcome, outcome_reason, finalizado_at,
         quota_litis_pct, quota_litis_received, partner,
@@ -95,6 +95,15 @@ export async function toggleQuotaLitisReceived(caseId, received) {
   const { error } = await supabase
     .from('cases')
     .update({ quota_litis_received: received, updated_at: new Date().toISOString() })
+    .eq('id', caseId)
+  return { error }
+}
+
+/** Update despacho attempt timestamps (array of 3: ISO string or null) */
+export async function updateDespachoAttempts(caseId, attempts) {
+  const { error } = await supabase
+    .from('cases')
+    .update({ despacho_attempts: attempts })
     .eq('id', caseId)
   return { error }
 }

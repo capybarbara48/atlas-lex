@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
-import { useCases, useFinalisedCases, updateCaseSituation } from '@/hooks/useCases'
+import { useCases, useFinalisedCases, updateCaseSituation, updateDespachoAttempts } from '@/hooks/useCases'
 import { useKanbanSituations } from '@/hooks/useKanbanSituations'
 import { useToast } from '@/context/ToastContext'
 import PageShell from '@/components/ui/PageShell'
@@ -33,6 +33,7 @@ function mapCase(c) {
     status:     c.status,
     situation:          c.situation ?? null,
     situationChangedAt: c.situation_changed_at ?? null,
+    despachoAttempts:   Array.isArray(c.despacho_attempts) ? [...c.despacho_attempts, null, null, null].slice(0, 3) : [null, null, null],
     tipo:               c.area ?? '—',
     tribunal:           c.court ?? '—',
     valor:              Number(c.valor) || 0,
@@ -179,8 +180,37 @@ function EditColumnsModal({ situations, onAdd, onUpdate, onDelete, onReorder, on
   )
 }
 
+/* ── Despacho attempt boxes ─────────────────────────────────────────── */
+function DespachoBoxes({ attempts, onToggle }) {
+  function fmt(ts) {
+    if (!ts) return ''
+    return new Date(ts).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+  }
+  return (
+    <div className={styles.despachoRow} onClick={e => e.stopPropagation()}>
+      <span className={styles.despachoLabel}>DESP.</span>
+      {attempts.map((ts, i) => (
+        <div key={i} className={styles.despachoWrap}>
+          <button
+            className={`${styles.despachoBox} ${ts ? styles.despachoBoxChecked : ''}`}
+            onClick={e => { e.stopPropagation(); onToggle(i) }}
+            title={ts ? `${i + 1}° despacho: ${fmt(ts)} — clique para remover` : `Registrar ${i + 1}° despacho`}
+          >
+            {ts && (
+              <svg viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" width="8" height="8">
+                <polyline points="1.5 6 4.5 9 10.5 3"/>
+              </svg>
+            )}
+          </button>
+          <span className={styles.despachoNum}>{i + 1}°</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 /* ── KanbanView ─────────────────────────────────────────────────────── */
-function KanbanView({ cases, situations, sitLoading, onMoveSituation, onEditColumns }) {
+function KanbanView({ cases, situations, sitLoading, onMoveSituation, onEditColumns, onDespachoToggle }) {
   const navigate = useNavigate()
   const [draggingId, setDraggingId] = useState(null)
   const [dragOver,   setDragOver]   = useState(null)
@@ -302,6 +332,12 @@ function KanbanView({ cases, situations, sitLoading, onMoveSituation, onEditColu
                                 )
                               })()}
                             </div>
+                            {/despachar/i.test(sit.value) && (
+                              <DespachoBoxes
+                                attempts={c.despachoAttempts}
+                                onToggle={idx => onDespachoToggle?.(c.id, c.despachoAttempts, idx)}
+                              />
+                            )}
                           </div>
                         ))
                     }
@@ -602,6 +638,14 @@ export default function Cases() {
     else refetch()
   }
 
+  async function handleDespachoToggle(caseId, currentAttempts, idx) {
+    const arr = [...(Array.isArray(currentAttempts) ? currentAttempts : [null, null, null])]
+    arr[idx] = arr[idx] ? null : new Date().toISOString()
+    const payload = arr.every(x => !x) ? null : arr
+    await updateDespachoAttempts(caseId, payload)
+    refetch()
+  }
+
   const filtered = useMemo(() => {
     if (!search.trim()) return cases
     const q = search.toLowerCase()
@@ -678,6 +722,7 @@ export default function Cases() {
                   sitLoading={sitLoading}
                   onMoveSituation={handleMoveSituation}
                   onEditColumns={() => setEditColsOpen(true)}
+                  onDespachoToggle={handleDespachoToggle}
                 />
               : <ListView cases={filtered} situations={situations} onMoveSituation={handleMoveSituation} onEdit={openDetail} />
       }

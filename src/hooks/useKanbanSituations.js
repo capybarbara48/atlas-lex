@@ -7,7 +7,8 @@ const DEFAULTS = [
   { value: 'Tarefas a Fazer',      color: '#f4a261', sort_order: 1 },
   { value: 'Em Andamento',         color: '#2a9d8f', sort_order: 2 },
   { value: 'Aguard. Julgamento',   color: '#457b9d', sort_order: 3 },
-  { value: 'Encerrado',            color: '#6c757d', sort_order: 4 },
+  { value: 'Despachar o Processo', color: '#7c3aed', sort_order: 4 },
+  { value: 'Encerrado',            color: '#6c757d', sort_order: 5 },
 ]
 
 export function useKanbanSituations() {
