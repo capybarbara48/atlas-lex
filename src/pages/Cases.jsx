@@ -344,7 +344,8 @@ function SituationSelect({ caseId, currentSituation, situations, onMove }) {
 }
 
 function ListView({ cases, situations, onMoveSituation, onEdit }) {
-  if (cases.length === 0) return (
+  const sorted = [...cases].sort((a, b) => a.title.localeCompare(b.title, 'pt-BR', { sensitivity: 'base' }))
+  if (sorted.length === 0) return (
     <div className={styles.emptyState}>
       <div className={styles.emptyIcon}>⚖</div>
       <p>Nenhum processo encontrado</p>
@@ -365,7 +366,7 @@ function ListView({ cases, situations, onMoveSituation, onEdit }) {
           </tr>
         </thead>
         <tbody>
-          {cases.map(c => (
+          {sorted.map(c => (
             <tr key={c.id} className={styles.tableRow} onClick={() => onEdit(c.id)} style={{ cursor: 'pointer' }}>
               <td>
                 <div className={styles.caseTitle}>{c.titulo}</div>
