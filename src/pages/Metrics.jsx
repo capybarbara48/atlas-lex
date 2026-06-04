@@ -47,12 +47,13 @@ const CX = 100, CY = 100, OR = 80, IR = 52
 function PieChart({ title, subtitle, data, loading }) {
   const [hov, setHov] = useState(null)
 
-  const total = data.reduce((s, d) => s + d.value, 0)
+  const total  = data.reduce((acc, d) => acc + d.value, 0)
+  const maxVal = data.length > 0 ? data[0].value : 1
   const hasGap = data.length > 1
 
   let cum = 0
   const slices = data.map((d, i) => {
-    const a0 = cum
+    const a0   = cum
     const span = (d.value / total) * 360
     cum += span
     return { ...d, a0, a1: cum, color: PALETTE[i % PALETTE.length] }
@@ -73,7 +74,7 @@ function PieChart({ title, subtitle, data, loading }) {
         <div className={s.state}>Nenhum dado disponível</div>
       ) : (
         <div className={s.body}>
-          {/* SVG donut */}
+          {/* ── SVG donut (centered) ── */}
           <div className={s.svgWrap}>
             <svg viewBox="0 0 200 200" className={s.svg}>
               {slices.length === 1 ? (
@@ -86,28 +87,24 @@ function PieChart({ title, subtitle, data, loading }) {
                   <circle cx={CX} cy={CY} r={IR} fill="var(--card)" />
                 </>
               ) : (
-                slices.map((sl, i) => {
-                  const scale = hov === i ? 'scale(1.05)' : 'scale(1)'
-                  return (
-                    <path
-                      key={i}
-                      d={arcPath(CX, CY, OR, IR, sl.a0, sl.a1, hasGap)}
-                      fill={sl.color}
-                      opacity={hov === null || hov === i ? 1 : 0.35}
-                      style={{
-                        transition: 'opacity .15s, transform .15s',
-                        transform: scale,
-                        transformOrigin: `${CX}px ${CY}px`,
-                        cursor: 'pointer',
-                      }}
-                      onMouseEnter={() => setHov(i)}
-                      onMouseLeave={() => setHov(null)}
-                    />
-                  )
-                })
+                slices.map((sl, i) => (
+                  <path
+                    key={i}
+                    d={arcPath(CX, CY, OR, IR, sl.a0, sl.a1, hasGap)}
+                    fill={sl.color}
+                    opacity={hov === null || hov === i ? 1 : 0.35}
+                    style={{
+                      transition: 'opacity .15s, transform .15s',
+                      transform: hov === i ? 'scale(1.05)' : 'scale(1)',
+                      transformOrigin: `${CX}px ${CY}px`,
+                      cursor: 'pointer',
+                    }}
+                    onMouseEnter={() => setHov(i)}
+                    onMouseLeave={() => setHov(null)}
+                  />
+                ))
               )}
 
-              {/* Center label */}
               {hSlice ? (
                 <>
                   <text x={CX} y={CY - 7} textAnchor="middle"
@@ -134,21 +131,33 @@ function PieChart({ title, subtitle, data, loading }) {
             </svg>
           </div>
 
-          {/* Legend */}
-          <div className={s.legend}>
-            {slices.map((sl, i) => (
-              <div
-                key={i}
-                className={`${s.legendRow} ${hov === i ? s.legendRowHov : ''}`}
-                onMouseEnter={() => setHov(i)}
-                onMouseLeave={() => setHov(null)}
-              >
-                <span className={s.legendDot} style={{ background: sl.color }} />
-                <span className={s.legendLabel} title={sl.label}>{sl.label}</span>
-                <span className={s.legendPct}>{((sl.value / total) * 100).toFixed(1)}%</span>
-                <span className={s.legendCount}>{sl.value}</span>
-              </div>
-            ))}
+          {/* ── Horizontal bars ── */}
+          <div className={s.bars}>
+            {slices.map((sl, i) => {
+              const pct  = (sl.value / total) * 100
+              const barW = (sl.value / maxVal) * 100
+              return (
+                <div
+                  key={i}
+                  className={`${s.barRow} ${hov === i ? s.barRowHov : ''}`}
+                  onMouseEnter={() => setHov(i)}
+                  onMouseLeave={() => setHov(null)}
+                >
+                  <div className={s.barLabelWrap}>
+                    <span className={s.barDot} style={{ background: sl.color }} />
+                    <span className={s.barLabelText} title={sl.label}>{sl.label}</span>
+                  </div>
+                  <div className={s.barTrack}>
+                    <div
+                      className={s.barFill}
+                      style={{ width: `${barW}%`, background: sl.color }}
+                    />
+                  </div>
+                  <span className={s.barPct}>{pct.toFixed(1)}%</span>
+                  <span className={s.barCount}>{sl.value}</span>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
@@ -158,8 +167,8 @@ function PieChart({ title, subtitle, data, loading }) {
 
 /* ─── Page ───────────────────────────────────────────────────────── */
 export default function Metrics() {
-  const [loading, setLoading]   = useState(true)
-  const [cases,   setCases]     = useState([])
+  const [loading,   setLoading]   = useState(true)
+  const [cases,     setCases]     = useState([])
   const [proposals, setProposals] = useState([])
 
   useEffect(() => {
@@ -175,10 +184,10 @@ export default function Metrics() {
     load()
   }, [])
 
-  const partnerData  = groupBy(cases,     'partner',      'Próprios')
-  const areaData     = groupBy(cases,     'area',         'Não especificada')
-  const courtData    = groupBy(cases,     'court',        'Não especificado')
-  const serviceData  = groupBy(proposals, 'service_type', 'Não especificado')
+  const partnerData = groupBy(cases,     'partner',      'Próprios')
+  const areaData    = groupBy(cases,     'area',         'Não especificada')
+  const courtData   = groupBy(cases,     'court',        'Não especificado')
+  const serviceData = groupBy(proposals, 'service_type', 'Não especificado')
 
   return (
     <PageShell
