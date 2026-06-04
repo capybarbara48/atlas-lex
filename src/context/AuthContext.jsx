@@ -7,8 +7,9 @@ const AuthContext = createContext(null)
 export function AuthProvider({ children }) {
   const [session,    setSession]    = useState(null)
   const [lawyer,     setLawyer]     = useState(null)
-  const [memberRole, setMemberRole] = useState(null)   // null = owner; 'advogado'|'estagiario' = team member
-  const [memberName, setMemberName] = useState(null)   // team member's own full_name
+  const [memberRole,        setMemberRole]        = useState(null)   // null = owner; 'advogado'|'estagiario' = team member
+  const [memberName,        setMemberName]        = useState(null)   // team member's own full_name
+  const [memberLinkedResp,  setMemberLinkedResp]  = useState(null)   // linked responsavel name for task filtering
   const [loading,    setLoading]    = useState(true)
 
   useEffect(() => {
@@ -25,6 +26,7 @@ export function AuthProvider({ children }) {
         setLawyer(null)
         setMemberRole(null)
         setMemberName(null)
+        setMemberLinkedResp(null)
         setLoading(false)
       }
     })
@@ -51,7 +53,7 @@ export function AuthProvider({ children }) {
     // 2. Not an owner — check if they're an active team member
     const { data: member } = await supabase
       .from('team_members')
-      .select('lawyer_id, role, full_name')
+      .select('lawyer_id, role, full_name, linked_responsavel')
       .eq('user_id', userId)
       .eq('status', 'active')
       .maybeSingle()
@@ -67,6 +69,7 @@ export function AuthProvider({ children }) {
         setLawyer(firmRow)           // lawyer = the owner's row (firm data)
         setMemberRole(member.role)
         setMemberName(member.full_name)
+        setMemberLinkedResp(member.linked_responsavel ?? null)
         setLoading(false)
         return
       }
@@ -76,6 +79,7 @@ export function AuthProvider({ children }) {
     setLawyer(null)
     setMemberRole(null)
     setMemberName(null)
+    setMemberLinkedResp(null)
     setLoading(false)
   }
 
@@ -101,7 +105,7 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{
       session, lawyer, loading, refreshLawyer,
-      memberRole, memberName, teamRole, isTeamMember,
+      memberRole, memberName, memberLinkedResp, teamRole, isTeamMember,
       isAdmin, isBeta,
     }}>
       {children}

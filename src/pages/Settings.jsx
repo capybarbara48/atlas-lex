@@ -120,14 +120,15 @@ const STATUS_INFO = {
   disabled:       { label: 'Desativado', cls: 'st-gray' },
 }
 
-function TeamMembersSection({ lawyerId, session }) {
-  const [members,  setMembers]  = useState([])
-  const [loading,  setLoading]  = useState(true)
-  const [saving,   setSaving]   = useState(false)
-  const [error,    setError]    = useState('')
-  const [name,     setName]     = useState('')
-  const [email,    setEmail]    = useState('')
-  const [role,     setRole]     = useState('estagiario')
+function TeamMembersSection({ lawyerId, session, responsaveis = [] }) {
+  const [members,     setMembers]     = useState([])
+  const [loading,     setLoading]     = useState(true)
+  const [saving,      setSaving]      = useState(false)
+  const [error,       setError]       = useState('')
+  const [name,        setName]        = useState('')
+  const [email,       setEmail]       = useState('')
+  const [role,        setRole]        = useState('estagiario')
+  const [linkedResp,  setLinkedResp]  = useState('')
 
   useEffect(() => {
     if (!lawyerId) return
@@ -147,15 +148,16 @@ function TeamMembersSection({ lawyerId, session }) {
     }
     setSaving(true)
     const { data, error } = await supabase.from('team_members').insert({
-      lawyer_id:     lawyerId,
-      invited_email: email.trim().toLowerCase(),
-      full_name:     name.trim(),
+      lawyer_id:          lawyerId,
+      invited_email:      email.trim().toLowerCase(),
+      full_name:          name.trim(),
       role,
+      linked_responsavel: linkedResp || null,
     }).select().single()
     setSaving(false)
     if (error) { setError(error.message); return }
     setMembers(m => [...m, data])
-    setName(''); setEmail('')
+    setName(''); setEmail(''); setLinkedResp('')
   }
 
   async function handleRemove(id) {
@@ -183,7 +185,10 @@ function TeamMembersSection({ lawyerId, session }) {
                         <span className={`badge ${m.role === 'advogado' ? 'st-blue' : 'st-teal'}`}>{ROLE_LABELS[m.role]}</span>
                         <span className={`badge ${st.cls}`}>{st.label}</span>
                       </div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-3)', marginTop: '0.2rem' }}>{m.invited_email}</div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-3)', marginTop: '0.2rem' }}>
+                        {m.invited_email}
+                        {m.linked_responsavel && <span style={{ marginLeft: '0.5rem', color: 'var(--accent)', fontWeight: 500 }}>· {m.linked_responsavel}</span>}
+                      </div>
                       {m.status === 'pending_invite' && (
                         <div style={{ fontSize: '0.72rem', color: 'var(--accent)', marginTop: '0.3rem', fontWeight: 500 }}>
                           Instrua o membro a se cadastrar em <strong>atlas-lex.com</strong> com o e-mail <strong>{m.invited_email}</strong>
@@ -202,7 +207,7 @@ function TeamMembersSection({ lawyerId, session }) {
           )
       }
 
-      <form onSubmit={handleAdd} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto auto', gap: '0.65rem', alignItems: 'end' }}>
+      <form onSubmit={handleAdd} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto auto', gap: '0.65rem', alignItems: 'end' }}>
         <div>
           <label style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: '0.3rem' }}>Nome completo</label>
           <input
@@ -215,6 +220,15 @@ function TeamMembersSection({ lawyerId, session }) {
             type="email"
             style={{ width: '100%', background: 'var(--bg)', border: 'var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.5rem 0.75rem', fontSize: '0.875rem', color: 'var(--text)', fontFamily: 'inherit' }}
             value={email} onChange={e => setEmail(e.target.value)} required placeholder="ana@escritorio.com" />
+        </div>
+        <div>
+          <label style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: '0.3rem' }}>Responsável vinculado</label>
+          <select
+            style={{ width: '100%', background: 'var(--bg)', border: 'var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.5rem 0.75rem', fontSize: '0.875rem', color: 'var(--text)', fontFamily: 'inherit', cursor: 'pointer' }}
+            value={linkedResp} onChange={e => setLinkedResp(e.target.value)}>
+            <option value="">— Nenhum —</option>
+            {responsaveis.map(r => <option key={r} value={r}>{r}</option>)}
+          </select>
         </div>
         <div>
           <label style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: '0.3rem' }}>Função</label>
@@ -1042,7 +1056,7 @@ export default function Settings() {
             title="Membros da Equipe"
             subtitle="Convide advogados e estagiários para acessar o escritório com suas próprias credenciais. Estagiários não têm acesso ao módulo Financeiro nem a Clientes."
           >
-            <TeamMembersSection lawyerId={lawyer?.id} session={session} />
+            <TeamMembersSection lawyerId={lawyer?.id} session={session} responsaveis={responsaveis} />
           </Section>
         )}
 

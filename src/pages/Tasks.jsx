@@ -793,13 +793,13 @@ function CalendarView({ tasks, onEdit }) {
 
 /* ── page ───────────────────────────────────────────────────────────── */
 export default function Tasks() {
-  const { lawyer, session, teamRole } = useAuth()
+  const { lawyer, session, teamRole, memberLinkedResp, memberName } = useAuth()
   const toast = useToast()
   const prefs = loadPreferences(lawyer)
   const responsaveis = lawyer?.preferences?.responsaveis ?? []
 
   const isIntern   = teamRole === 'estagiario'
-  const internName = lawyer?.full_name ?? ''
+  const internName = memberLinkedResp || memberName || ''
 
   const [view, setView]           = useState(prefs.tarefas_view ?? 'agenda')
   const [search, setSearch]       = useState('')
