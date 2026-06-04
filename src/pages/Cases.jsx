@@ -313,7 +313,37 @@ function SkeletonKanban() {
 }
 
 /* ── ListView ───────────────────────────────────────────────────────── */
-function ListView({ cases, onEdit }) {
+function SituationSelect({ caseId, currentSituation, situations, onMove }) {
+  const [saving, setSaving] = useState(false)
+  const sit = situations.find(s => s.id === currentSituation)
+
+  async function handleChange(e) {
+    e.stopPropagation()
+    const val = e.target.value
+    setSaving(true)
+    await onMove(caseId, val === '' ? null : val)
+    setSaving(false)
+  }
+
+  return (
+    <select
+      className={styles.sitSelect}
+      style={{ borderLeftColor: sit?.color ?? '#94a3b8' }}
+      value={currentSituation ?? ''}
+      onChange={handleChange}
+      onClick={e => e.stopPropagation()}
+      disabled={saving}
+      title="Alterar situação"
+    >
+      <option value="">— Sem situação —</option>
+      {situations.map(s => (
+        <option key={s.id} value={s.id}>{s.value}</option>
+      ))}
+    </select>
+  )
+}
+
+function ListView({ cases, situations, onMoveSituation, onEdit }) {
   if (cases.length === 0) return (
     <div className={styles.emptyState}>
       <div className={styles.emptyIcon}>⚖</div>
@@ -327,6 +357,7 @@ function ListView({ cases, onEdit }) {
           <tr>
             <th>Processo</th>
             <th>Cliente</th>
+            <th>Situação</th>
             <th>Tipo</th>
             <th>Tribunal</th>
             <th>Valor</th>
@@ -344,6 +375,14 @@ function ListView({ cases, onEdit }) {
                 {c.clienteId
                   ? <Link to={`/painel/clientes/${c.clienteId}`} className={styles.clientLink}>{c.cliente}</Link>
                   : c.cliente}
+              </td>
+              <td onClick={e => e.stopPropagation()}>
+                <SituationSelect
+                  caseId={c.id}
+                  currentSituation={c.situation}
+                  situations={situations}
+                  onMove={onMoveSituation}
+                />
               </td>
               <td><span className="badge st-teal">{c.tipo}</span></td>
               <td><span className={`badge ${c.trib_color}`}>{c.tribunal}</span></td>
@@ -616,7 +655,7 @@ export default function Cases() {
                   onMoveSituation={handleMoveSituation}
                   onEditColumns={() => setEditColsOpen(true)}
                 />
-              : <ListView cases={filtered} onEdit={openDetail} />
+              : <ListView cases={filtered} situations={situations} onMoveSituation={handleMoveSituation} onEdit={openDetail} />
       }
 
       {formOpen && (
