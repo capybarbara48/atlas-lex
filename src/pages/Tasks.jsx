@@ -536,7 +536,7 @@ function AgendaTaskRow({ t, todayISO, responsaveis, onClick, onCheck, onOrderCha
 }
 
 /* ── Agenda view ────────────────────────────────────────────────────── */
-function AgendaView({ rawTasks, responsaveis, filterResp, session, lawyerId, isIntern, internName, onEdit, onNewWithDate, refetch, onCycleAssignee }) {
+function AgendaView({ rawTasks, responsaveis, filterResp, session, lawyerId, isIntern, internName, onEdit, onNewWithDate, refetch, onCycleAssignee, showDayMode }) {
   const today    = new Date()
   const todayISO = toISO(today)
   const tomorrowISO = toISO(addDays(today, 1))
@@ -683,7 +683,7 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, lawyerId, isI
             onClick={() => onNewWithDate(selectedISO, filterResp !== 'todos' ? filterResp : null)}
             title="Nova tarefa"
           >+</button>
-          <ModeToggle mode={dayModes[selectedISO] ?? 'virtual'} onToggle={() => toggleMode(selectedISO)} />
+          {showDayMode !== false && <ModeToggle mode={dayModes[selectedISO] ?? 'virtual'} onToggle={() => toggleMode(selectedISO)} />}
         </div>
         <div
           className={`${styles.agendaCardBody} ${dropTarget === 'today' ? styles.agendaCardBodyDrop : ''}`}
@@ -741,7 +741,7 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, lawyerId, isI
           <span className={styles.agendaCardSub}>
             {new Date(tomorrowISO + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'short' })}
           </span>
-          <ModeToggle mode={dayModes[tomorrowISO] ?? 'virtual'} onToggle={() => toggleMode(tomorrowISO)} />
+          {showDayMode !== false && <ModeToggle mode={dayModes[tomorrowISO] ?? 'virtual'} onToggle={() => toggleMode(tomorrowISO)} />}
           <button
             className={styles.agendaAddBtn}
             onClick={() => onNewWithDate(tomorrowISO, filterResp !== 'todos' ? filterResp : null)}
@@ -827,7 +827,7 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, lawyerId, isI
                     <div className={styles.weekCellHeader}>
                       <span className={styles.weekDayWkd}>{WEEKDAYS_SHORT[d.getDay()]}</span>
                       <span className={`${styles.weekDayNum} ${isToday ? styles.weekDayNumToday : ''}`}>{d.getDate()}</span>
-                      <ModeToggle mode={dayModes[iso] ?? 'virtual'} onToggle={() => toggleMode(iso)} mini />
+                      {showDayMode !== false && <ModeToggle mode={dayModes[iso] ?? 'virtual'} onToggle={() => toggleMode(iso)} mini />}
                     </div>
                     <div className={styles.weekCellTasks}>
                       {tasks.map(t => (
@@ -1261,6 +1261,7 @@ export default function Tasks() {
               onNewWithDate={openNewWithDate}
               refetch={refetch}
               onCycleAssignee={handleCycleAssignee}
+              showDayMode={prefs.show_day_mode !== false}
             />
           : view === 'kanban'
             ? <KanbanView tasks={filtered} onEdit={openEdit} />

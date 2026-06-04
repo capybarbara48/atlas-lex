@@ -728,3 +728,110 @@
 @media (max-width: 600px) {
   .tribunaisGroups { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ── Day mode preference illustration ───────────────────────────── */
+.dayModePreviewGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 420px;
+}
+
+.dayModeCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 0.75rem 0.75rem;
+  background: var(--bg);
+  border: 1.5px solid rgba(var(--accent-rgb), 0.12);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: inherit;
+  text-align: center;
+}
+.dayModeCard:hover {
+  border-color: rgba(var(--accent-rgb), 0.3);
+}
+.dayModeCardActive {
+  border-color: var(--accent) !important;
+  background: var(--accent-dim) !important;
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
+}
+
+.dayModePreview {
+  width: 100%;
+  background: var(--bg-2, var(--bg));
+  border: 1px solid rgba(var(--accent-rgb), 0.1);
+  border-radius: 8px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.dayModePreviewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+
+.dayModePreviewDate {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1;
+}
+
+.dayModePreviewWeekday {
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+.dayModePreviewDay {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+
+.dayModePreviewPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.dayModePreviewLines {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.dayModePreviewLine {
+  height: 4px;
+  width: 100%;
+  background: rgba(var(--accent-rgb), 0.13);
+  border-radius: 3px;
+}
+
+.dayModeCardLabel {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.dayModeCardCaption {
+  font-size: 0.65rem;
+  color: var(--text-3);
+  line-height: 1.3;
+}

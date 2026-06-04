@@ -6,6 +6,7 @@ const DEFAULTS = {
   tarefas_view:     'kanban',  // 'kanban' | 'lista'
   financeiro_view:  'lista',   // 'lista'  | 'grafico'
   nav_mode:         'sidebar', // 'sidebar' | 'top' | 'bottom'
+  show_day_mode:    true,      // show Virtual/Presencial pill on day cards
 }
 
 // In-memory cache keyed by lawyerId — updated optimistically on save/reset

@@ -734,6 +734,56 @@ export default function Settings() {
               </div>
             </div>
 
+            {/* Day mode pill */}
+            <div className={styles.prefRow} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '0.75rem' }}>
+              <div className={styles.prefRowLabel}>
+                <span className={styles.prefLabel}>Etiqueta de modo do dia</span>
+                <span className={styles.prefSub}>Exibe indicador "Virtual" ou "Presencial" nos cards e mini-cards do Espaço de Trabalho</span>
+              </div>
+              <div className={styles.dayModePreviewGrid}>
+                {[
+                  { v: true,  label: 'Ativado',   caption: 'Com etiqueta de modo' },
+                  { v: false, label: 'Desativado', caption: 'Sem etiqueta de modo' },
+                ].map(({ v, label, caption }) => {
+                  const active = (prefs.show_day_mode !== false) === v
+                  return (
+                    <button
+                      key={String(v)}
+                      type="button"
+                      className={`${styles.dayModeCard} ${active ? styles.dayModeCardActive : ''}`}
+                      onClick={() => handlePrefChange('show_day_mode', v)}
+                    >
+                      <div className={styles.dayModePreview}>
+                        <div className={styles.dayModePreviewHeader}>
+                          <div className={styles.dayModePreviewDate}>
+                            <span className={styles.dayModePreviewWeekday}>QUA</span>
+                            <span className={styles.dayModePreviewDay}>4</span>
+                          </div>
+                          {v && (
+                            <span className={styles.dayModePreviewPill} style={{ background: '#7c3aed' }}>
+                              <svg width="7" height="7" viewBox="0 0 16 16" fill="currentColor">
+                                <rect x="1" y="2" width="14" height="11" rx="2" ry="2" fill="none" stroke="currentColor" strokeWidth="1.8"/>
+                                <rect x="5" y="13" width="6" height="2" rx="1"/>
+                                <rect x="3" y="15" width="10" height="1.5" rx="0.75"/>
+                              </svg>
+                              Virtual
+                            </span>
+                          )}
+                        </div>
+                        <div className={styles.dayModePreviewLines}>
+                          <div className={styles.dayModePreviewLine} />
+                          <div className={styles.dayModePreviewLine} style={{ width: '65%' }} />
+                          <div className={styles.dayModePreviewLine} style={{ width: '80%' }} />
+                        </div>
+                      </div>
+                      <span className={styles.dayModeCardLabel}>{label}</span>
+                      <span className={styles.dayModeCardCaption}>{caption}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
           </div>
           <div className={styles.formFooter}>
             <button type="button" className={styles.btnReset} onClick={handleResetPrefs}>
