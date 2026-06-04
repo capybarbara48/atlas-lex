@@ -326,23 +326,27 @@ function WeeklyGrid({ lawyerId }) {
                   <span className={s.dayName}>{WEEK_SHORT[WEEK_DAYS[i]]}</span>
                   <span className={s.dayNum}>{date.getDate()}</span>
                 </div>
+              </div>
+              <div className={s.dayModeRow}>
                 <button
-                  className={`${s.modeToggle} ${mode === 'virtual' ? s.modeVirtual : ''}`}
+                  className={s.modeToggle}
+                  style={{ background: mode === 'presencial' ? '#22a84a' : '#7c3aed' }}
                   onClick={() => toggleMode(key)}
-                  title={mode === 'presencial' ? 'Presencial — clique p/ virtual' : 'Virtual — clique p/ presencial'}
+                  title="Clique para alternar"
                 >
                   {mode === 'presencial' ? (
-                    <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="11" height="11">
-                      <circle cx="7" cy="5" r="2.5"/>
-                      <path d="M2 13c0-2.761 2.239-5 5-5s5 2.239 5 5"/>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="9" height="9">
+                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                      <polyline points="9 22 9 12 15 12 15 22"/>
                     </svg>
                   ) : (
-                    <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="11" height="11">
-                      <rect x="1" y="2.5" width="12" height="7" rx="1.5"/>
-                      <path d="M4.5 12h5M7 9.5V12"/>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="9" height="9">
+                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                      <line x1="8" y1="21" x2="16" y2="21"/>
+                      <line x1="12" y1="17" x2="12" y2="21"/>
                     </svg>
                   )}
-                  <span>{mode === 'presencial' ? 'Pres.' : 'Virtual'}</span>
+                  {mode === 'presencial' ? 'Presencial' : 'Virtual'}
                 </button>
               </div>
 
