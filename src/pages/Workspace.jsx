@@ -617,10 +617,14 @@ function StatsRow({ lawyerId }) {
 /* Histórico — navegação mês a mês, retenção 24 meses                 */
 /* ═══════════════════════════════════════════════════════════════════ */
 function HistoryCard({ lawyerId }) {
-  const [month,   setMonth]   = useState(() => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), 1) })
-  const [tasks,   setTasks]   = useState([])
-  const [desps,   setDesps]   = useState([])
-  const [loading, setLoading] = useState(false)
+  const { lawyer }           = useAuth()
+  const responsaveis         = lawyer?.preferences?.responsaveis ?? []
+
+  const [month,        setMonth]        = useState(() => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), 1) })
+  const [tasks,        setTasks]        = useState([])
+  const [desps,        setDesps]        = useState([])
+  const [loading,      setLoading]      = useState(false)
+  const [personFilter, setPersonFilter] = useState(null)
 
   useEffect(() => {
     if (!lawyerId) return
@@ -650,8 +654,10 @@ function HistoryCard({ lawyerId }) {
   const combined = useMemo(() => {
     const t = tasks.map(t => ({ key: 't' + t.id,  type: 'task',     title: t.title,      sub: t.assigned_to, date: t.updated_at }))
     const d = desps.map(d => ({ key: 'd' + d.id,  type: 'despacho', title: d.case_title, sub: d.tipo,        date: d.done_at }))
-    return [...t, ...d].sort((a, b) => new Date(b.date) - new Date(a.date))
-  }, [tasks, desps])
+    const all = [...t, ...d].sort((a, b) => new Date(b.date) - new Date(a.date))
+    if (!personFilter) return all
+    return all.filter(item => item.sub === personFilter)
+  }, [tasks, desps, personFilter])
 
   const monthLabel = month.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
   function prevMonth() { setMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1)) }
@@ -674,6 +680,26 @@ function HistoryCard({ lawyerId }) {
         </div>
         {combined.length > 0 && <span className="badge st-gray">{combined.length}</span>}
       </div>
+
+      {responsaveis.length > 0 && (
+        <div className={s.histFilter}>
+          <button
+            className={`${s.histFilterBtn} ${!personFilter ? s.histFilterActive : ''}`}
+            onClick={() => setPersonFilter(null)}
+          >
+            Todos
+          </button>
+          {responsaveis.map(p => (
+            <button
+              key={p}
+              className={`${s.histFilterBtn} ${personFilter === p ? s.histFilterActive : ''}`}
+              onClick={() => setPersonFilter(prev => prev === p ? null : p)}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+      )}
 
       {loading ? (
         <div className={s.dimMsg}>Carregando…</div>
