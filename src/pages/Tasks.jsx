@@ -793,15 +793,21 @@ function CalendarView({ tasks, onEdit }) {
 
 /* ── page ───────────────────────────────────────────────────────────── */
 export default function Tasks() {
-  const { lawyer, session } = useAuth()
+  const { lawyer, session, teamRole } = useAuth()
   const toast = useToast()
   const prefs = loadPreferences(lawyer)
   const responsaveis = lawyer?.preferences?.responsaveis ?? []
+
+  const isIntern   = teamRole === 'estagiario'
+  const internName = lawyer?.full_name ?? ''
 
   const [view, setView]           = useState(prefs.tarefas_view ?? 'agenda')
   const [search, setSearch]       = useState('')
   const [filterPri, setFilterPri] = useState('todos')
   const [filterResp, setFilterResp] = useState('todos')
+
+  // Interns always see only their own tasks — override any filter value
+  const effectiveFilterResp = isIntern ? internName : filterResp
   const [formOpen, setFormOpen]   = useState(false)
   const [editing,  setEditing]    = useState(null)
 
@@ -836,20 +842,21 @@ export default function Tasks() {
   function openNewWithDate(dateISO, assignedTo) {
     setEditing({
       due_date:    dateISO ? dateISO + 'T12:00:00' : null,
-      assigned_to: assignedTo ?? '',
+      assigned_to: isIntern ? internName : (assignedTo ?? ''),
     })
     setFormOpen(true)
   }
 
   const filtered = useMemo(() => {
     let list = tasks
+    if (isIntern) list = list.filter(t => !t.responsavel || t.responsavel === internName)
     if (filterPri !== 'todos') list = list.filter(t => t.prioridade === filterPri)
     if (search.trim()) {
       const q = search.toLowerCase()
       list = list.filter(t => t.titulo.toLowerCase().includes(q) || t.caso.toLowerCase().includes(q))
     }
     return list
-  }, [tasks, search, filterPri])
+  }, [tasks, search, filterPri, isIntern, internName])
 
   const pendentes = tasks.filter(t => t.status !== 'concluida' && t.status !== 'cancelada').length
 
@@ -866,7 +873,7 @@ export default function Tasks() {
       }
       filters={
         view === 'agenda'
-          ? (responsaveis.length > 0
+          ? (!isIntern && responsaveis.length > 0
               ? <RespPills responsaveis={responsaveis} value={filterResp} onChange={setFilterResp} />
               : null)
           : (
@@ -902,7 +909,7 @@ export default function Tasks() {
           ? <AgendaView
               rawTasks={rawTasks ?? []}
               responsaveis={responsaveis}
-              filterResp={filterResp}
+              filterResp={effectiveFilterResp}
               session={session}
               onEdit={openEdit}
               onNewWithDate={openNewWithDate}
