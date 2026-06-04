@@ -267,11 +267,12 @@ function ModeToggle({ mode, onToggle, mini }) {
 }
 
 /* ── Despachos card ──────────────────────────────────────────────────── */
-function DespachosCard({ lawyerId }) {
+function DespachosCard({ lawyerId, responsaveis, isIntern, internName }) {
   const [cases,   setCases]   = useState([])
   const [queue,   setQueue]   = useState([])
   const [history, setHistory] = useState([])
   const [selCase, setSelCase] = useState('')
+  const [selResp, setSelResp] = useState('')
   const [tab,     setTab]     = useState('fila')
 
   useEffect(() => {
@@ -282,20 +283,23 @@ function DespachosCard({ lawyerId }) {
 
   useEffect(() => {
     if (!lawyerId) return
-    supabase.from('workspace_despachos')
+    let qQ = supabase.from('workspace_despachos')
       .select('*').eq('status', 'pendente').order('created_at')
-      .then(({ data }) => setQueue(data ?? []))
-    supabase.from('workspace_despachos')
+    if (isIntern && internName) qQ = qQ.eq('responsavel', internName)
+    qQ.then(({ data }) => setQueue(data ?? []))
+
+    let hQ = supabase.from('workspace_despachos')
       .select('*').eq('status', 'concluido')
       .order('done_at', { ascending: false }).limit(30)
-      .then(({ data }) => setHistory(data ?? []))
-  }, [lawyerId])
+    if (isIntern && internName) hQ = hQ.eq('responsavel', internName)
+    hQ.then(({ data }) => setHistory(data ?? []))
+  }, [lawyerId, isIntern, internName])
 
   async function addToQueue() {
     const c = cases.find(c => c.id === selCase)
     if (!c || !lawyerId) return
     const { data } = await supabase.from('workspace_despachos')
-      .insert({ lawyer_id: lawyerId, case_id: c.id, case_title: c.title, local: 'Secretaria', tipo: DESP_TIPOS[0], notas: '', status: 'pendente' })
+      .insert({ lawyer_id: lawyerId, case_id: c.id, case_title: c.title, local: 'Secretaria', tipo: DESP_TIPOS[0], notas: '', status: 'pendente', responsavel: selResp || null })
       .select('*').single()
     if (data) setQueue(prev => [...prev, data])
     setSelCase('')
@@ -355,6 +359,12 @@ function DespachosCard({ lawyerId }) {
                 <option value="">Selecionar processo…</option>
                 {cases.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
               </select>
+              {responsaveis.length > 0 && !isIntern && (
+                <select className={styles.dspRespSel} value={selResp} onChange={e => setSelResp(e.target.value)}>
+                  <option value="">Responsável…</option>
+                  {responsaveis.map(r => <option key={r} value={r}>{r.split(' ')[0]}</option>)}
+                </select>
+              )}
               <button className={styles.dspAddBtn} onClick={addToQueue} disabled={!selCase}>+</button>
             </div>
             {queue.length === 0
@@ -365,6 +375,18 @@ function DespachosCard({ lawyerId }) {
                     <div key={d.id} className={styles.dspItem}>
                       <div className={styles.dspItemHead}>
                         <span className={styles.dspCaseTitle}>{d.case_title}</span>
+                        {responsaveis.length > 0 ? (
+                          <select
+                            className={styles.dspRespBadge}
+                            value={d.responsavel || ''}
+                            onChange={e => update(d.id, 'responsavel', e.target.value || null)}
+                          >
+                            <option value="">Sem resp.</option>
+                            {responsaveis.map(r => <option key={r} value={r}>{r.split(' ')[0]}</option>)}
+                          </select>
+                        ) : d.responsavel ? (
+                          <span className="badge st-teal" style={{ fontSize: '0.6rem' }}>{d.responsavel.split(' ')[0]}</span>
+                        ) : null}
                         <button className={styles.dspXBtn} onClick={() => removeQ(d.id)}>×</button>
                       </div>
                       <div className={styles.dspLocalRow}>
@@ -399,6 +421,7 @@ function DespachosCard({ lawyerId }) {
                   </div>
                   <div className={styles.dspHistMeta}>
                     <span className="badge st-teal" style={{ fontSize: '0.6rem' }}>{d.local}</span>
+                    {d.responsavel && <span className="badge st-blue" style={{ fontSize: '0.6rem' }}>{d.responsavel.split(' ')[0]}</span>}
                     <span className={styles.dspHistTipo}>{d.tipo}</span>
                   </div>
                   {d.notas && <p className={styles.dspHistNotes}>{d.notas}</p>}
@@ -513,7 +536,7 @@ function AgendaTaskRow({ t, todayISO, responsaveis, onClick, onCheck, onOrderCha
 }
 
 /* ── Agenda view ────────────────────────────────────────────────────── */
-function AgendaView({ rawTasks, responsaveis, filterResp, session, lawyerId, onEdit, onNewWithDate, refetch, onCycleAssignee }) {
+function AgendaView({ rawTasks, responsaveis, filterResp, session, lawyerId, isIntern, internName, onEdit, onNewWithDate, refetch, onCycleAssignee }) {
   const today    = new Date()
   const todayISO = toISO(today)
   const tomorrowISO = toISO(addDays(today, 1))
@@ -819,7 +842,7 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, lawyerId, onE
         </div>
       </div>
 
-      <DespachosCard lawyerId={lawyerId} />
+      <DespachosCard lawyerId={lawyerId} responsaveis={responsaveis} isIntern={isIntern} internName={internName} />
 
       {/* ── Card 5: Audiências ── */}
       <div className={`${styles.agendaCard} ${styles.agendaCardFull}`}>
@@ -1232,6 +1255,8 @@ export default function Tasks() {
               filterResp={effectiveFilterResp}
               session={session}
               lawyerId={lawyer?.id}
+              isIntern={isIntern}
+              internName={internName}
               onEdit={openEdit}
               onNewWithDate={openNewWithDate}
               refetch={refetch}

@@ -989,6 +989,24 @@
 }
 .dspSelect:focus { border-color: var(--accent); }
 
+.dspRespSel {
+  width: 120px;
+  flex-shrink: 0;
+  font-size: 0.75rem; padding: 0.4rem 0.4rem;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--bg); color: var(--text); font-family: inherit; outline: none;
+}
+.dspRespSel:focus { border-color: var(--accent); }
+
+.dspRespBadge {
+  font-size: 0.68rem; padding: 0.15rem 0.4rem;
+  border: 1px solid var(--border); border-radius: 999px;
+  background: var(--accent-dim); color: var(--accent);
+  font-family: inherit; cursor: pointer; outline: none;
+  flex-shrink: 0;
+}
+.dspRespBadge:focus { border-color: var(--accent); }
+
 .dspAddBtn {
   padding: 0.4rem 0.875rem;
   border: 1.5px solid var(--accent); border-radius: var(--radius-sm);
