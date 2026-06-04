@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
-import { useCaseStats, useCases, updateCaseSituation } from '@/hooks/useCases'
+import { useCaseStats, useCases, updateCaseSituation, updateDespachoAttempts } from '@/hooks/useCases'
 import { useKanbanSituations } from '@/hooks/useKanbanSituations'
 import { useClientCount } from '@/hooks/useClients'
 import { useTodayTasks, updateTaskStatus } from '@/hooks/useTasks'
@@ -31,12 +31,14 @@ function tribColor(court) {
 /* ── data mappers ─────────────────────────────────────────────────────── */
 function mapDashCase(c) {
   return {
-    id:         c.id,
-    titulo:     c.title,
-    status:     c.status,
-    situation:  c.situation ?? null,
-    tribunal:   c.court ?? '—',
-    trib_color: tribColor(c.court),
+    id:               c.id,
+    titulo:           c.title,
+    status:           c.status,
+    situation:        c.situation ?? null,
+    situationChangedAt: c.situation_changed_at ?? null,
+    despachoAttempts: Array.isArray(c.despacho_attempts) ? [...c.despacho_attempts, null, null, null].slice(0, 3) : [null, null, null],
+    tribunal:         c.court ?? '—',
+    trib_color:       tribColor(c.court),
   }
 }
 
@@ -61,7 +63,7 @@ function StatBox({ num, label }) {
   )
 }
 
-function KanbanBoard({ cases, situations, onMove }) {
+function KanbanBoard({ cases, situations, onMove, onDespachoToggle }) {
   const navigate = useNavigate()
   const [draggingId, setDraggingId] = useState(null)
   const [dragOver,   setDragOver]   = useState(null)
@@ -136,21 +138,55 @@ function KanbanBoard({ cases, situations, onMove }) {
               <div className={styles.kanbanItems}>
                 {items.length === 0
                   ? <div className={styles.kanbanEmpty}>Vazio</div>
-                  : items.map(item => (
-                      <div
-                        key={item.id}
-                        className={`${styles.kanbanItem} ${draggingId === item.id ? styles.kanbanItemDragging : ''}`}
-                        draggable
-                        onDragStart={e => handleDragStart(e, item.id)}
-                        onDragEnd={handleDragEnd}
-                        onClick={() => navigate('/painel/casos/' + item.id)}
-                      >
-                        {item.titulo}
-                        <span className={`${styles.kanbanTribunal} ${item.trib_color}`}>
-                          {item.tribunal}
-                        </span>
-                      </div>
-                    ))
+                  : items.map(item => {
+                      const days = item.situationChangedAt
+                        ? Math.floor((Date.now() - new Date(item.situationChangedAt).getTime()) / 86400000)
+                        : null
+                      const dStyle = days === null ? null
+                        : days < 30  ? { color: 'var(--text-3)', bg: 'rgba(0,0,0,0.06)' }
+                        : days < 60  ? { color: '#ea580c', bg: 'rgba(234,88,12,0.1)' }
+                        :              { color: '#dc2626', bg: 'rgba(220,38,38,0.1)' }
+                      const isDespacho = /despachar/i.test(sit.value)
+                      return (
+                        <div
+                          key={item.id}
+                          className={`${styles.kanbanItem} ${draggingId === item.id ? styles.kanbanItemDragging : ''}`}
+                          draggable
+                          onDragStart={e => handleDragStart(e, item.id)}
+                          onDragEnd={handleDragEnd}
+                          onClick={() => navigate('/painel/casos/' + item.id)}
+                        >
+                          <div className={styles.kanbanItemTitle}>{item.titulo}</div>
+                          <div className={styles.kanbanItemMeta}>
+                            <span className={styles.kanbanTribunal} style={{ background: col + '22', color: col, border: `1px solid ${col}44` }}>
+                              {item.tribunal}
+                            </span>
+                            {dStyle && (
+                              <span style={{ marginLeft: 'auto', fontSize: '0.58rem', fontWeight: 700, padding: '0.1rem 0.3rem', borderRadius: 4, background: dStyle.bg, color: dStyle.color, whiteSpace: 'nowrap' }}>
+                                {days}d
+                              </span>
+                            )}
+                          </div>
+                          {isDespacho && (
+                            <div className={styles.despachoRow} onClick={e => e.stopPropagation()}>
+                              <span className={styles.despachoLabel}>DESP.</span>
+                              {item.despachoAttempts.map((ts, i) => (
+                                <div key={i} className={styles.despachoWrap}>
+                                  <button
+                                    className={`${styles.despachoBox} ${ts ? styles.despachoBoxChecked : ''}`}
+                                    onClick={e => { e.stopPropagation(); onDespachoToggle?.(item.id, item.despachoAttempts, i) }}
+                                    title={ts ? `${i+1}° despacho: ${new Date(ts).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}` : `Registrar ${i+1}° despacho`}
+                                  >
+                                    {ts && <svg viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" width="8" height="8"><polyline points="1.5 6 4.5 9 10.5 3"/></svg>}
+                                  </button>
+                                  <span className={styles.despachoNum}>{i+1}°</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })
                 }
               </div>
             </div>
@@ -229,7 +265,7 @@ export default function Dashboard() {
   const { data: rawHearings }                       = useUpcomingHearings()
 
   /* derived data */
-  const cases   = useMemo(() => (rawCases   ?? []).map(mapDashCase),  [rawCases])
+  const cases   = useMemo(() => (rawCases ?? []).filter(c => c.status !== 'finalizado').map(mapDashCase), [rawCases])
   const tasks   = useMemo(() => (rawTasks   ?? []).map(mapDashTask),  [rawTasks])
   const today        = new Date().toISOString().split('T')[0]
   const overdueTasks = tasks.filter(t => t.prazo && t.prazo < today)
@@ -246,6 +282,14 @@ export default function Dashboard() {
 
   async function handleMoveCase(caseId, situationId) {
     await updateCaseSituation(caseId, situationId)
+    refetchCases()
+  }
+
+  async function handleDespachoToggle(caseId, currentAttempts, idx) {
+    const arr = [...(Array.isArray(currentAttempts) ? currentAttempts : [null, null, null])]
+    arr[idx] = arr[idx] ? null : new Date().toISOString()
+    const payload = arr.every(x => !x) ? null : arr
+    await updateDespachoAttempts(caseId, payload)
     refetchCases()
   }
 
@@ -287,7 +331,7 @@ export default function Dashboard() {
             </div>
             <Link to="/painel/casos" className={styles.cardLink}>Ver todos →</Link>
           </div>
-          <KanbanBoard cases={cases} situations={situations} onMove={handleMoveCase} />
+          <KanbanBoard cases={cases} situations={situations} onMove={handleMoveCase} onDespachoToggle={handleDespachoToggle} />
         </div>
 
         {/* ── Card: Audiências ── */}
