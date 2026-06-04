@@ -292,10 +292,10 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, onEdit, onNew
       return {
         d, iso,
         isToday: iso === todayISO,
-        tasks: rawTasks.filter(t =>
+        tasks: byOrder(rawTasks.filter(t =>
           t.due_date?.split('T')[0] === iso &&
           (filterResp === 'todos' || t.assigned_to === filterResp)
-        ),
+        )),
       }
     })
   , [rawTasks, filterResp, todayISO, weekOffset])
