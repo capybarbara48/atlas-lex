@@ -153,7 +153,7 @@ export default function Clients() {
   const { lawyer } = useAuth()
   const toast = useToast()
   const navigate = useNavigate()
-  const prefs = loadPreferences(lawyer?.id)
+  const prefs = loadPreferences(lawyer)
 
   const [view, setView]           = useState(prefs.clientes_view ?? 'lista')
   const [search, setSearch]       = useState('')
@@ -180,7 +180,7 @@ export default function Clients() {
   function handleViewChange(v) {
     const mapped = v === 'kanban' ? 'grid' : 'lista'
     setView(mapped)
-    savePreferences(lawyer?.id, { clientes_view: mapped })
+    savePreferences(lawyer, { clientes_view: mapped })
   }
 
   const filtered = useMemo(() => {

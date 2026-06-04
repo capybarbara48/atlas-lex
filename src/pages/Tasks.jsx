@@ -795,7 +795,7 @@ function CalendarView({ tasks, onEdit }) {
 export default function Tasks() {
   const { lawyer, session } = useAuth()
   const toast = useToast()
-  const prefs = loadPreferences(lawyer?.id)
+  const prefs = loadPreferences(lawyer)
   const responsaveis = lawyer?.preferences?.responsaveis ?? []
 
   const [view, setView]           = useState(prefs.tarefas_view ?? 'agenda')
@@ -822,7 +822,7 @@ export default function Tasks() {
 
   function handleViewChange(v) {
     setView(v)
-    savePreferences(lawyer?.id, { tarefas_view: v })
+    savePreferences(lawyer, { tarefas_view: v })
   }
 
   async function handleCycleAssignee(taskId, currentAssignee) {

@@ -239,12 +239,12 @@ export default function AppLayout() {
   const dockTimer = useRef(null)
 
   const [navMode, setNavMode] = useState(() =>
-    loadPreferences(lawyer?.id).nav_mode ?? 'sidebar'
+    loadPreferences(lawyer).nav_mode ?? 'sidebar'
   )
 
   useEffect(() => {
     function onPrefsChange() {
-      setNavMode(loadPreferences(lawyer?.id).nav_mode ?? 'sidebar')
+      setNavMode(loadPreferences(lawyer).nav_mode ?? 'sidebar')
     }
     window.addEventListener('atlasPrefsChanged', onPrefsChange)
     return () => window.removeEventListener('atlasPrefsChanged', onPrefsChange)

@@ -19,15 +19,6 @@ const FOCUS_SECS  = 30 * 60
 const BREAK_SECS  = 5  * 60
 const CIRC        = 2 * Math.PI * 54
 
-/* ─── LocalStorage helpers ─────────────────────────────────────────── */
-function lsGet(key, fallback) {
-  try { return JSON.parse(localStorage.getItem(key)) ?? fallback }
-  catch { return fallback }
-}
-function lsSet(key, val) {
-  try { localStorage.setItem(key, JSON.stringify(val)) } catch {}
-}
-
 /* ─── Date helpers ──────────────────────────────────────────────────── */
 function isoDate(d = new Date()) {
   return d.toISOString().slice(0, 10)
@@ -103,9 +94,7 @@ function PomodoroCard() {
     clearInterval(intRef.current)
     intRef.current = setInterval(() => {
       setSecs(s => {
-        // 10-second warning: 3 quick beeps at 880 Hz
         if (s === 10) playWarning()
-        // End of session: transition (s === 0 = timer showed 0:00 for 1 s, then fires)
         if (s === 0) {
           playDone()
           if (mode === 'focus') { setCycles(c => c + 1); setMode('break'); return BREAK_SECS }
@@ -266,36 +255,81 @@ function TodayFocusCard() {
 /* Weekly Grid                                                         */
 /* ═══════════════════════════════════════════════════════════════════ */
 function WeeklyGrid({ lawyerId }) {
-  const tasksKey = `atlas_intern_tasks_${lawyerId}`
-  const modesKey = `atlas_intern_daymodes_${lawyerId}`
-
   const [monday,   setMonday]   = useState(weekMonday)
-  const [allTasks, setAllTasks] = useState(() => lsGet(tasksKey, {}))
-  const [modes,    setModes]    = useState(() => lsGet(modesKey, {}))
+  const [allTasks, setAllTasks] = useState({})
+  const [modes,    setModes]    = useState({})
   const [inputs,   setInputs]   = useState({})
 
   const dates = useMemo(() => weekDates(monday), [monday])
   const today = isoDate()
 
-  useEffect(() => { lsSet(tasksKey, allTasks) }, [allTasks, tasksKey])
-  useEffect(() => { lsSet(modesKey, modes) }, [modes, modesKey])
+  useEffect(() => {
+    if (!lawyerId) return
+    const from = isoDate(dates[0])
+    const to   = isoDate(dates[4])
 
-  function addTask(date) {
+    supabase.from('workspace_day_tasks')
+      .select('id, date, text, done, sort_order')
+      .gte('date', from).lte('date', to)
+      .order('sort_order')
+      .then(({ data }) => {
+        const grouped = {}
+        ;(data ?? []).forEach(t => {
+          const k = t.date
+          if (!grouped[k]) grouped[k] = []
+          grouped[k].push(t)
+        })
+        setAllTasks(grouped)
+      })
+
+    supabase.from('workspace_day_modes')
+      .select('date, mode')
+      .gte('date', from).lte('date', to)
+      .then(({ data }) => {
+        const m = {}
+        ;(data ?? []).forEach(r => { m[r.date] = r.mode })
+        setModes(m)
+      })
+  }, [lawyerId, monday])
+
+  async function addTask(date) {
     const key  = isoDate(date)
     const text = (inputs[key] ?? '').trim()
-    if (!text) return
-    setAllTasks(p => ({ ...p, [key]: [...(p[key] ?? []), { id: Date.now(), text, done: false }] }))
-    setInputs(p => ({ ...p, [key]: '' }))
+    if (!text || !lawyerId) return
+    const sortOrder = (allTasks[key] ?? []).length
+    const { data } = await supabase.from('workspace_day_tasks')
+      .insert({ lawyer_id: lawyerId, date: key, text, done: false, sort_order: sortOrder })
+      .select('id, date, text, done, sort_order')
+      .single()
+    if (data) {
+      setAllTasks(p => ({ ...p, [key]: [...(p[key] ?? []), data] }))
+      setInputs(p => ({ ...p, [key]: '' }))
+    }
   }
-  function toggleTask(key, id) {
-    setAllTasks(p => ({ ...p, [key]: (p[key] ?? []).map(t => t.id === id ? { ...t, done: !t.done } : t) }))
+
+  async function toggleTask(key, id) {
+    const task = (allTasks[key] ?? []).find(t => t.id === id)
+    if (!task) return
+    const newDone = !task.done
+    setAllTasks(p => ({ ...p, [key]: (p[key] ?? []).map(t => t.id === id ? { ...t, done: newDone } : t) }))
+    await supabase.from('workspace_day_tasks').update({ done: newDone }).eq('id', id)
   }
-  function removeTask(key, id) {
+
+  async function removeTask(key, id) {
     setAllTasks(p => ({ ...p, [key]: (p[key] ?? []).filter(t => t.id !== id) }))
+    await supabase.from('workspace_day_tasks').delete().eq('id', id)
   }
-  function toggleMode(key) {
-    setModes(p => ({ ...p, [key]: p[key] === 'virtual' ? 'presencial' : 'virtual' }))
+
+  async function toggleMode(key) {
+    const current = modes[key] ?? 'presencial'
+    const newMode = current === 'virtual' ? 'presencial' : 'virtual'
+    setModes(p => ({ ...p, [key]: newMode }))
+    await supabase.from('workspace_day_modes').upsert(
+      { lawyer_id: lawyerId, date: key, mode: newMode },
+      { onConflict: 'lawyer_id,date' }
+    )
   }
+
   function prevWeek() { const m = new Date(monday); m.setDate(m.getDate() - 7); setMonday(m) }
   function nextWeek() { const m = new Date(monday); m.setDate(m.getDate() + 7); setMonday(m) }
 
@@ -384,17 +418,11 @@ function WeeklyGrid({ lawyerId }) {
 /* Despachos                                                           */
 /* ═══════════════════════════════════════════════════════════════════ */
 function DespachosCard({ lawyerId }) {
-  const queueKey = `atlas_intern_despachos_${lawyerId}`
-  const histKey  = `atlas_intern_desp_hist_${lawyerId}`
-
   const [cases,   setCases]   = useState([])
-  const [queue,   setQueue]   = useState(() => lsGet(queueKey, []))
-  const [history, setHistory] = useState(() => lsGet(histKey,  []))
+  const [queue,   setQueue]   = useState([])
+  const [history, setHistory] = useState([])
   const [selCase, setSelCase] = useState('')
   const [tab,     setTab]     = useState('fila')
-
-  useEffect(() => { lsSet(queueKey, queue) }, [queue, queueKey])
-  useEffect(() => { lsSet(histKey,  history) }, [history, histKey])
 
   useEffect(() => {
     supabase.from('cases').select('id, title')
@@ -403,25 +431,54 @@ function DespachosCard({ lawyerId }) {
       .then(({ data }) => setCases(data ?? []))
   }, [])
 
-  function addToQueue() {
+  useEffect(() => {
+    if (!lawyerId) return
+    supabase.from('workspace_despachos')
+      .select('*')
+      .eq('status', 'pendente')
+      .order('created_at')
+      .then(({ data }) => setQueue(data ?? []))
+
+    supabase.from('workspace_despachos')
+      .select('*')
+      .eq('status', 'concluido')
+      .order('done_at', { ascending: false })
+      .limit(30)
+      .then(({ data }) => setHistory(data ?? []))
+  }, [lawyerId])
+
+  async function addToQueue() {
     const c = cases.find(c => c.id === selCase)
-    if (!c) return
-    setQueue(prev => [...prev, {
-      id: Date.now(), caseId: c.id, caseTitle: c.title,
-      local: 'Secretaria', tipo: DESP_TIPOS[0], notas: '',
-    }])
+    if (!c || !lawyerId) return
+    const { data } = await supabase.from('workspace_despachos')
+      .insert({
+        lawyer_id: lawyerId, case_id: c.id, case_title: c.title,
+        local: 'Secretaria', tipo: DESP_TIPOS[0], notas: '', status: 'pendente',
+      })
+      .select('*').single()
+    if (data) setQueue(prev => [...prev, data])
     setSelCase('')
   }
-  function update(id, field, val) {
+
+  async function update(id, field, val) {
     setQueue(prev => prev.map(d => d.id === id ? { ...d, [field]: val } : d))
+    await supabase.from('workspace_despachos').update({ [field]: val }).eq('id', id)
   }
-  function markDone(id) {
-    const d = queue.find(d => d.id === id)
-    if (!d) return
-    setHistory(prev => [{ ...d, doneAt: new Date().toISOString() }, ...prev])
+
+  async function markDone(id) {
+    const doneAt = new Date().toISOString()
+    const { data } = await supabase.from('workspace_despachos')
+      .update({ status: 'concluido', done_at: doneAt })
+      .eq('id', id)
+      .select('*').single()
     setQueue(prev => prev.filter(d => d.id !== id))
+    if (data) setHistory(prev => [data, ...prev])
   }
-  function removeQ(id) { setQueue(prev => prev.filter(d => d.id !== id)) }
+
+  async function removeQ(id) {
+    setQueue(prev => prev.filter(d => d.id !== id))
+    await supabase.from('workspace_despachos').delete().eq('id', id)
+  }
 
   return (
     <div className={s.card}>
@@ -456,7 +513,7 @@ function DespachosCard({ lawyerId }) {
                 {queue.map(d => (
                   <div key={d.id} className={s.dspItem}>
                     <div className={s.dspItemHead}>
-                      <span className={s.dspCaseTitle}>{d.caseTitle}</span>
+                      <span className={s.dspCaseTitle}>{d.case_title}</span>
                       <button className={s.dspXBtn} onClick={() => removeQ(d.id)}>×</button>
                     </div>
                     <div className={s.dspLocalRow}>
@@ -492,11 +549,11 @@ function DespachosCard({ lawyerId }) {
         <div className={s.dspHistList}>
           {history.length === 0
             ? <div className={s.dimMsg}>Nenhum despacho realizado.</div>
-            : history.slice(0, 30).map(d => (
-              <div key={d.id + d.doneAt} className={s.dspHistItem}>
+            : history.map(d => (
+              <div key={d.id} className={s.dspHistItem}>
                 <div className={s.dspHistTop}>
-                  <span className={s.dspHistCase}>{d.caseTitle}</span>
-                  <span className={s.dspHistDate}>{fmtShort(d.doneAt)}</span>
+                  <span className={s.dspHistCase}>{d.case_title}</span>
+                  <span className={s.dspHistDate}>{fmtShort(d.done_at)}</span>
                 </div>
                 <div className={s.dspHistMeta}>
                   <span className="badge st-teal" style={{fontSize:'0.6rem'}}>{d.local}</span>
@@ -520,11 +577,8 @@ function StatsRow({ lawyerId }) {
 
   useEffect(() => {
     if (!lawyerId) return
-    const today   = isoDate()
-    const histKey = `atlas_intern_desp_hist_${lawyerId}`
-    const hist    = lsGet(histKey, [])
-    const mon     = weekMonday()
-    const despWeek = hist.filter(d => new Date(d.doneAt) >= mon).length
+    const today = isoDate()
+    const monISO = weekMonday().toISOString()
 
     Promise.all([
       supabase.from('tasks').select('id', { count: 'exact', head: true })
@@ -533,8 +587,11 @@ function StatsRow({ lawyerId }) {
       supabase.from('tasks').select('id', { count: 'exact', head: true })
         .gte('updated_at', today + 'T00:00:00')
         .eq('status', 'concluida'),
-    ]).then(([{ count: pending }, { count: done }]) => {
-      setS({ pending: pending ?? 0, done: done ?? 0, despWeek })
+      supabase.from('workspace_despachos').select('id', { count: 'exact', head: true })
+        .eq('status', 'concluido')
+        .gte('done_at', monISO),
+    ]).then(([{ count: pending }, { count: done }, { count: despWeek }]) => {
+      setS({ pending: pending ?? 0, done: done ?? 0, despWeek: despWeek ?? 0 })
     })
   }, [lawyerId])
 
@@ -565,41 +622,34 @@ function HistoryCard({ lawyerId }) {
   const [desps,   setDesps]   = useState([])
   const [loading, setLoading] = useState(false)
 
-  // Cleanup: remove despachos com mais de 24 meses ao montar
-  useEffect(() => {
-    if (!lawyerId) return
-    const histKey = `atlas_intern_desp_hist_${lawyerId}`
-    const cutoff  = new Date()
-    cutoff.setMonth(cutoff.getMonth() - 24)
-    const cleaned = lsGet(histKey, []).filter(d => new Date(d.doneAt) >= cutoff)
-    lsSet(histKey, cleaned)
-  }, [lawyerId])
-
   useEffect(() => {
     if (!lawyerId) return
     setLoading(true)
-    const from    = isoDate(month)
-    const next    = new Date(month.getFullYear(), month.getMonth() + 1, 1)
-    const to      = isoDate(next)
-    const histKey = `atlas_intern_desp_hist_${lawyerId}`
-    const hist    = lsGet(histKey, [])
+    const from = isoDate(month)
+    const next = new Date(month.getFullYear(), month.getMonth() + 1, 1)
+    const to   = isoDate(next)
 
-    supabase.from('tasks').select('id, title, updated_at, assigned_to')
-      .eq('status', 'concluida')
-      .gte('updated_at', from)
-      .lt('updated_at',  to)
-      .order('updated_at', { ascending: false })
-      .limit(200)
-      .then(({ data }) => {
-        setTasks(data ?? [])
-        setDesps(hist.filter(d => { const dt = new Date(d.doneAt); return dt >= month && dt < next }))
-        setLoading(false)
-      })
+    Promise.all([
+      supabase.from('tasks').select('id, title, updated_at, assigned_to')
+        .eq('status', 'concluida')
+        .gte('updated_at', from).lt('updated_at', to)
+        .order('updated_at', { ascending: false })
+        .limit(200),
+      supabase.from('workspace_despachos').select('id, case_title, tipo, notas, done_at')
+        .eq('status', 'concluido')
+        .gte('done_at', from).lt('done_at', to)
+        .order('done_at', { ascending: false })
+        .limit(200),
+    ]).then(([{ data: taskData }, { data: despData }]) => {
+      setTasks(taskData ?? [])
+      setDesps(despData ?? [])
+      setLoading(false)
+    })
   }, [lawyerId, month])
 
   const combined = useMemo(() => {
-    const t = tasks.map(t => ({ key: 't' + t.id,  type: 'task',     title: t.title,     sub: t.assigned_to, date: t.updated_at }))
-    const d = desps.map(d => ({ key: 'd' + d.id,  type: 'despacho', title: d.caseTitle, sub: d.tipo,        date: d.doneAt }))
+    const t = tasks.map(t => ({ key: 't' + t.id,  type: 'task',     title: t.title,      sub: t.assigned_to, date: t.updated_at }))
+    const d = desps.map(d => ({ key: 'd' + d.id,  type: 'despacho', title: d.case_title, sub: d.tipo,        date: d.done_at }))
     return [...t, ...d].sort((a, b) => new Date(b.date) - new Date(a.date))
   }, [tasks, desps])
 
@@ -607,7 +657,6 @@ function HistoryCard({ lawyerId }) {
   function prevMonth() { setMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1)) }
   function nextMonth() { setMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1)) }
 
-  // Prevent navigating beyond 24 months ago
   const cutoffMonth = new Date()
   cutoffMonth.setMonth(cutoffMonth.getMonth() - 23)
   cutoffMonth.setDate(1)
@@ -665,13 +714,12 @@ export default function Workspace() {
 
   const [now, setNow] = useState(new Date())
   useEffect(() => { const id = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(id) }, [])
-  const h       = now.getHours()
+  const h        = now.getHours()
   const greeting = h >= 5 && h < 12 ? 'Bom dia' : h >= 12 && h < 18 ? 'Boa tarde' : 'Boa noite'
   const dateStr  = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
   return (
     <div className={s.page}>
-      {/* ── Greeting ── */}
       <div className={s.greetBar}>
         <div className={s.greetLeft}>
           <h1 className={s.greetTitle}>{greeting}, {firstName}!</h1>
@@ -680,19 +728,16 @@ export default function Workspace() {
         <StatsRow lawyerId={lawyerId} />
       </div>
 
-      {/* ── Top: Pomodoro + Hoje ── */}
       <div className={s.topRow}>
         <PomodoroCard />
         <TodayFocusCard />
       </div>
 
-      {/* ── Mid: Grade + Despachos ── */}
       <div className={s.midRow}>
         <WeeklyGrid lawyerId={lawyerId} />
         <DespachosCard lawyerId={lawyerId} />
       </div>
 
-      {/* ── History ── */}
       <HistoryCard lawyerId={lawyerId} />
     </div>
   )

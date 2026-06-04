@@ -290,7 +290,7 @@ export default function Settings() {
     setFirmName(lawyer.firm_name   ?? '')
     setLogoUrl(lawyer.logo_url     ?? '')
     setAccent(lawyer.theme_accent  ?? '#043b61')
-    setPrefs(loadPreferences(lawyer.id))
+    setPrefs(loadPreferences(lawyer))
     const prefs = lawyer.preferences ?? {}
     if (prefs.service_types?.length)              setServiceTypes(prefs.service_types)
     if (prefs.quota_litis_options?.length)        setQuotaLitis(prefs.quota_litis_options)
@@ -355,12 +355,12 @@ export default function Settings() {
   function handlePrefChange(key, value) {
     const next = { ...prefs, [key]: value }
     setPrefs(next)
-    savePreferences(lawyer.id, { [key]: value })
+    savePreferences(lawyer, { [key]: value })
   }
 
   function handleResetPrefs() {
-    resetPreferences(lawyer?.id)
-    setPrefs(loadPreferences(lawyer?.id))
+    resetPreferences(lawyer)
+    setPrefs(loadPreferences(lawyer))
     setSuccess('Preferências redefinidas para o padrão!')
     setTimeout(() => setSuccess(''), 3000)
   }

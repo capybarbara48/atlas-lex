@@ -502,7 +502,7 @@ export default function Cases() {
   const { lawyer } = useAuth()
   const toast      = useToast()
   const navigate   = useNavigate()
-  const prefs      = loadPreferences(lawyer?.id)
+  const prefs      = loadPreferences(lawyer)
 
   const [tab, setTab]                 = useState('ativos')
   const [view, setView]               = useState(prefs.casos_view ?? 'kanban')
@@ -530,7 +530,7 @@ export default function Cases() {
   }
   function handleViewChange(v) {
     setView(v)
-    savePreferences(lawyer?.id, { casos_view: v })
+    savePreferences(lawyer, { casos_view: v })
   }
 
   async function handleMoveSituation(caseId, situationId) {
