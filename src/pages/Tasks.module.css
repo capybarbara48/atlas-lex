@@ -318,6 +318,18 @@
 }
 .agendaTaskTitle:hover { color: var(--accent); }
 
+.taskTime {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.1);
+  padding: 0.05rem 0.3rem;
+  border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .agendaTaskResp {
   font-size: 0.62rem;
   font-weight: 600;

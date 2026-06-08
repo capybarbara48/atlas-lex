@@ -12,6 +12,7 @@ export default function TaskForm({ initial, onSave, onClose }) {
     priority:    initial?.priority    ?? 'media',
     status:      initial?.status      ?? 'pendente',
     due_date:    initial?.due_date    ? initial.due_date.split('T')[0] : '',
+    due_time:    (() => { const tp = initial?.due_date?.split('T')[1]?.slice(0, 5); return tp && tp !== '12:00' && tp !== '00:00' ? tp : '' })(),
     description: initial?.description ?? '',
     assigned_to: initial?.assigned_to ?? '',
   })
@@ -34,7 +35,7 @@ export default function TaskForm({ initial, onSave, onClose }) {
       case_id:     f.case_id     || null,
       priority:    f.priority,
       status:      f.status,
-      due_date:    f.due_date ? f.due_date + 'T12:00:00' : null,
+      due_date:    f.due_date ? f.due_date + (f.due_time ? 'T' + f.due_time + ':00' : 'T00:00:00') : null,
       description: f.description.trim() || null,
       assigned_to: f.assigned_to.trim() || null,
     }
@@ -87,7 +88,10 @@ export default function TaskForm({ initial, onSave, onClose }) {
 
         <div className={s.field}>
           <label className={s.label}>Vencimento</label>
-          <input className={s.input} type="date" value={f.due_date} onChange={e => set('due_date', e.target.value)} />
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <input className={s.input} type="date" style={{ flex: '2 1 0' }} value={f.due_date} onChange={e => set('due_date', e.target.value)} />
+            <input className={s.input} type="time" style={{ flex: '1 1 0' }} value={f.due_time} onChange={e => set('due_time', e.target.value)} placeholder="Hora" />
+          </div>
         </div>
 
         <div className={s.field}>

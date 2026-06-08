@@ -41,12 +41,14 @@ function respColor(name, responsaveis) {
 
 /* ── data mapper ────────────────────────────────────────────────────── */
 function mapTask(t) {
+  const timePart = t.due_date?.split('T')[1]?.slice(0, 5)
   return {
     id:          t.id,
     titulo:      t.title,
     status:      t.status,
     prioridade:  t.priority,
     vencimento:  t.due_date?.split('T')[0] ?? null,
+    horario:     (timePart && timePart !== '12:00' && timePart !== '00:00') ? timePart : null,
     caso:        t.cases?.title ?? '—',
     responsavel: t.assigned_to ?? null,
   }
@@ -487,6 +489,7 @@ function AgendaTaskRow({ t, todayISO, responsaveis, onClick, onCheck, onOrderCha
       />
       <span className={styles.agendaTaskDot} style={{ background: PRI_DOT_HEX[t.priority] ?? '#888' }} />
       <span className={styles.agendaTaskTitle} onClick={() => onClick(t.id)}>{t.title}</span>
+      {t.horario && <span className={styles.taskTime}>{t.horario}</span>}
       {t.assigned_to && (
         <span
           className={styles.agendaTaskResp}
@@ -867,6 +870,7 @@ function KanbanView({ tasks, onEdit }) {
                             {t.vencimento && (
                               <span className={`${styles.kanbanDate} ${vencida ? styles.overdueDate : ''}`}>
                                 {fmtDate(t.vencimento, { day: '2-digit', month: '2-digit' })}
+                                {t.horario && <span className={styles.taskTime}>{t.horario}</span>}
                               </span>
                             )}
                           </div>
@@ -913,6 +917,7 @@ function ListView({ tasks, onEdit }) {
                 </span></td>
                 <td className={`${styles.dateCell} ${vencida ? styles.overdueDate : ''}`}>
                   {fmtDate(t.vencimento, { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                  {t.horario && <span className={styles.taskTime}>{t.horario}</span>}
                   {vencida && <span className={styles.vencidaTag}>Vencida</span>}
                 </td>
               </tr>
