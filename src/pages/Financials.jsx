@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useAllEntries, deleteEntry, confirmEntry, unconfirmEntry } from '@/hooks/useFinancials'
 import { useQuotaLitisCases, toggleQuotaLitisReceived } from '@/hooks/useCases'
@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext'
 import PageShell from '@/components/ui/PageShell'
 import Modal from '@/components/ui/Modal'
 import EntryForm from '@/components/forms/EntryForm'
+import { useToast } from '@/context/ToastContext'
 import styles from './Financials.module.css'
 
 /* ── data mapper ──────────────────────────────────────────────────────── */
@@ -478,6 +479,7 @@ function QuotaLitisView({ cases, loading, onToggle }) {
 export default function Financials() {
   const now = new Date()
   const { lawyer } = useAuth()
+  const { addToast } = useToast()
 
   const [tab, setTab]             = useState('lancamentos')
   const [viewYear, setViewYear]   = useState(now.getFullYear())
@@ -507,18 +509,21 @@ export default function Financials() {
   function handleSave()     { refetch(); setFormOpen(false) }
 
   async function handleDelete(id) {
-    await deleteEntry(id)
+    const { error } = await deleteEntry(id)
+    if (error) { addToast('Erro ao excluir lançamento: ' + error.message, 'error'); return }
     setConfirmDeleteId(null)
     refetch()
   }
 
   async function handleConfirm(id) {
-    await confirmEntry(id)
+    const { error } = await confirmEntry(id)
+    if (error) { addToast('Erro ao confirmar pagamento: ' + error.message, 'error'); return }
     refetch()
   }
 
   async function handleUnconfirm(id) {
-    await unconfirmEntry(id)
+    const { error } = await unconfirmEntry(id)
+    if (error) { addToast('Erro ao reverter pagamento: ' + error.message, 'error'); return }
     refetch()
   }
 
@@ -532,7 +537,8 @@ export default function Financials() {
   const monthEntries = useMemo(() => {
     // recurring despesas appear in every month; others filtered by date
     let list = entries.filter(e =>
-      (e.tipo === 'despesa' && e.recurring) || e.data?.startsWith(monthStr)
+      (e.tipo === 'despesa' && e.recurring && e.data && e.data.slice(0, 7) <= monthStr) ||
+      e.data?.startsWith(monthStr)
     )
     if (search.trim()) {
       const q = search.toLowerCase()

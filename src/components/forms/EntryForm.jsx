@@ -101,6 +101,7 @@ export default function EntryForm({ initial, defaultType = 'receita', onSave, on
     e.preventDefault()
     setSaving(true); setError('')
 
+    try {
     const catVal = getCategory()
 
     // ── Installment plan: create N records ──────────────────────────────
@@ -132,7 +133,6 @@ export default function EntryForm({ initial, defaultType = 'receita', onSave, on
       })
 
       const { error } = await supabase.from('financial_entries').insert(records)
-      setSaving(false)
       if (error) { setError(error.message); return }
       onSave()
       return
@@ -155,9 +155,13 @@ export default function EntryForm({ initial, defaultType = 'receita', onSave, on
       ? await supabase.from('financial_entries').update(payload).eq('id', initial.id)
       : await supabase.from('financial_entries').insert({ ...payload, lawyer_id: lawyer?.id ?? session.user.id })
 
-    setSaving(false)
     if (error) { setError(error.message); return }
     onSave()
+    } catch (err) {
+      setError(err?.message ?? 'Erro inesperado ao salvar.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function handleDelete() {
