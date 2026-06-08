@@ -224,10 +224,16 @@ function DespachosCard({ lawyerId, responsaveis, isIntern, internName }) {
   const [tab,     setTab]     = useState('fila')
 
   useEffect(() => {
-    supabase.from('cases').select('id, title')
+    supabase.from('cases').select('id, title, case_number, court')
       .in('status', ['ativo', 'suspenso']).order('title')
       .then(({ data }) => setCases(data ?? []))
   }, [])
+
+  const caseMap = useMemo(() => {
+    const m = {}
+    cases.forEach(c => { m[c.id] = c })
+    return m
+  }, [cases])
 
   useEffect(() => {
     if (!lawyerId) return
@@ -305,7 +311,7 @@ function DespachosCard({ lawyerId, responsaveis, isIntern, internName }) {
             <div className={styles.dspAddRow}>
               <select className={styles.dspSelect} value={selCase} onChange={e => setSelCase(e.target.value)}>
                 <option value="">Selecionar processo…</option>
-                {cases.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                {cases.map(c => <option key={c.id} value={c.id}>{c.case_number ? `${c.case_number} · ${c.title}` : c.title}</option>)}
               </select>
               {responsaveis.length > 0 && !isIntern && (
                 <select className={styles.dspRespSel} value={selResp} onChange={e => setSelResp(e.target.value)}>
@@ -322,7 +328,15 @@ function DespachosCard({ lawyerId, responsaveis, isIntern, internName }) {
                   {queue.map(d => (
                     <div key={d.id} className={styles.dspItem}>
                       <div className={styles.dspItemHead}>
-                        <span className={styles.dspCaseTitle}>{d.case_title}</span>
+                        <div className={styles.dspCaseInfo}>
+                          <span className={styles.dspCaseTitle}>{d.case_title}</span>
+                          {(() => { const ci = caseMap[d.case_id]; return (ci?.case_number || ci?.court) ? (
+                            <span className={styles.dspCaseMeta}>
+                              {ci.case_number && <span>{ci.case_number}</span>}
+                              {ci.court       && <span className={styles.dspCaseTrib}>{ci.court}</span>}
+                            </span>
+                          ) : null })()}
+                        </div>
                         {responsaveis.length > 0 ? (
                           <select
                             className={styles.dspRespBadge}
@@ -364,7 +378,15 @@ function DespachosCard({ lawyerId, responsaveis, isIntern, internName }) {
               : history.map(d => (
                 <div key={d.id} className={styles.dspHistItem}>
                   <div className={styles.dspHistTop}>
-                    <span className={styles.dspHistCase}>{d.case_title}</span>
+                    <div className={styles.dspCaseInfo}>
+                      <span className={styles.dspHistCase}>{d.case_title}</span>
+                      {(() => { const ci = caseMap[d.case_id]; return (ci?.case_number || ci?.court) ? (
+                        <span className={styles.dspCaseMeta}>
+                          {ci.case_number && <span>{ci.case_number}</span>}
+                          {ci.court       && <span className={styles.dspCaseTrib}>{ci.court}</span>}
+                        </span>
+                      ) : null })()}
+                    </div>
                     <span className={styles.dspHistDate}>{fmtD(d.done_at)}</span>
                   </div>
                   <div className={styles.dspHistMeta}>
