@@ -408,19 +408,19 @@ function DespachosCard({ lawyerId, responsaveis, isIntern, internName }) {
 function HearingEventItem({ h, todayISO }) {
   const isToday = h.date === todayISO
   const d = new Date(h.date + 'T12:00:00')
+  const monthShort = d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '').toUpperCase()
   return (
     <div className={styles.eventItem}>
       <div className={styles.evDateCol}>
         <span className={styles.evWeekday}>{WEEKDAYS_SHORT[d.getDay()]}</span>
         <span className={styles.evDay}>{d.getDate()}</span>
+        <span className={styles.evMonth}>{monthShort}</span>
       </div>
       <div className={styles.evSep} />
       <div className={styles.evBody}>
         <div className={styles.evTitle}>{h.title}</div>
         <div className={styles.evMeta}>
-          <span className={`${styles.evTag} ${isToday ? styles.evTagHoje : styles.evTagProx}`}>
-            {isToday ? 'Hoje' : d.toLocaleDateString('pt-BR', { month: 'short' })}
-          </span>
+          {isToday && <span className={`${styles.evTag} ${styles.evTagHoje}`}>Hoje</span>}
           {h.cases?.title && <span>{h.cases.title}</span>}
           {h.location && <span>{h.location}</span>}
         </div>

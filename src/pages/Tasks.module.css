@@ -612,6 +612,14 @@
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
 }
+.evMonth {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-2);
+  margin-top: 0.05rem;
+}
 
 .evSep {
   width: 1px;

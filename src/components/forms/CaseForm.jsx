@@ -28,7 +28,7 @@ const HEARING_TYPES = [
   'Audiência de Regulamentação de Visitas',
 ]
 
-function HearingsSection({ caseId, lawyerId }) {
+function HearingsSection({ caseId, lawyerId, lawyerName }) {
   const { data: hearings, refetch } = useCaseHearings(caseId)
   const [nh, setNh] = useState({ title: '', date: '', time: '', location: '' })
   const [titleCustom, setTitleCustom] = useState(false)
@@ -46,6 +46,20 @@ function HearingsSection({ caseId, lawyerId }) {
       date:      nh.date,
       time:      nh.time || null,
       location:  nh.location.trim() || null,
+    })
+    // Auto-create a task for the hearing date assigned to the main lawyer
+    await supabase.from('tasks').insert({
+      lawyer_id:   lawyerId,
+      case_id:     caseId,
+      title:       nh.title.trim(),
+      due_date:    nh.date,
+      assigned_to: lawyerName || null,
+      priority:    'alta',
+      status:      'pendente',
+      description: [
+        nh.time ? `Horário: ${nh.time.slice(0, 5)}` : null,
+        nh.location.trim() ? `Local: ${nh.location.trim()}` : null,
+      ].filter(Boolean).join(' · ') || null,
     })
     setAdding(false)
     setNh({ title: '', date: '', time: '', location: '' })
@@ -640,7 +654,7 @@ export default function CaseForm({ initial, onSave, onClose }) {
         </div>
 
         {initial?.id && (
-          <HearingsSection caseId={initial.id} lawyerId={session.user.id} />
+          <HearingsSection caseId={initial.id} lawyerId={session.user.id} lawyerName={lawyer?.full_name} />
         )}
 
       </div>
