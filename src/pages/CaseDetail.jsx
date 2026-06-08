@@ -346,6 +346,51 @@ function CaseNoteExpand({ nota, onClose, onSaved }) {
   )
 }
 
+function CaseDespachoSection({ caseId }) {
+  const [desps,   setDesps]   = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    supabase
+      .from('workspace_despachos')
+      .select('id, tipo, local, notas, responsavel, done_at')
+      .eq('case_id', caseId)
+      .eq('status', 'concluido')
+      .order('done_at', { ascending: false })
+      .then(({ data }) => { setDesps(data ?? []); setLoading(false) })
+  }, [caseId])
+
+  function fmtDt(iso) {
+    if (!iso) return '—'
+    return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  }
+
+  return (
+    <Section title="Despachos Realizados" count={loading ? undefined : desps.length}>
+      {loading
+        ? <SkeletonListItem />
+        : desps.length === 0
+          ? <Empty text="Nenhum despacho registrado neste processo" />
+          : desps.map(d => (
+              <div key={d.id} className={styles.listItem}>
+                <div className={styles.listMain}>
+                  <span className={styles.listTitle}>{d.tipo || 'Despacho'}</span>
+                  {d.notas && <span className={styles.listSub}>{d.notas}</span>}
+                </div>
+                <div className={styles.listMeta}>
+                  <span className="badge st-teal" style={{ fontSize: '0.6rem' }}>{d.local}</span>
+                  {d.responsavel && (
+                    <span className="badge st-blue" style={{ fontSize: '0.6rem' }}>{d.responsavel.split(' ')[0]}</span>
+                  )}
+                  <span className={styles.listDate}>{fmtDt(d.done_at)}</span>
+                </div>
+              </div>
+            ))
+      }
+    </Section>
+  )
+}
+
 function CaseNotesSection({ caseId, lawyerId }) {
   const { data: notasRaw, refetch } = useCaseNotes(caseId)
   const notas = notasRaw ?? []
@@ -955,6 +1000,9 @@ export default function CaseDetail() {
 
       {/* ── Notas ── */}
       <CaseNotesSection caseId={caso.id} lawyerId={caso.lawyer_id} />
+
+      {/* ── Despachos realizados ── */}
+      <CaseDespachoSection caseId={caso.id} />
 
       {finalizarOpen && (
         <Modal title="Finalizar Processo" onClose={() => setFinalizarOpen(false)}>
