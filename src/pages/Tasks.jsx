@@ -311,7 +311,7 @@ function DespachosCard({ lawyerId, responsaveis, isIntern, internName }) {
             <div className={styles.dspAddRow}>
               <select className={styles.dspSelect} value={selCase} onChange={e => setSelCase(e.target.value)}>
                 <option value="">Selecionar processo…</option>
-                {cases.map(c => <option key={c.id} value={c.id}>{c.case_number ? `${c.case_number} · ${c.title}` : c.title}</option>)}
+                {cases.map(c => <option key={c.id} value={c.id}>{c.case_number ? `${c.title} · ${c.case_number}` : c.title}</option>)}
               </select>
               {responsaveis.length > 0 && !isIntern && (
                 <select className={styles.dspRespSel} value={selResp} onChange={e => setSelResp(e.target.value)}>
