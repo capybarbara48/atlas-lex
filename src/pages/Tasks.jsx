@@ -463,6 +463,8 @@ function RespPills({ responsaveis, value, onChange }) {
 function AgendaTaskRow({ t, todayISO, responsaveis, onClick, onCheck, onOrderChange, onDragStart, onDragEnd, isDragging, onCycleAssignee }) {
   const overdue = t.due_date && t.due_date.split('T')[0] < todayISO && !['concluida','cancelada'].includes(t.status)
   const done    = t.status === 'concluida'
+  const rawTime = t.due_date?.split('T')[1]?.slice(0, 5)
+  const horario = (rawTime && rawTime !== '12:00' && rawTime !== '00:00') ? rawTime : null
   return (
     <div
       className={`${styles.agendaTaskRow} ${overdue ? styles.agendaTaskOverdue : ''} ${done ? styles.agendaTaskDone : ''} ${isDragging ? styles.agendaTaskDragging : ''}`}
@@ -489,7 +491,7 @@ function AgendaTaskRow({ t, todayISO, responsaveis, onClick, onCheck, onOrderCha
       />
       <span className={styles.agendaTaskDot} style={{ background: PRI_DOT_HEX[t.priority] ?? '#888' }} />
       <span className={styles.agendaTaskTitle} onClick={() => onClick(t.id)}>{t.title}</span>
-      {t.horario && <span className={styles.taskTime}>{t.horario}</span>}
+      {horario && <span className={styles.taskTime}>{horario}</span>}
       {t.assigned_to && (
         <span
           className={styles.agendaTaskResp}
@@ -1167,7 +1169,7 @@ export default function Tasks() {
 
   const filtered = useMemo(() => {
     let list = tasks
-    if (isIntern) list = list.filter(t => !t.responsavel || t.responsavel === internName)
+    if (isIntern) list = list.filter(t => t.responsavel === internName)
     if (filterPri !== 'todos') list = list.filter(t => t.prioridade === filterPri)
     if (search.trim()) {
       const q = search.toLowerCase()
