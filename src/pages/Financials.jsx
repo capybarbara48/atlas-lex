@@ -287,15 +287,14 @@ function EntryItem({ e, confirmDeleteId, setConfirmDeleteId, onEdit, onDelete, o
       <div className={`${styles.entryDot} ${isReceita ? styles.entryDotGreen : styles.entryDotRed}`} />
       <div className={styles.entryBody}>
         <div className={styles.entryName}>
-          {e.desc}
+          {e.caso ?? e.category ?? e.desc}
           {e.recurring && <span className={styles.recurringBadge}>Fixa</span>}
           {e.installmentOf && (
             <span className={styles.installmentBadge}>{e.installmentOf}/{e.installmentTotal}</span>
           )}
         </div>
         <div className={styles.entryMeta}>
-          {e.caso && <span className={styles.entryCase}>{e.caso}</span>}
-          {e.category && !e.caso && <span className={styles.entryCase}>{e.category}</span>}
+          {(e.caso || e.category) && <span className={styles.entryCase}>{e.desc}</span>}
           <span className={isPaid ? styles.statusPaid : styles.statusPending}>
             {isPaid ? '✓ Pago' : '⏳ Pendente'}
           </span>
