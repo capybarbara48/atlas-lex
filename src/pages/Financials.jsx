@@ -39,7 +39,8 @@ function fmtBRLPlain(v) {
 
 function fmtDate(iso) {
   if (!iso) return ''
-  return new Date(iso + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
+  const dt = iso.length <= 10 ? new Date(iso + 'T12:00:00') : new Date(iso)
+  return dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
 }
 
 function fmtDateTime(iso) {
@@ -299,7 +300,7 @@ function EntryItem({ e, confirmDeleteId, setConfirmDeleteId, onEdit, onDelete, o
             {isPaid ? '✓ Pago' : '⏳ Pendente'}
           </span>
           {isPaid && e.paidAt
-            ? <span className={styles.entryDate}>{fmtDateTime(e.paidAt)}</span>
+            ? <span className={styles.entryDate}>{fmtDate(e.paidAt)}</span>
             : !isPaid && e.data && <span className={styles.entryDate}>{fmtDate(e.data)}</span>
           }
         </div>
@@ -574,9 +575,8 @@ export default function Financials() {
     const pdfFmtDt  = iso => {
       if (!iso) return '—'
       try {
-        const dt = new Date(iso)
+        const dt = iso.length <= 10 ? new Date(iso + 'T12:00:00') : new Date(iso)
         return dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-          + ' ' + dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
       } catch { return '—' }
     }
 

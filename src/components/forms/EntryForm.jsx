@@ -148,7 +148,7 @@ export default function EntryForm({ initial, defaultType = 'receita', onSave, on
       category:    catVal,
       recurring:   isRecurr,
       due_date:    isRecurr ? null : (f.due_date || null),
-      paid_at:     f.status === 'pago' ? (f.paid_at || null) : null,
+      paid_at:     f.status === 'pago' && f.paid_at ? new Date(f.paid_at + 'T12:00:00').toISOString() : null,
     }
 
     const { error } = initial?.id
