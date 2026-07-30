@@ -90,6 +90,21 @@ export async function finalizeCase(caseId, outcome, outcomeReason) {
   return { error }
 }
 
+/** Reopen a finalised case, sending it back to the active docket */
+export async function reactivateCase(caseId) {
+  const { error } = await supabase
+    .from('cases')
+    .update({
+      status: 'ativo',
+      outcome: null,
+      outcome_reason: null,
+      finalizado_at: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', caseId)
+  return { error }
+}
+
 /** Toggle quota-litis received state */
 export async function toggleQuotaLitisReceived(caseId, received) {
   const { error } = await supabase

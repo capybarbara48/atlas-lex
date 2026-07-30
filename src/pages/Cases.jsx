@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
-import { useCases, useFinalisedCases, updateCaseSituation, updateDespachoAttempts } from '@/hooks/useCases'
+import { useCases, useFinalisedCases, updateCaseSituation, updateDespachoAttempts, reactivateCase } from '@/hooks/useCases'
 import { useKanbanSituations } from '@/hooks/useKanbanSituations'
 import { useToast } from '@/context/ToastContext'
 import PageShell from '@/components/ui/PageShell'
@@ -523,7 +523,7 @@ const OUTCOME_META = {
   outro:        { label: 'Outro',        cls: 'st-gray' },
 }
 
-function FinalizadosView({ cases, loading }) {
+function FinalizadosView({ cases, loading, onReactivate }) {
   const navigate = useNavigate()
 
   const procedente   = cases.filter(c => c.outcome === 'procedente').length
@@ -559,6 +559,7 @@ function FinalizadosView({ cases, loading }) {
                     <th>Resultado</th>
                     <th>Motivo</th>
                     <th>Finalizado em</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -583,6 +584,19 @@ function FinalizadosView({ cases, loading }) {
                         <td><span className={`badge ${om.cls}`}>{om.label}</span></td>
                         <td className={styles.reasonCell}>{c.outcome_reason || '—'}</td>
                         <td className={styles.dateCell}>{finDate}</td>
+                        <td className={styles.actionsCell} onClick={e => e.stopPropagation()}>
+                          <button
+                            className={styles.reactivateBtn}
+                            onClick={() => onReactivate(c.id, c.title)}
+                            title="Reativar caso"
+                          >
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="12" height="12">
+                              <path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.89"/>
+                              <path d="M13.5 2.5v3.5H10"/>
+                            </svg>
+                            Reativar
+                          </button>
+                        </td>
                       </tr>
                     )
                   })}
@@ -611,7 +625,7 @@ export default function Cases() {
   const [editColsOpen, setEditColsOpen] = useState(false)
 
   const { data: rawCases, loading, error, refetch } = useCases()
-  const { data: rawFinalizados, loading: finLoading } = useFinalisedCases()
+  const { data: rawFinalizados, loading: finLoading, refetch: refetchFinalizados } = useFinalisedCases()
   const { situations, loading: sitLoading, addSituation, updateSituation, deleteSituation, reorderSituations } = useKanbanSituations()
 
   // exclude finalized from the active tab
@@ -644,6 +658,15 @@ export default function Cases() {
     const payload = arr.every(x => !x) ? null : arr
     await updateDespachoAttempts(caseId, payload)
     refetch()
+  }
+
+  async function handleReactivate(caseId, caseTitle) {
+    if (!window.confirm(`Reativar o processo "${caseTitle}"? Ele voltará para Processos Ativos.`)) return
+    const { error } = await reactivateCase(caseId)
+    if (error) { toast.error('Erro ao reativar processo.'); return }
+    refetch()
+    refetchFinalizados()
+    toast.success('Processo reativado.')
   }
 
   const filtered = useMemo(() => {
@@ -708,7 +731,7 @@ export default function Cases() {
       }
     >
       {tab === 'finalizados'
-        ? <FinalizadosView cases={finalizados} loading={finLoading} />
+        ? <FinalizadosView cases={finalizados} loading={finLoading} onReactivate={handleReactivate} />
         : error
           ? <div className={styles.emptyState}><p>Erro ao carregar casos.</p></div>
           : loading
