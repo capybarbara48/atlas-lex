@@ -1,8 +1,9 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useAllTasks, updateTaskStatus, updateTaskAssignee } from '@/hooks/useTasks'
 import { supabase } from '@/lib/supabase'
 import { generateTeamTasksReportPDF } from '@/lib/teamTasksPDF'
+import { useToast } from '@/context/ToastContext'
 import PageShell from '@/components/ui/PageShell'
 import styles from './Interns.module.css'
 
@@ -200,6 +201,7 @@ function HistorySection({ lawyerId, responsaveis, selectedMember }) {
 /* ── Page ───────────────────────────────────────────────────────────── */
 export default function Interns() {
   const { lawyer } = useAuth()
+  const toast = useToast()
   const responsaveis = lawyer?.preferences?.responsaveis ?? []
 
   const [member,       setMember]       = useState('todos')
@@ -208,6 +210,32 @@ export default function Interns() {
     const n = new Date()
     return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}`
   })
+  const [pdfMembers, setPdfMembers] = useState(responsaveis)
+  const [pdfPickerOpen, setPdfPickerOpen] = useState(false)
+  const pdfPickerRef = useRef(null)
+
+  useEffect(() => {
+    // Keep selection valid as the team roster changes (new member → included by default; removed → dropped)
+    setPdfMembers(prev => {
+      const kept = prev.filter(p => responsaveis.includes(p))
+      const added = responsaveis.filter(r => !prev.includes(r))
+      return [...kept, ...added]
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [responsaveis.join('|')])
+
+  useEffect(() => {
+    if (!pdfPickerOpen) return
+    function onClickOutside(e) {
+      if (pdfPickerRef.current && !pdfPickerRef.current.contains(e.target)) setPdfPickerOpen(false)
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [pdfPickerOpen])
+
+  function togglePdfMember(name) {
+    setPdfMembers(prev => prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name])
+  }
 
   const { data: rawTasks, loading, refetch } = useAllTasks()
   const tasks = useMemo(() => rawTasks ?? [], [rawTasks])
@@ -247,13 +275,15 @@ export default function Interns() {
   const unassigned = tasks.filter(t => !t.assigned_to).length
 
   function handleGeneratePDF() {
+    if (pdfMembers.length === 0) { toast.error('Selecione ao menos um membro da equipe.'); return }
     const [y, m] = pdfMonth.split('-').map(Number)
     generateTeamTasksReportPDF({
       lawyer,
       monthDate: new Date(y, m - 1, 1),
-      responsaveis,
+      responsaveis: pdfMembers,
       tasks,
     })
+    setPdfPickerOpen(false)
   }
 
   /* ── Empty setup state ── */
@@ -285,6 +315,26 @@ export default function Interns() {
             onChange={e => setPdfMonth(e.target.value)}
             title="Mês de referência do relatório"
           />
+          <div className={styles.pdfPickerWrap} ref={pdfPickerRef}>
+            <button className={styles.pdfPickerBtn} onClick={() => setPdfPickerOpen(v => !v)}>
+              {pdfMembers.length === responsaveis.length ? 'Todos os membros' : `${pdfMembers.length} membro${pdfMembers.length === 1 ? '' : 's'}`}
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="11" height="11"><path d="M4 6l4 4 4-4"/></svg>
+            </button>
+            {pdfPickerOpen && (
+              <div className={styles.pdfPickerPanel}>
+                <div className={styles.pdfPickerActions}>
+                  <button onClick={() => setPdfMembers(responsaveis)}>Selecionar todos</button>
+                  <button onClick={() => setPdfMembers([])}>Limpar</button>
+                </div>
+                {responsaveis.map(r => (
+                  <label key={r} className={styles.pdfPickerItem}>
+                    <input type="checkbox" checked={pdfMembers.includes(r)} onChange={() => togglePdfMember(r)} />
+                    {r}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
           <button className={styles.pdfBtn} onClick={handleGeneratePDF}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             Gerar PDF

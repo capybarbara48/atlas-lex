@@ -227,6 +227,74 @@
 .pdfBtn:hover { background: var(--accent-dark); transform: translateY(-1px); }
 .pdfBtn svg { width: 14px; height: 14px; flex-shrink: 0; }
 
+.pdfPickerWrap { position: relative; }
+.pdfPickerBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.pdfPickerBtn:hover { border-color: var(--accent); color: var(--accent); }
+.pdfPickerBtn svg { flex-shrink: 0; }
+
+.pdfPickerPanel {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 20;
+  background: var(--card);
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  padding: 0.6rem;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.pdfPickerActions {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
+  border-bottom: 1px solid var(--border);
+}
+.pdfPickerActions button {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 0.15rem 0;
+}
+.pdfPickerActions button:hover { text-decoration: underline; }
+.pdfPickerItem {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.pdfPickerItem:hover { background: var(--bg); }
+.pdfPickerItem input { cursor: pointer; }
+
 .filterGroup { display: flex; gap: 0.3rem; flex-wrap: wrap; }
 .filterBtn {
   padding: 0.3rem 0.7rem;
