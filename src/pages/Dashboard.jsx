@@ -6,9 +6,18 @@ import { useKanbanSituations } from '@/hooks/useKanbanSituations'
 import { useClientCount } from '@/hooks/useClients'
 import { useTodayTasks, updateTaskStatus } from '@/hooks/useTasks'
 import { useUpcomingHearings } from '@/hooks/useHearings'
+import { useMonthFinancials } from '@/hooks/useFinancials'
+import { useProposals } from '@/hooks/useProposals'
 import Modal from '@/components/ui/Modal'
 import CaseForm from '@/components/forms/CaseForm'
+import TaskForm from '@/components/forms/TaskForm'
+import ProposalForm from '@/components/forms/ProposalForm'
+import EntryForm from '@/components/forms/EntryForm'
 import styles from './Dashboard.module.css'
+
+function brl(v) {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v ?? 0)
+}
 
 /* ── helpers ─────────────────────────────────────────────────────────── */
 function greeting() {
@@ -36,6 +45,7 @@ function mapDashCase(c) {
     status:           c.status,
     situation:        c.situation ?? null,
     situationChangedAt: c.situation_changed_at ?? null,
+    area:             c.area ?? null,
     despachoAttempts: Array.isArray(c.despacho_attempts) ? [...c.despacho_attempts, null, null, null].slice(0, 3) : [null, null, null],
     tribunal:         c.court ?? '—',
     trib_color:       tribColor(c.court),
@@ -251,10 +261,161 @@ function HearingEventItem({ h }) {
   )
 }
 
+/* ── Financeiro do mês (isolado: só monta o hook/consulta p/ quem pode ver) ── */
+function FinanceCard() {
+  const { data: fin } = useMonthFinancials()
+
+  return (
+    <div className={styles.card}>
+      <div className={styles.cardHeader}>
+        <div className={styles.cardTitleGroup}>
+          <div className={`${styles.cardIcon} ${styles.iconGreen}`}>$</div>
+          <div>
+            <div className={styles.cardTitle}>Financeiro do Mês</div>
+            <div className={styles.cardSubtitle}>Receitas, despesas e pendências</div>
+          </div>
+        </div>
+        <Link to="/painel/financeiro" className={styles.cardLink}>Ver financeiro →</Link>
+      </div>
+      <div className={styles.cardBody} style={{ overflow: 'visible', maxHeight: 'none' }}>
+        <div className={styles.finStatsRow}>
+          <div className={styles.finStat}>
+            <span className={styles.finStatLabel}>Receita</span>
+            <span className={`${styles.finStatVal} ${styles.positive}`}>{brl(fin?.receita)}</span>
+          </div>
+          <div className={styles.finStatDiv} />
+          <div className={styles.finStat}>
+            <span className={styles.finStatLabel}>Despesa</span>
+            <span className={`${styles.finStatVal} ${styles.negative}`}>{brl(fin?.despesa)}</span>
+          </div>
+          <div className={styles.finStatDiv} />
+          <div className={styles.finStat}>
+            <span className={styles.finStatLabel}>Saldo</span>
+            <span className={`${styles.finStatVal} ${(fin?.saldo ?? 0) >= 0 ? styles.positive : styles.negative}`}>{brl(fin?.saldo)}</span>
+          </div>
+          <div className={styles.finStatDiv} />
+          <div className={styles.finStat}>
+            <span className={styles.finStatLabel}>Pendente</span>
+            <span className={styles.finStatVal}>{brl(fin?.pendente)}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ── Distribuição de casos por área ─────────────────────────────────── */
+const AREA_COLORS = ['abar_accent', 'abar_blue', 'abar_green', 'abar_purple', 'abar_orange', 'abar_gray']
+
+function AreaDistributionCard({ cases }) {
+  const rows = useMemo(() => {
+    const counts = {}
+    cases.forEach(c => {
+      const key = c.area?.trim() || 'Sem área'
+      counts[key] = (counts[key] ?? 0) + 1
+    })
+    const total = cases.length || 1
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([area, count], i) => ({
+        area, count,
+        pct: Math.round((count / total) * 100),
+        color: AREA_COLORS[i % AREA_COLORS.length],
+      }))
+  }, [cases])
+
+  return (
+    <div className={styles.card}>
+      <div className={styles.cardHeader}>
+        <div className={styles.cardTitleGroup}>
+          <div className={`${styles.cardIcon} ${styles.iconPurple}`}>◧</div>
+          <div>
+            <div className={styles.cardTitle}>Distribuição por Área</div>
+            <div className={styles.cardSubtitle}>{cases.length} casos ativos</div>
+          </div>
+        </div>
+        <Link to="/painel/metricas" className={styles.cardLink}>Ver métricas →</Link>
+      </div>
+      <div className={styles.cardBody} style={{ overflow: 'visible', maxHeight: 'none' }}>
+        {rows.length === 0
+          ? <div className={styles.emptyHint}>Nenhum caso ativo para exibir</div>
+          : rows.map(r => (
+            <div key={r.area} className={styles.abarRow}>
+              <div className={styles.abarInfo}>
+                <span className={styles.abarLabel}>{r.area}</span>
+                <span className={styles.abarPct}>{r.count} · {r.pct}%</span>
+              </div>
+              <div className={styles.abarTrack}>
+                <div className={`${styles.abarFill} ${styles[r.color]}`} style={{ width: `${r.pct}%` }} />
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  )
+}
+
+const PROPOSAL_STATUS = {
+  enviada:  { label: 'Aguardando', color: '#d97706' },
+  aceita:   { label: 'Aceita',     color: 'var(--green)' },
+  recusada: { label: 'Recusada',   color: 'var(--red)' },
+  rascunho: { label: 'Rascunho',   color: 'var(--text-3)' },
+}
+
+function ProposalRow({ p }) {
+  const st = PROPOSAL_STATUS[p.status] ?? PROPOSAL_STATUS.rascunho
+  const cliente = p.clients?.full_name ?? p.client_name_override ?? '—'
+  return (
+    <div className={styles.entryRow}>
+      <div className={styles.entryLeft}>
+        <span className={styles.entryDesc}>{p.title}</span>
+        <div className={styles.entryMeta}>
+          <span className={styles.entryStatus} style={{ color: st.color }}>{st.label}</span>
+          <span style={{ color: 'var(--text-3)', fontSize: '0.7rem' }}>{cliente}</span>
+        </div>
+      </div>
+      {p.fee_amount != null && <span className={styles.entryVal}>{brl(p.fee_amount)}</span>}
+    </div>
+  )
+}
+
+function ProposalsCard({ proposals }) {
+  const pendentes = proposals.filter(p => p.status === 'enviada')
+  const shown = proposals.slice(0, 5)
+  return (
+    <div className={styles.card}>
+      <div className={styles.cardHeader}>
+        <div className={styles.cardTitleGroup}>
+          <div className={`${styles.cardIcon} ${styles.iconGold}`}>✎</div>
+          <div>
+            <div className={styles.cardTitle}>Propostas</div>
+            <div className={styles.cardSubtitle}>
+              {pendentes.length > 0 ? `${pendentes.length} aguardando resposta` : 'Nenhuma pendente'}
+            </div>
+          </div>
+        </div>
+        <Link to="/painel/propostas" className={styles.cardLink}>Ver todas →</Link>
+      </div>
+      <div className={styles.cardBody}>
+        {shown.length === 0
+          ? <div className={styles.emptyHint}>Nenhuma proposta cadastrada</div>
+          : shown.map(p => <ProposalRow key={p.id} p={p} />)
+        }
+      </div>
+    </div>
+  )
+}
+
 /* ── main dashboard ───────────────────────────────────────────────────── */
 export default function Dashboard() {
   const { lawyer, teamRole } = useAuth()
-  const [caseFormOpen, setCaseFormOpen] = useState(false)
+  const [caseFormOpen,     setCaseFormOpen]     = useState(false)
+  const [taskFormOpen,     setTaskFormOpen]     = useState(false)
+  const [proposalFormOpen, setProposalFormOpen] = useState(false)
+  const [entryFormOpen,    setEntryFormOpen]    = useState(false)
+  const [financeKey,       setFinanceKey]       = useState(0)
 
   /* data hooks */
   const { data: caseStats }                         = useCaseStats()
@@ -263,6 +424,7 @@ export default function Dashboard() {
   const { data: clientesTotal }                     = useClientCount()
   const { data: rawTasks,   refetch: refetchTasks } = useTodayTasks()
   const { data: rawHearings }                       = useUpcomingHearings()
+  const { data: rawProposals, refetch: refetchProposals } = useProposals({ limit: 20 })
 
   /* derived data */
   const cases   = useMemo(() => (rawCases ?? []).filter(c => c.status !== 'finalizado').map(mapDashCase), [rawCases])
@@ -271,10 +433,10 @@ export default function Dashboard() {
   const overdueTasks = tasks.filter(t => t.prazo && t.prazo < today)
   const todayTasks   = tasks.filter(t => t.prazo === today)
   const hearings     = rawHearings ?? []
+  const proposals    = rawProposals ?? []
 
   const casosTotal  = caseStats?.total ?? '—'
   const casosAtivos = caseStats?.ativo ?? '—'
-  const tarefasHoje = overdueTasks.length + todayTasks.length
   async function handleTaskCheck(taskId) {
     await updateTaskStatus(taskId, 'concluida')
     refetchTasks()
@@ -307,13 +469,37 @@ export default function Dashboard() {
         </div>
 
         <div className={styles.statsMini}>
-          <StatBox num={tarefasHoje} label="Tarefas hoje" />
+          <StatBox num={todayTasks.length} label="Tarefas hoje" />
+          {overdueTasks.length > 0 && (
+            <div className={`${styles.statBox} ${styles.statBoxRed}`}>
+              <div className={styles.statBoxNum}>{overdueTasks.length}</div>
+              <div className={styles.statBoxLabel}>Vencidas</div>
+            </div>
+          )}
         </div>
 
         <button className={styles.btnNovo} onClick={() => setCaseFormOpen(true)}>
           <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.75.75 0 0 1 .75.75v5.5h5.5a.75.75 0 0 1 0 1.5h-5.5v5.5a.75.75 0 0 1-1.5 0v-5.5H1.75a.75.75 0 0 1 0-1.5h5.5v-5.5A.75.75 0 0 1 8 1Z"/></svg>
           Novo caso
         </button>
+      </div>
+
+      {/* ── Quick actions ── */}
+      <div className={styles.quickActions}>
+        <button className={styles.quickBtn} onClick={() => setTaskFormOpen(true)}>
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.75.75 0 0 1 .75.75v5.5h5.5a.75.75 0 0 1 0 1.5h-5.5v5.5a.75.75 0 0 1-1.5 0v-5.5H1.75a.75.75 0 0 1 0-1.5h5.5v-5.5A.75.75 0 0 1 8 1Z"/></svg>
+          Nova tarefa
+        </button>
+        <button className={styles.quickBtn} onClick={() => setProposalFormOpen(true)}>
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.75.75 0 0 1 .75.75v5.5h5.5a.75.75 0 0 1 0 1.5h-5.5v5.5a.75.75 0 0 1-1.5 0v-5.5H1.75a.75.75 0 0 1 0-1.5h5.5v-5.5A.75.75 0 0 1 8 1Z"/></svg>
+          Nova proposta
+        </button>
+        {teamRole !== 'estagiario' && (
+          <button className={styles.quickBtn} onClick={() => setEntryFormOpen(true)}>
+            <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.75.75 0 0 1 .75.75v5.5h5.5a.75.75 0 0 1 0 1.5h-5.5v5.5a.75.75 0 0 1-1.5 0v-5.5H1.75a.75.75 0 0 1 0-1.5h5.5v-5.5A.75.75 0 0 1 8 1Z"/></svg>
+            Novo lançamento
+          </button>
+        )}
       </div>
 
       {/* ── Main 2-column grid ── */}
@@ -374,20 +560,43 @@ export default function Dashboard() {
               <div>
                 <div className={styles.cardTitle}>Tarefas de Hoje</div>
                 <div className={styles.cardSubtitle}>
-                  {todayTasks.length > 0 ? `${todayTasks.length} tarefa(s) para hoje` : 'Nenhuma tarefa para hoje'}
+                  {overdueTasks.length > 0
+                    ? `${overdueTasks.length} vencida(s) · ${todayTasks.length} para hoje`
+                    : todayTasks.length > 0 ? `${todayTasks.length} tarefa(s) para hoje` : 'Nenhuma tarefa para hoje'}
                 </div>
               </div>
             </div>
             <Link to="/painel/tarefas" className={styles.cardLink}>Ver todas →</Link>
           </div>
           <div className={styles.cardBody}>
-            {todayTasks.length === 0
+            {overdueTasks.length === 0 && todayTasks.length === 0
               ? <div className={styles.emptyHint}>Nenhuma tarefa agendada para hoje</div>
-              : todayTasks.map(t => <TarefaItem key={t.id} t={t} onCheck={handleTaskCheck} />)
+              : <>
+                  {overdueTasks.length > 0 && (
+                    <>
+                      <p className={`${styles.taskSectionLabel} ${styles.taskSectionLabelRed}`}>Vencidas</p>
+                      {overdueTasks.map(t => <TarefaItem key={t.id} t={t} onCheck={handleTaskCheck} />)}
+                    </>
+                  )}
+                  {todayTasks.length > 0 && (
+                    <>
+                      <p className={`${styles.taskSectionLabel} ${styles.taskSectionLabelMuted}`}>Hoje</p>
+                      {todayTasks.map(t => <TarefaItem key={t.id} t={t} onCheck={handleTaskCheck} />)}
+                    </>
+                  )}
+                </>
             }
           </div>
         </div>
 
+        {/* ── Card: Financeiro do mês (oculto para estagiários) ── */}
+        {teamRole !== 'estagiario' && <FinanceCard key={financeKey} />}
+
+        {/* ── Card: Distribuição de casos por área ── */}
+        <AreaDistributionCard cases={cases} />
+
+        {/* ── Card: Propostas ── */}
+        <ProposalsCard proposals={proposals} />
 
       </div>
 
@@ -397,6 +606,36 @@ export default function Dashboard() {
           <CaseForm
             onClose={() => setCaseFormOpen(false)}
             onSave={() => { setCaseFormOpen(false); refetchCases() }}
+          />
+        </Modal>
+      )}
+
+      {/* ── New task modal ── */}
+      {taskFormOpen && (
+        <Modal title="Nova Tarefa" onClose={() => setTaskFormOpen(false)} size="lg">
+          <TaskForm
+            onClose={() => setTaskFormOpen(false)}
+            onSave={() => { setTaskFormOpen(false); refetchTasks() }}
+          />
+        </Modal>
+      )}
+
+      {/* ── New proposal modal ── */}
+      {proposalFormOpen && (
+        <Modal title="Nova Proposta" onClose={() => setProposalFormOpen(false)} size="lg">
+          <ProposalForm
+            onClose={() => setProposalFormOpen(false)}
+            onSave={() => { setProposalFormOpen(false); refetchProposals() }}
+          />
+        </Modal>
+      )}
+
+      {/* ── New financial entry modal (advogado only, gated by quick-action button) ── */}
+      {entryFormOpen && teamRole !== 'estagiario' && (
+        <Modal title="Novo Lançamento" onClose={() => setEntryFormOpen(false)} size="lg">
+          <EntryForm
+            onClose={() => setEntryFormOpen(false)}
+            onSave={() => { setEntryFormOpen(false); setFinanceKey(k => k + 1) }}
           />
         </Modal>
       )}

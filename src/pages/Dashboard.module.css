@@ -96,6 +96,39 @@
   font-weight: 600;
 }
 
+.statBoxRed {
+  background: rgba(224,60,60,0.08);
+  border-color: rgba(224,60,60,0.25);
+}
+.statBoxRed .statBoxNum   { color: var(--red); }
+.statBoxRed .statBoxLabel { color: var(--red); opacity: 0.85; }
+
+/* ── Quick actions row ───────────────────────────────────────────── */
+.quickActions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.quickBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--card);
+  border: var(--border);
+  color: var(--text-2);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.quickBtn:hover {
+  color: var(--accent);
+  border-color: rgba(var(--accent-rgb),0.3);
+  background: var(--accent-dim);
+}
+.quickBtn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
 .btnNovo {
   margin-left: auto;
   display: inline-flex;
@@ -153,6 +186,7 @@
 .iconBlue   { background: var(--blue-dim); }
 .iconGreen  { background: var(--green-dim); }
 .iconPurple { background: var(--accent-dim); }
+.iconRed    { background: rgba(224,60,60,0.1); color: var(--red); }
 
 .cardTitle    { font-size: 0.9rem; font-weight: 600; letter-spacing: -0.01em; color: var(--text); }
 .cardSubtitle { font-size: 0.7rem; color: var(--text-2); margin-top: 0.15rem; }
@@ -496,6 +530,17 @@
 }
 .prazoVencido { color: var(--red); font-weight: 700; }
 
+.taskSectionLabel {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  margin: 0 0 0.4rem;
+}
+.taskSectionLabel:not(:first-child) { margin-top: 0.75rem; }
+.taskSectionLabelRed { color: var(--red); }
+.taskSectionLabelMuted { color: var(--text-3); }
+
 /* ── Financeiro ──────────────────────────────────────────────────── */
 .finStatsRow {
   display: flex;
@@ -571,6 +616,9 @@
 .abar_accent { background: var(--accent); }
 .abar_blue   { background: var(--blue); }
 .abar_green  { background: var(--green); }
+.abar_purple { background: #7c3aed; }
+.abar_orange { background: #ea580c; }
+.abar_gray   { background: #94a3b8; }
 
 .recentTitle {
   font-size: 0.65rem;
