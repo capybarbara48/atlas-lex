@@ -5,6 +5,7 @@ import { useKanbanSituations } from '@/hooks/useKanbanSituations'
 import { useAreas } from '@/hooks/useAreas'
 import { getActiveGroups } from '@/lib/tribunais'
 import { useCaseHearings, addHearing, deleteHearing } from '@/hooks/useHearings'
+import { toTitleCase } from '@/lib/text'
 import Modal from '@/components/ui/Modal'
 import ClientForm from './ClientForm'
 import s from './Form.module.css'
@@ -39,10 +40,11 @@ function HearingsSection({ caseId, lawyerId, lawyerName }) {
   async function handleAdd() {
     if (!nh.title.trim() || !nh.date) return
     setAdding(true)
+    const hearingTitle = toTitleCase(nh.title)
     await addHearing({
       lawyer_id: lawyerId,
       case_id:   caseId,
-      title:     nh.title.trim(),
+      title:     hearingTitle,
       date:      nh.date,
       time:      nh.time || null,
       location:  nh.location.trim() || null,
@@ -51,7 +53,7 @@ function HearingsSection({ caseId, lawyerId, lawyerName }) {
     await supabase.from('tasks').insert({
       lawyer_id:   lawyerId,
       case_id:     caseId,
-      title:       nh.title.trim(),
+      title:       hearingTitle,
       due_date:    nh.date,
       assigned_to: lawyerName || null,
       priority:    'alta',
@@ -297,7 +299,7 @@ export default function CaseForm({ initial, onSave, onClose }) {
     e.preventDefault()
     setSaving(true); setError('')
     const payload = {
-      title:            f.title.trim(),
+      title:            toTitleCase(f.title),
       case_number:      f.case_number.trim() || null,
       client_id:        f.client_id   || null,
       court:            f.court.trim() || null,
@@ -365,7 +367,7 @@ export default function CaseForm({ initial, onSave, onClose }) {
     setNcSaving(true); setNcError('')
     const { data, error } = await supabase
       .from('clients')
-      .insert({ lawyer_id: lawyer?.id ?? session.user.id, full_name: nc.full_name.trim(), tipo: nc.tipo, email: nc.email.trim() || null, phone: nc.phone.trim() || null })
+      .insert({ lawyer_id: lawyer?.id ?? session.user.id, full_name: toTitleCase(nc.full_name), tipo: nc.tipo, email: nc.email.trim() || null, phone: nc.phone.trim() || null })
       .select('id, full_name')
       .single()
     setNcSaving(false)

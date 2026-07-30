@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
+import { toTitleCase } from '@/lib/text'
 import s from './Form.module.css'
 
 export default function ProposalForm({ initial, onSave, onClose }) {
@@ -45,7 +46,7 @@ export default function ProposalForm({ initial, onSave, onClose }) {
     e.preventDefault()
     setSaving(true); setError('')
     const payload = {
-      title:          f.title.trim(),
+      title:          toTitleCase(f.title),
       client_id:      f.client_id      || null,
       case_id:        f.case_id        || null,
       status:         f.status,

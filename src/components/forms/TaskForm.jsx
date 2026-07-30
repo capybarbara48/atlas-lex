@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
+import { toTitleCase } from '@/lib/text'
 import s from './Form.module.css'
 
 export default function TaskForm({ initial, onSave, onClose }) {
@@ -31,7 +32,7 @@ export default function TaskForm({ initial, onSave, onClose }) {
     e.preventDefault()
     setSaving(true); setError('')
     const payload = {
-      title:       f.title.trim(),
+      title:       toTitleCase(f.title),
       case_id:     f.case_id     || null,
       priority:    f.priority,
       status:      f.status,

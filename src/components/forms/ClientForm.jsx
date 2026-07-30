@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
+import { toTitleCase } from '@/lib/text'
 import s from './Form.module.css'
 
 const ESTADOS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG',
@@ -27,7 +28,7 @@ export default function ClientForm({ initial, onSave, onClose }) {
     e.preventDefault()
     setSaving(true); setError('')
     const payload = {
-      full_name: f.full_name.trim(),
+      full_name: toTitleCase(f.full_name),
       tipo:      f.tipo,
       cpf_cnpj:  f.cpf_cnpj.trim()  || null,
       email:     f.email.trim()      || null,
