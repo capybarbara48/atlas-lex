@@ -684,6 +684,7 @@ export default function Cases() {
       title="Casos"
       subtitle={loading ? 'Carregando…' : `${cases.length} ativos · ${finalizados.length} finalizados`}
       viewToggle={tab === 'ativos' ? <ViewToggle value={view} onChange={handleViewChange} /> : null}
+      fullWidth={tab === 'ativos' && view === 'kanban'}
       action={
         tab === 'ativos' ? (
           <button className={styles.btnNovo} onClick={() => { setEditing(null); setFormOpen(true) }}>

@@ -9,11 +9,12 @@ import styles from './PageShell.module.css'
  *   action       ReactNode    — botão de ação primária (canto superior direito)
  *   filters      ReactNode    — barra de busca / filtros
  *   viewToggle   ReactNode    — toggle kanban/lista
+ *   fullWidth    boolean      — remove o limite de largura da página (ex: quadros kanban)
  *   children     ReactNode    — conteúdo principal
  */
-export default function PageShell({ title, subtitle, action, filters, viewToggle, children }) {
+export default function PageShell({ title, subtitle, action, filters, viewToggle, fullWidth, children }) {
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} ${fullWidth ? styles.pageFull : ''}`}>
       <div className={styles.topBar}>
         <div className={styles.titleGroup}>
           <h1 className={styles.title}>{title}</h1>
