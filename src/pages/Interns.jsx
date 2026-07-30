@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useAllTasks, updateTaskStatus, updateTaskAssignee } from '@/hooks/useTasks'
 import { supabase } from '@/lib/supabase'
+import { generateTeamTasksReportPDF } from '@/lib/teamTasksPDF'
 import PageShell from '@/components/ui/PageShell'
 import styles from './Interns.module.css'
 
@@ -203,6 +204,10 @@ export default function Interns() {
 
   const [member,       setMember]       = useState('todos')
   const [filterStatus, setFilterStatus] = useState('todos')
+  const [pdfMonth, setPdfMonth] = useState(() => {
+    const n = new Date()
+    return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}`
+  })
 
   const { data: rawTasks, loading, refetch } = useAllTasks()
   const tasks = useMemo(() => rawTasks ?? [], [rawTasks])
@@ -241,6 +246,16 @@ export default function Interns() {
 
   const unassigned = tasks.filter(t => !t.assigned_to).length
 
+  function handleGeneratePDF() {
+    const [y, m] = pdfMonth.split('-').map(Number)
+    generateTeamTasksReportPDF({
+      lawyer,
+      monthDate: new Date(y, m - 1, 1),
+      responsaveis,
+      tasks,
+    })
+  }
+
   /* ── Empty setup state ── */
   if (responsaveis.length === 0) {
     return (
@@ -261,6 +276,21 @@ export default function Interns() {
     <PageShell
       title="Equipe"
       subtitle={loading ? 'Carregando…' : `${tasks.length} tarefas · ${responsaveis.length} membros`}
+      action={
+        <div className={styles.pdfToolbar}>
+          <input
+            type="month"
+            className={styles.monthInput}
+            value={pdfMonth}
+            onChange={e => setPdfMonth(e.target.value)}
+            title="Mês de referência do relatório"
+          />
+          <button className={styles.pdfBtn} onClick={handleGeneratePDF}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Gerar PDF
+          </button>
+        </div>
+      }
     >
       {/* ── Member selector ── */}
       <div className={styles.memberBar}>

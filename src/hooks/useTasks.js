@@ -20,7 +20,7 @@ export function useAllTasks() {
   return useSupabaseQuery(async () => {
     return supabase
       .from('tasks')
-      .select('id, title, status, priority, due_date, description, assigned_to, sort_order, cases ( title )')
+      .select('id, title, status, priority, due_date, description, assigned_to, sort_order, completed_at, cases ( title )')
       .order('due_date', { ascending: true, nullsFirst: false })
   }, [])
 }

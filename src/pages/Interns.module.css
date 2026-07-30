@@ -198,6 +198,35 @@
   color: var(--text-2);
 }
 
+.pdfToolbar { display: flex; align-items: center; gap: 0.6rem; }
+.monthInput {
+  padding: 0.5rem 0.75rem;
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  font-size: 0.8rem;
+  font-family: inherit;
+  color: var(--text);
+}
+.pdfBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 1.1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.pdfBtn:hover { background: var(--accent-dark); transform: translateY(-1px); }
+.pdfBtn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
 .filterGroup { display: flex; gap: 0.3rem; flex-wrap: wrap; }
 .filterBtn {
   padding: 0.3rem 0.7rem;
