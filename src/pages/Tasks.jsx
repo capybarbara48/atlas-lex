@@ -844,16 +844,67 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, lawyerId, isI
   )
 }
 
+/* ── shared: responsible-person avatar ───────────────────────────────── */
+function respInitials(name) {
+  if (!name) return '?'
+  return name.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase()
+}
+
+function RespAvatar({ name, responsaveis, size = 'sm' }) {
+  if (!name) return null
+  const col = respColor(name, responsaveis)
+  return (
+    <span
+      className={`${styles.respAvatar} ${size === 'xs' ? styles.respAvatarXs : ''}`}
+      style={{ background: col }}
+      title={name}
+    >
+      {respInitials(name)}
+    </span>
+  )
+}
+
+const PRI_ORDER = { urgente: 0, alta: 1, media: 2, baixa: 3 }
+const STATUS_ORDER = Object.fromEntries(KANBAN_COLS.map((c, i) => [c.key, i]))
+
+function sortTasks(list) {
+  return [...list].sort((a, b) => {
+    const p = (PRI_ORDER[a.prioridade] ?? 9) - (PRI_ORDER[b.prioridade] ?? 9)
+    if (p !== 0) return p
+    if (!a.vencimento && !b.vencimento) return 0
+    if (!a.vencimento) return 1
+    if (!b.vencimento) return -1
+    return a.vencimento.localeCompare(b.vencimento)
+  })
+}
+
 /* ── KanbanView ─────────────────────────────────────────────────────── */
-function KanbanView({ tasks, onEdit }) {
+function KanbanView({ tasks, responsaveis, onEdit, onStatusChange }) {
   const today = new Date().toISOString().split('T')[0]
+  const [draggingId, setDraggingId] = useState(null)
+  const [dragOverCol, setDragOverCol] = useState(null)
+
+  function handleDrop(e, colKey) {
+    e.preventDefault()
+    if (draggingId) onStatusChange?.(draggingId, colKey)
+    setDraggingId(null)
+    setDragOverCol(null)
+  }
+
   return (
     <div className={styles.kanbanWrapper}>
       <div className={styles.kanbanBoard}>
         {KANBAN_COLS.map(col => {
-          const items = tasks.filter(t => t.status === col.key)
+          const items = sortTasks(tasks.filter(t => t.status === col.key))
+          const isOver = dragOverCol === col.key
           return (
-            <div key={col.key} className={styles.kanbanCol}>
+            <div
+              key={col.key}
+              className={`${styles.kanbanCol} ${isOver ? styles.kanbanColOver : ''}`}
+              onDragOver={e => { e.preventDefault(); setDragOverCol(col.key) }}
+              onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setDragOverCol(null) }}
+              onDrop={e => handleDrop(e, col.key)}
+            >
               <div className={styles.kanbanColHeader}>
                 <span className={`${styles.kanbanColTitle} ${col.color}`}>{col.label}</span>
                 <span className={styles.kanbanColCount}>{items.length}</span>
@@ -864,8 +915,14 @@ function KanbanView({ tasks, onEdit }) {
                   : items.map(t => {
                       const vencida = t.status !== 'concluida' && t.vencimento && t.vencimento < today
                       return (
-                        <div key={t.id} className={`${styles.kanbanCard} ${vencida ? styles.overdue : ''}`}
-                          onClick={() => onEdit(t.id)} style={{ cursor: 'pointer' }}>
+                        <div
+                          key={t.id}
+                          className={`${styles.kanbanCard} ${vencida ? styles.overdue : ''} ${draggingId === t.id ? styles.kanbanCardDragging : ''}`}
+                          draggable
+                          onDragStart={() => setDraggingId(t.id)}
+                          onDragEnd={() => { setDraggingId(null); setDragOverCol(null) }}
+                          onClick={() => onEdit(t.id)}
+                        >
                           <div className={styles.kanbanCardTitle}>{t.titulo}</div>
                           <div className={styles.kanbanCardMeta}>
                             <span className={`badge ${PRI_CSS[t.prioridade]}`}>{PRI_LABELS[t.prioridade]}</span>
@@ -876,7 +933,10 @@ function KanbanView({ tasks, onEdit }) {
                               </span>
                             )}
                           </div>
-                          {t.caso !== '—' && <div className={styles.kanbanCase}>{t.caso}</div>}
+                          <div className={styles.kanbanCardFooter}>
+                            {t.caso !== '—' && <div className={styles.kanbanCase}>{t.caso}</div>}
+                            <RespAvatar name={t.responsavel} responsaveis={responsaveis} />
+                          </div>
                         </div>
                       )
                     })
@@ -891,8 +951,41 @@ function KanbanView({ tasks, onEdit }) {
 }
 
 /* ── ListView ───────────────────────────────────────────────────────── */
-function ListView({ tasks, onEdit }) {
+const LIST_SORT_COLS = [
+  { key: 'titulo',      label: 'Tarefa' },
+  { key: 'caso',        label: 'Caso' },
+  { key: 'responsavel', label: 'Responsável' },
+  { key: 'prioridade',  label: 'Prioridade' },
+  { key: 'status',      label: 'Status' },
+  { key: 'vencimento',  label: 'Vencimento' },
+]
+
+function ListView({ tasks, responsaveis, onEdit }) {
   const today = new Date().toISOString().split('T')[0]
+  const [sortKey, setSortKey] = useState('vencimento')
+  const [sortDir, setSortDir] = useState('asc')
+
+  function toggleSort(key) {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortKey(key); setSortDir('asc') }
+  }
+
+  const sorted = useMemo(() => {
+    const list = [...tasks]
+    list.sort((a, b) => {
+      let av, bv
+      if (sortKey === 'prioridade')     { av = PRI_ORDER[a.prioridade] ?? 9; bv = PRI_ORDER[b.prioridade] ?? 9 }
+      else if (sortKey === 'status')     { av = STATUS_ORDER[a.status] ?? 9; bv = STATUS_ORDER[b.status] ?? 9 }
+      else if (sortKey === 'vencimento') { av = a.vencimento ?? '9999-99-99'; bv = b.vencimento ?? '9999-99-99' }
+      else if (sortKey === 'responsavel') { av = a.responsavel ?? ''; bv = b.responsavel ?? '' }
+      else                                { av = a[sortKey] ?? ''; bv = b[sortKey] ?? '' }
+      if (av < bv) return sortDir === 'asc' ? -1 : 1
+      if (av > bv) return sortDir === 'asc' ? 1 : -1
+      return 0
+    })
+    return list
+  }, [tasks, sortKey, sortDir])
+
   if (tasks.length === 0) return (
     <div className={styles.emptyState}>
       <div className={styles.emptyIcon}>✓</div>
@@ -903,16 +996,31 @@ function ListView({ tasks, onEdit }) {
     <div className={styles.tableCard}>
       <table className={styles.table}>
         <thead>
-          <tr><th>Tarefa</th><th>Caso</th><th>Prioridade</th><th>Status</th><th>Vencimento</th></tr>
+          <tr>
+            {LIST_SORT_COLS.map(c => (
+              <th key={c.key} className={styles.sortableTh} onClick={() => toggleSort(c.key)}>
+                {c.label}
+                {sortKey === c.key && <span className={styles.sortArrow}>{sortDir === 'asc' ? '↑' : '↓'}</span>}
+              </th>
+            ))}
+          </tr>
         </thead>
         <tbody>
-          {tasks.map(t => {
+          {sorted.map(t => {
             const vencida = t.status !== 'concluida' && t.vencimento && t.vencimento < today
             return (
               <tr key={t.id} className={`${styles.tableRow} ${vencida ? styles.overdueRow : ''}`}
                 onClick={() => onEdit(t.id)} style={{ cursor: 'pointer' }}>
                 <td className={styles.taskTitleCell}>{t.titulo}</td>
                 <td className={styles.caseCell}>{t.caso}</td>
+                <td>
+                  {t.responsavel
+                    ? <span className={styles.respCell}>
+                        <RespAvatar name={t.responsavel} responsaveis={responsaveis} size="xs" />
+                        {t.responsavel}
+                      </span>
+                    : <span className={styles.caseCell}>—</span>}
+                </td>
                 <td><span className={`badge ${PRI_CSS[t.prioridade]}`}>{PRI_LABELS[t.prioridade]}</span></td>
                 <td><span className={`badge badge-${t.status === 'em_andamento' ? 'pendente' : t.status}`}>
                   {KANBAN_COLS.find(c => c.key === t.status)?.label ?? t.status}
@@ -932,7 +1040,7 @@ function ListView({ tasks, onEdit }) {
 }
 
 /* ── Calendar view ──────────────────────────────────────────────────── */
-function CalendarView({ tasks, onEdit }) {
+function CalendarView({ tasks, responsaveis, onEdit }) {
   const [calMode, setCalMode] = useState('mes')
   const [anchor,  setAnchor]  = useState(() => new Date())
 
@@ -1005,7 +1113,8 @@ function CalendarView({ tasks, onEdit }) {
                     style={{ borderLeftColor: PRI_DOT[t.prioridade] ?? 'var(--accent)' }}
                     onClick={e => { e.stopPropagation(); onEdit(t.id) }}
                   >
-                    {t.titulo}
+                    {t.responsavel && <RespAvatar name={t.responsavel} responsaveis={responsaveis} size="xs" />}
+                    <span className={styles.calChipTitle}>{t.titulo}</span>
                   </div>
                 ))}
                 {dayTasks.length > 3 && (
@@ -1042,7 +1151,10 @@ function CalendarView({ tasks, onEdit }) {
                     style={{ borderLeftColor: PRI_DOT[t.prioridade] ?? 'var(--accent)' }}
                     onClick={() => onEdit(t.id)}
                   >
-                    <span className={styles.calWeekTaskTitle}>{t.titulo}</span>
+                    <div className={styles.calWeekTaskHead}>
+                      <span className={styles.calWeekTaskTitle}>{t.titulo}</span>
+                      {t.responsavel && <RespAvatar name={t.responsavel} responsaveis={responsaveis} size="xs" />}
+                    </div>
                     {t.caso !== '—' && <span className={styles.calWeekTaskCase}>{t.caso}</span>}
                   </div>
                 ))}
@@ -1077,6 +1189,12 @@ function CalendarView({ tasks, onEdit }) {
                 <span className={`badge badge-${t.status === 'em_andamento' ? 'pendente' : t.status}`}>
                   {KANBAN_COLS.find(c => c.key === t.status)?.label ?? t.status}
                 </span>
+                {t.responsavel && (
+                  <span className={styles.calDayTaskResp}>
+                    <RespAvatar name={t.responsavel} responsaveis={responsaveis} size="xs" />
+                    {t.responsavel}
+                  </span>
+                )}
               </div>
             </div>
           ))
@@ -1104,6 +1222,16 @@ function CalendarView({ tasks, onEdit }) {
           ))}
         </div>
       </div>
+      {responsaveis.length > 0 && (
+        <div className={styles.calLegend}>
+          {responsaveis.map((r, i) => (
+            <span key={r} className={styles.calLegendItem}>
+              <span className={styles.calLegendDot} style={{ background: RESP_COLORS[i % RESP_COLORS.length] }} />
+              {r}
+            </span>
+          ))}
+        </div>
+      )}
       {calMode === 'mes'    && renderMonth()}
       {calMode === 'semana' && renderWeek()}
       {calMode === 'dia'    && renderDay()}
@@ -1125,6 +1253,7 @@ export default function Tasks() {
   const [search, setSearch]       = useState('')
   const [filterPri, setFilterPri] = useState('todos')
   const [filterResp, setFilterResp] = useState('todos')
+  const [hideDone, setHideDone]   = useState(false)
 
   // Interns always see only their own tasks — override any filter value
   const effectiveFilterResp = isIntern ? internName : filterResp
@@ -1159,6 +1288,12 @@ export default function Tasks() {
     refetch()
   }
 
+  async function handleStatusChange(taskId, newStatus) {
+    const { error } = await updateTaskStatus(taskId, newStatus)
+    if (error) { toast.error('Erro ao mover tarefa.'); return }
+    refetch()
+  }
+
   function openNewWithDate(dateISO, assignedTo) {
     setEditing({
       due_date:    dateISO ? dateISO + 'T12:00:00' : null,
@@ -1170,13 +1305,15 @@ export default function Tasks() {
   const filtered = useMemo(() => {
     let list = tasks
     if (isIntern) list = list.filter(t => t.responsavel === internName)
+    else if (effectiveFilterResp !== 'todos') list = list.filter(t => t.responsavel === effectiveFilterResp)
     if (filterPri !== 'todos') list = list.filter(t => t.prioridade === filterPri)
+    if (hideDone) list = list.filter(t => t.status !== 'concluida' && t.status !== 'cancelada')
     if (search.trim()) {
       const q = search.toLowerCase()
       list = list.filter(t => t.titulo.toLowerCase().includes(q) || t.caso.toLowerCase().includes(q))
     }
     return list
-  }, [tasks, search, filterPri, isIntern, internName])
+  }, [tasks, search, filterPri, isIntern, internName, effectiveFilterResp, hideDone])
 
   const pendentes = tasks.filter(t => t.status !== 'concluida' && t.status !== 'cancelada').length
 
@@ -1219,6 +1356,13 @@ export default function Tasks() {
                   >{l}</button>
                 ))}
               </div>
+              {!isIntern && responsaveis.length > 0 && (
+                <RespPills responsaveis={responsaveis} value={filterResp} onChange={setFilterResp} />
+              )}
+              <label className={styles.hideDoneToggle}>
+                <input type="checkbox" checked={hideDone} onChange={e => setHideDone(e.target.checked)} />
+                Ocultar concluídas
+              </label>
             </>
           )
       }
@@ -1241,10 +1385,10 @@ export default function Tasks() {
               showDayMode={prefs.show_day_mode !== false}
             />
           : view === 'kanban'
-            ? <KanbanView tasks={filtered} onEdit={openEdit} />
+            ? <KanbanView tasks={filtered} responsaveis={responsaveis} onEdit={openEdit} onStatusChange={handleStatusChange} />
             : view === 'calendario'
-              ? <CalendarView tasks={filtered} onEdit={openEdit} />
-              : <ListView tasks={filtered} onEdit={openEdit} />
+              ? <CalendarView tasks={filtered} responsaveis={responsaveis} onEdit={openEdit} />
+              : <ListView tasks={filtered} responsaveis={responsaveis} onEdit={openEdit} />
       }
 
       {formOpen && (
