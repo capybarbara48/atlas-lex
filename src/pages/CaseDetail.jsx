@@ -18,24 +18,118 @@ import { Skeleton, SkeletonListItem } from '@/components/ui/Skeleton'
 import styles from './CaseDetail.module.css'
 
 /* ── PDF generation ─────────────────────────────────────────────────── */
-function generateCasePDF(caso, tasks, entries, lawyer, phase) {
+const CASE_PDF_STRINGS = {
+  pt: {
+    htmlLang: 'pt-BR', locale: 'pt-BR', currency: 'BRL',
+    barFallback: 'Advocacia',
+    dadosCliente: 'Dados do Cliente',
+    dadosProcesso: 'Dados do Processo',
+    situacaoAtual: 'Situação Atual do Processo',
+    tarefas: 'Tarefas',
+    financeiro: 'Financeiro',
+    tipo: 'Tipo',
+    pessoaJuridica: 'Pessoa Jurídica',
+    pessoaFisica: 'Pessoa Física',
+    cpfCnpj: 'CPF/CNPJ',
+    telefone: 'Telefone',
+    email: 'E-mail',
+    cidade: 'Cidade',
+    area: 'Área',
+    tribunal: 'Tribunal',
+    valorCausa: 'Valor da causa',
+    observacoes: 'Observações',
+    situacaoEspera: 'Situação de Espera',
+    faseProcessual: 'Fase Processual',
+    colTarefa: 'Tarefa',
+    colPrioridade: 'Prioridade',
+    colStatus: 'Status',
+    colPrazo: 'Prazo',
+    colDescricao: 'Descrição',
+    colTipo: 'Tipo',
+    colValor: 'Valor',
+    colData: 'Data',
+    receita: 'Receita',
+    despesa: 'Despesa',
+    receitas: 'Receitas',
+    despesas: 'Despesas',
+    saldo: 'Saldo',
+    fichaProcesso: 'Ficha do Processo',
+    fichaProcessoTitle: title => `Ficha do Processo — ${title}`,
+    dataEmissao: 'Data de Emissão',
+    geradoEm: dateStr => `Gerado em ${dateStr}`,
+    usoInterno: 'Uso interno · Confidencial',
+    imprimir: 'Imprimir / Salvar como PDF',
+    popupBlocked: 'Permita pop-ups nesta página para gerar o PDF.',
+    priMap: { urgente:['#ef4444','Urgente'], alta:['#ef4444','Alta'], media:['#f59e0b','Média'], baixa:['#94a3b8','Baixa'] },
+    taskStMap: { pendente:['#f59e0b','Pendente'], em_andamento:['#3b82f6','Em andamento'], concluida:['#22c55e','Concluída'], cancelada:['#94a3b8','Cancelada'] },
+    entryStMap: { pago:['#22c55e','Pago'], pendente:['#f59e0b','Pendente'], cancelado:['#94a3b8','Cancelado'] },
+  },
+  en: {
+    htmlLang: 'en-US', locale: 'en-US', currency: 'USD',
+    barFallback: 'Attorney at Law',
+    dadosCliente: 'Client Information',
+    dadosProcesso: 'Case Information',
+    situacaoAtual: 'Current Case Status',
+    tarefas: 'Tasks',
+    financeiro: 'Financials',
+    tipo: 'Type',
+    pessoaJuridica: 'Business',
+    pessoaFisica: 'Individual',
+    cpfCnpj: 'Tax ID',
+    telefone: 'Phone',
+    email: 'Email',
+    cidade: 'City',
+    area: 'Practice Area',
+    tribunal: 'Court',
+    valorCausa: 'Case Value',
+    observacoes: 'Notes',
+    situacaoEspera: 'Awaiting Status',
+    faseProcessual: 'Case Phase',
+    colTarefa: 'Task',
+    colPrioridade: 'Priority',
+    colStatus: 'Status',
+    colPrazo: 'Due Date',
+    colDescricao: 'Description',
+    colTipo: 'Type',
+    colValor: 'Amount',
+    colData: 'Date',
+    receita: 'Income',
+    despesa: 'Expense',
+    receitas: 'Income',
+    despesas: 'Expenses',
+    saldo: 'Balance',
+    fichaProcesso: 'Case Summary',
+    fichaProcessoTitle: title => `Case Summary — ${title}`,
+    dataEmissao: 'Issue Date',
+    geradoEm: dateStr => `Generated on ${dateStr}`,
+    usoInterno: 'Internal use · Confidential',
+    imprimir: 'Print / Save as PDF',
+    popupBlocked: 'Please allow pop-ups on this page to generate the PDF.',
+    priMap: { urgente:['#ef4444','Urgent'], alta:['#ef4444','High'], media:['#f59e0b','Medium'], baixa:['#94a3b8','Low'] },
+    taskStMap: { pendente:['#f59e0b','Pending'], em_andamento:['#3b82f6','In Progress'], concluida:['#22c55e','Completed'], cancelada:['#94a3b8','Cancelled'] },
+    entryStMap: { pago:['#22c55e','Paid'], pendente:['#f59e0b','Pending'], cancelado:['#94a3b8','Cancelled'] },
+  },
+}
+
+function generateCasePDF(caso, tasks, entries, lawyer, phase, lang = 'pt') {
+  const L = CASE_PDF_STRINGS[lang] ?? CASE_PDF_STRINGS.pt
   const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
 
   function fmtDate(iso) {
     if (!iso) return '—'
-    try { return new Date(iso.length === 10 ? iso + 'T12:00:00' : iso).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric' }) }
+    try { return new Date(iso.length === 10 ? iso + 'T12:00:00' : iso).toLocaleDateString(L.locale, { day:'2-digit', month:'2-digit', year:'numeric' }) }
     catch { return iso }
   }
 
-  const fmtBRL = n => new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(Number(n) || 0)
+  const fmtBRL = n => new Intl.NumberFormat(L.locale, { style:'currency', currency:L.currency }).format(Number(n) || 0)
   const accent     = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#4361ee'
-  const officeName = lawyer?.firm_name || lawyer?.full_name || 'Advocacia'
-  const oabLine    = lawyer?.oab_number ? ` · OAB ${lawyer.oab_number}` : ''
-  const dateStr    = new Date().toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })
+  const officeName = lawyer?.firm_name || lawyer?.full_name || L.barFallback
+  const oabLine    = lawyer?.oab_number ? ` · ${lang === 'en' ? `Bar No. ${lawyer.oab_number}` : `OAB ${lawyer.oab_number}`}` : ''
+  const dateStr    = new Date().toLocaleDateString(L.locale, { day:'2-digit', month:'long', year:'numeric' })
 
-  const priMap      = { urgente:['#ef4444','Urgente'], alta:['#ef4444','Alta'], media:['#f59e0b','Média'], baixa:['#94a3b8','Baixa'] }
-  const taskStMap   = { pendente:['#f59e0b','Pendente'], em_andamento:['#3b82f6','Em andamento'], concluida:['#22c55e','Concluída'], cancelada:['#94a3b8','Cancelada'] }
-  const entryStMap  = { pago:['#22c55e','Pago'], pendente:['#f59e0b','Pendente'], cancelado:['#94a3b8','Cancelado'] }
+  const priMap      = L.priMap
+  const taskStMap   = L.taskStMap
+  const entryStMap  = L.entryStMap
 
   const divider = label => `
     <div style="display:flex;align-items:center;gap:1rem;margin:1.75rem 0 1.25rem;">
@@ -54,11 +148,11 @@ function generateCasePDF(caso, tasks, entries, lawyer, phase) {
   // Dados do cliente
   const cli = caso.clients
   const clientFields = cli ? [
-    { l: 'Tipo',       v: cli.tipo === 'PJ' ? 'Pessoa Jurídica' : 'Pessoa Física' },
-    cli.cpf_cnpj && { l: 'CPF/CNPJ', v: cli.cpf_cnpj },
-    cli.phone    && { l: 'Telefone', v: cli.phone },
-    cli.email    && { l: 'E-mail',   v: cli.email },
-    (cli.cidade || cli.estado) && { l: 'Cidade', v: [cli.cidade, cli.estado].filter(Boolean).join(' / ') },
+    { l: L.tipo,       v: cli.tipo === 'PJ' ? L.pessoaJuridica : L.pessoaFisica },
+    cli.cpf_cnpj && { l: L.cpfCnpj, v: cli.cpf_cnpj },
+    cli.phone    && { l: L.telefone, v: cli.phone },
+    cli.email    && { l: L.email,   v: cli.email },
+    (cli.cidade || cli.estado) && { l: L.cidade, v: [cli.cidade, cli.estado].filter(Boolean).join(' / ') },
   ].filter(Boolean) : []
 
   const clientRows = clientFields.map((f, i) => `
@@ -68,7 +162,7 @@ function generateCasePDF(caso, tasks, entries, lawyer, phase) {
     </tr>`).join('')
 
   const clientHtml = cli ? `
-    ${divider('Dados do Cliente')}
+    ${divider(L.dadosCliente)}
     <div style="background:#f4f7fa;border:1px solid #dde4eb;border-radius:14px;overflow:hidden;margin-bottom:0.75rem;">
       <div style="padding:1rem 1.25rem;border-bottom:1px solid #dde4eb;display:flex;align-items:center;gap:0.75rem;">
         <div style="width:36px;height:36px;background:${accent};border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -81,10 +175,10 @@ function generateCasePDF(caso, tasks, entries, lawyer, phase) {
 
   // Dados do processo
   const caseFields = [
-    caso.area               && { l: 'Área',           v: caso.area },
-    caso.court              && { l: 'Tribunal',       v: caso.court },
-    caso.valor > 0          && { l: 'Valor da causa', v: fmtBRL(caso.valor) },
-    caso.description        && { l: 'Observações',    v: caso.description },
+    caso.area               && { l: L.area,      v: caso.area },
+    caso.court              && { l: L.tribunal,  v: caso.court },
+    caso.valor > 0          && { l: L.valorCausa, v: fmtBRL(caso.valor) },
+    caso.description        && { l: L.observacoes, v: caso.description },
   ].filter(Boolean)
 
   const infoRows = caseFields.map((f, i) => `
@@ -95,14 +189,14 @@ function generateCasePDF(caso, tasks, entries, lawyer, phase) {
 
   // Situação atual do processo (fase selecionada pelo advogado)
   const statusHtml = phase ? `
-    ${divider('Situação Atual do Processo')}
+    ${divider(L.situacaoAtual)}
     <div style="background:#f4f7fa;border:1px solid #dde4eb;border-radius:14px;padding:1.75rem 2rem;margin-bottom:2rem;">
       <div style="display:flex;align-items:center;gap:0.875rem;margin-bottom:1.1rem;">
         <div style="background:${accent};color:#fff;border-radius:7px;padding:0.28rem 0.7rem;font-size:0.62rem;font-weight:800;letter-spacing:0.06em;white-space:nowrap;flex-shrink:0;">${esc(phase.id)}</div>
         <div style="font-size:0.95rem;font-weight:700;color:#1a1a2e;line-height:1.3;">${esc(phase.titulo)}</div>
       </div>
       <div style="font-size:0.875rem;color:#3a4a5a;line-height:1.8;border-left:3px solid ${accent};padding-left:1.25rem;">${esc(phase.explicacao)}</div>
-      <div style="margin-top:1rem;font-size:0.6rem;color:#8a9bac;text-transform:uppercase;letter-spacing:0.1em;font-weight:700;">${esc(phase.grupo)} · ${phase.tipo === 'aguardando' ? 'Situação de Espera' : 'Fase Processual'}</div>
+      <div style="margin-top:1rem;font-size:0.6rem;color:#8a9bac;text-transform:uppercase;letter-spacing:0.1em;font-weight:700;">${esc(phase.grupo)} · ${phase.tipo === 'aguardando' ? L.situacaoEspera : L.faseProcessual}</div>
     </div>` : ''
 
   // Tarefas
@@ -119,9 +213,9 @@ function generateCasePDF(caso, tasks, entries, lawyer, phase) {
       </tr>`
     }).join('')
     tasksHtml = `
-      ${divider('Tarefas')}
+      ${divider(L.tarefas)}
       <div style="border:1px solid #dde4eb;border-radius:14px;overflow:hidden;margin-bottom:2rem;">
-        <table style="width:100%;border-collapse:collapse;">${thead('Tarefa','Prioridade','Status','Prazo')}<tbody>${rows}</tbody></table>
+        <table style="width:100%;border-collapse:collapse;">${thead(L.colTarefa,L.colPrioridade,L.colStatus,L.colPrazo)}<tbody>${rows}</tbody></table>
       </div>`
   }
 
@@ -135,19 +229,19 @@ function generateCasePDF(caso, tasks, entries, lawyer, phase) {
       const [sc, sl] = entryStMap[e.status] ?? ['#94a3b8', e.status]
       return `<tr style="${i%2===0?'background:#f4f7fa;':''}">
         <td style="padding:0.6rem 1rem;font-size:0.82rem;font-weight:500;color:#1a1a2e;">${esc(e.description || '—')}</td>
-        <td style="padding:0.6rem 1rem;">${badge(e.type === 'receita' ? '#22c55e' : '#ef4444', e.type === 'receita' ? 'Receita' : 'Despesa')}</td>
+        <td style="padding:0.6rem 1rem;">${badge(e.type === 'receita' ? '#22c55e' : '#ef4444', e.type === 'receita' ? L.receita : L.despesa)}</td>
         <td style="padding:0.6rem 1rem;">${badge(sc, sl)}</td>
         <td style="padding:0.6rem 1rem;font-size:0.8rem;font-weight:700;text-align:right;color:${e.type === 'receita' ? '#1a9e43' : '#e03c3c'};">${e.type === 'receita' ? '+' : '−'}${esc(fmtBRL(e.amount))}</td>
         <td style="padding:0.6rem 1rem;font-size:0.72rem;color:#5a6a7a;white-space:nowrap;">${esc(fmtDate(e.due_date))}</td>
       </tr>`
     }).join('')
     entriesHtml = `
-      ${divider('Financeiro')}
+      ${divider(L.financeiro)}
       <div style="border:1px solid #dde4eb;border-radius:14px;overflow:hidden;margin-bottom:1.5rem;">
-        <table style="width:100%;border-collapse:collapse;">${thead('Descrição','Tipo','Status','Valor','Data')}<tbody>${rows}</tbody></table>
+        <table style="width:100%;border-collapse:collapse;">${thead(L.colDescricao,L.colTipo,L.colStatus,L.colValor,L.colData)}<tbody>${rows}</tbody></table>
       </div>
       <div style="display:flex;background:#f4f7fa;border:1px solid #dde4eb;border-radius:12px;overflow:hidden;margin-bottom:2rem;">
-        ${[['Receitas','#1a9e43',fmtBRL(totRec)],['Despesas','#e03c3c',fmtBRL(totDesp)],['Saldo',saldo>=0?'#1a9e43':'#e03c3c',fmtBRL(saldo)]].map((item, idx) => `
+        ${[[L.receitas,'#1a9e43',fmtBRL(totRec)],[L.despesas,'#e03c3c',fmtBRL(totDesp)],[L.saldo,saldo>=0?'#1a9e43':'#e03c3c',fmtBRL(saldo)]].map((item, idx) => `
           ${idx > 0 ? '<div style="width:1px;background:#dde4eb;"></div>' : ''}
           <div style="flex:1;text-align:center;padding:1rem;">
             <div style="font-size:0.58rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#8a9bac;margin-bottom:0.35rem;">${esc(item[0])}</div>
@@ -157,10 +251,10 @@ function generateCasePDF(caso, tasks, entries, lawyer, phase) {
   }
 
   const html = `<!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="${L.htmlLang}">
 <head>
 <meta charset="UTF-8">
-<title>Ficha do Processo — ${esc(caso.title)}</title>
+<title>${esc(L.fichaProcessoTitle(caso.title))}</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -193,7 +287,7 @@ function generateCasePDF(caso, tasks, entries, lawyer, phase) {
 <div class="no-print" style="text-align:center;margin-bottom:1.5rem;">
   <button onclick="window.print()" style="background:${accent};color:#fff;border:none;border-radius:10px;padding:0.7rem 2rem;font-size:0.88rem;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:0.6rem;box-shadow:0 4px 20px rgba(0,0,0,0.18);">
     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-    Imprimir / Salvar como PDF
+    ${esc(L.imprimir)}
   </button>
 </div>
 <div class="page">
@@ -205,16 +299,16 @@ function generateCasePDF(caso, tasks, entries, lawyer, phase) {
         </div>
         <div>
           <div class="office-name-main">${esc(officeName)}</div>
-          <div class="office-name-sub">Advocacia${oabLine}</div>
+          <div class="office-name-sub">${esc(L.barFallback)}${oabLine}</div>
         </div>
       </div>
       <div class="header-doc-info">
-        <div class="doc-label">Data de Emissão</div>
+        <div class="doc-label">${esc(L.dataEmissao)}</div>
         <div class="doc-date">${dateStr}</div>
       </div>
     </div>
     <div class="header-body">
-      <div class="prop-badge">Ficha do Processo</div>
+      <div class="prop-badge">${esc(L.fichaProcesso)}</div>
       <div class="prop-title">${esc(caso.title)}</div>
       ${caso.case_number ? `<div class="prop-sub">${esc(caso.case_number)}</div>` : ''}
     </div>
@@ -222,7 +316,7 @@ function generateCasePDF(caso, tasks, entries, lawyer, phase) {
   <div class="pdf-body">
     ${clientHtml}
     ${caseFields.length > 0 ? `
-    ${divider('Dados do Processo')}
+    ${divider(L.dadosProcesso)}
     <div style="border:1px solid #dde4eb;border-radius:14px;overflow:hidden;margin-bottom:2rem;">
       <table style="width:100%;border-collapse:collapse;"><tbody>${infoRows}</tbody></table>
     </div>` : ''}
@@ -232,14 +326,14 @@ function generateCasePDF(caso, tasks, entries, lawyer, phase) {
   </div>
   <div class="pdf-footer">
     <div class="pdf-footer-brand">${esc(officeName)}</div>
-    <div class="pdf-footer-note">Gerado em ${dateStr}<br>Uso interno · Confidencial</div>
+    <div class="pdf-footer-note">${esc(L.geradoEm(dateStr))}<br>${esc(L.usoInterno)}</div>
   </div>
 </div>
 </body>
 </html>`
 
   const win = window.open('', '_blank')
-  if (!win) { alert('Permita pop-ups nesta página para gerar o PDF.'); return }
+  if (!win) { alert(L.popupBlocked); return }
   win.document.write(html)
   win.document.close()
 }
@@ -795,7 +889,7 @@ export default function CaseDetail() {
         </div>
 
         <div className={styles.headerActions}>
-          <button className={styles.pdfBtn} onClick={() => generateCasePDF(caso, tasks, entries, lawyer, selectedPhase)}>
+          <button className={styles.pdfBtn} onClick={() => generateCasePDF(caso, tasks, entries, lawyer, selectedPhase, i18n.language)}>
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
               <polyline points="4 6 4 1.5 12 1.5 12 6"/>
               <path d="M4 11.5H2.5a1.5 1.5 0 0 1-1.5-1.5V6a1.5 1.5 0 0 1 1.5-1.5h11A1.5 1.5 0 0 1 14 6v4a1.5 1.5 0 0 1-1.5 1.5H11"/>

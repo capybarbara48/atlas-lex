@@ -32,9 +32,9 @@ function mapEntry(e) {
 }
 
 /* ── helpers ──────────────────────────────────────────────────────────── */
-/* NOTE: fmtBRLPlain stays pt-BR — used only by generateFinanceiroPDF's printed report, which is left untranslated by design. */
-function fmtBRLPlain(v) {
-  return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+function fmtBRLPlain(v, locale = 'pt-BR', currency = 'BRL') {
+  const symbol = currency === 'USD' ? '$' : 'R$'
+  return symbol + ' ' + Number(v).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 function fmtDate(iso, lang) {
@@ -53,6 +53,58 @@ function monthLong(y, m, lang) {
 function monthShort(m, lang) {
   return formatDate(new Date(2000, m, 1), lang, { month: 'short' })
     .replace('.', '')
+}
+
+/* ── Financeiro PDF report strings ───────────────────────────────────── */
+const FIN_PDF_STRINGS = {
+  pt: {
+    htmlLang: 'pt-BR', locale: 'pt-BR', currency: 'BRL',
+    docTitle: mesNome => `Relatório Financeiro — ${mesNome}`,
+    generatedOn: 'Gerado em',
+    badge: 'Relatório Financeiro',
+    subtitle: 'Demonstrativo de Ativos e Passivos',
+    incomeLabel: 'Receitas',
+    expenseLabel: 'Despesas',
+    balanceLabel: 'Saldo',
+    sectionIncome: 'Ativos — Receitas Registradas',
+    sectionExpenses: 'Passivos — Despesas do Mês',
+    caseLabel: 'Caso',
+    descLabel: 'Descrição',
+    confirmedOnLabel: 'Confirmado em',
+    categoryLabel: 'Categoria',
+    paidOnLabel: 'Pago em',
+    amountLabel: 'Valor',
+    emptyIncome: 'Nenhuma receita registrada',
+    emptyExpense: 'Nenhuma despesa lançada',
+    recurringBadge: 'Fixa',
+    footerNote: 'Relatório gerado automaticamente',
+    popupBlocked: 'Permita pop-ups para gerar o PDF.',
+    barFallback: 'Advocacia',
+  },
+  en: {
+    htmlLang: 'en-US', locale: 'en-US', currency: 'USD',
+    docTitle: mesNome => `Financial Report — ${mesNome}`,
+    generatedOn: 'Generated on',
+    badge: 'Financial Report',
+    subtitle: 'Income & Expense Statement',
+    incomeLabel: 'Income',
+    expenseLabel: 'Expenses',
+    balanceLabel: 'Balance',
+    sectionIncome: 'Income — Recorded Revenue',
+    sectionExpenses: 'Expenses — Recorded This Month',
+    caseLabel: 'Case',
+    descLabel: 'Description',
+    confirmedOnLabel: 'Confirmed On',
+    categoryLabel: 'Category',
+    paidOnLabel: 'Paid On',
+    amountLabel: 'Amount',
+    emptyIncome: 'No income recorded',
+    emptyExpense: 'No expenses recorded',
+    recurringBadge: 'Recurring',
+    footerNote: 'Report generated automatically',
+    popupBlocked: 'Please allow pop-ups to generate the PDF.',
+    barFallback: 'Attorney at Law',
+  },
 }
 
 /* ── inline SVG icons ─────────────────────────────────────────────────── */
@@ -559,25 +611,27 @@ export default function Financials() {
   const qlPendingCount = (qlCases ?? []).filter(c => !c.quota_litis_received).length
 
   /* ── PDF generator ──────────────────────────────────────────────────── */
-  function generateFinanceiroPDF() {
+  function generateFinanceiroPDF(lang = 'pt') {
+    const L         = FIN_PDF_STRINGS[lang] ?? FIN_PDF_STRINGS.pt
     const accent    = lawyer?.theme_accent ?? '#043b61'
     const firmName  = lawyer?.firm_name    ?? 'Atlas Lex'
-    const oabLabel  = lawyer?.oab_number   ? `OAB ${lawyer.oab_number}` : 'Advocacia'
-    // Printed report stays in Portuguese regardless of UI language (legal-document convention) — kept decoupled from mLabel.
-    const mesNome   = monthLong(viewYear, viewMonth, 'pt')
-    const dateStr   = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
-    const fB        = v => fmtBRLPlain(v)
+    const oabLabel  = lawyer?.oab_number
+      ? (lang === 'en' ? `Bar No. ${lawyer.oab_number}` : `OAB ${lawyer.oab_number}`)
+      : L.barFallback
+    const mesNome   = monthLong(viewYear, viewMonth, lang)
+    const dateStr   = new Date().toLocaleDateString(L.locale, { day: '2-digit', month: 'long', year: 'numeric' })
+    const fB        = v => fmtBRLPlain(v, L.locale, L.currency)
 
     const pdfFmtDt  = iso => {
       if (!iso) return '—'
       try {
         const dt = iso.length <= 10 ? new Date(iso + 'T12:00:00') : new Date(iso)
-        return dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+        return dt.toLocaleDateString(L.locale, { day: '2-digit', month: '2-digit', year: 'numeric' })
       } catch { return '—' }
     }
 
     const ativoRows = receitasMes.length === 0
-      ? `<tr><td colspan="4" style="text-align:center;color:#8a9bac;font-style:italic;">Nenhuma receita registrada</td></tr>`
+      ? `<tr><td colspan="4" style="text-align:center;color:#8a9bac;font-style:italic;">${L.emptyIncome}</td></tr>`
       : receitasMes.map(e => `
         <tr>
           <td>${e.caso ?? '—'}</td>
@@ -587,11 +641,11 @@ export default function Financials() {
         </tr>`).join('')
 
     const passivoRows = despesasMes.length === 0
-      ? `<tr><td colspan="4" style="text-align:center;color:#8a9bac;font-style:italic;">Nenhuma despesa lançada</td></tr>`
+      ? `<tr><td colspan="4" style="text-align:center;color:#8a9bac;font-style:italic;">${L.emptyExpense}</td></tr>`
       : despesasMes.map(e => `
         <tr>
           <td>${e.category ?? '—'}</td>
-          <td>${e.desc}${e.recurring ? ' <span style="font-size:0.6rem;background:rgba(139,92,246,0.12);color:#7c3aed;border-radius:999px;padding:0.05rem 0.35rem;font-weight:700;text-transform:uppercase;">Fixa</span>' : ''}</td>
+          <td>${e.desc}${e.recurring ? ` <span style="font-size:0.6rem;background:rgba(139,92,246,0.12);color:#7c3aed;border-radius:999px;padding:0.05rem 0.35rem;font-weight:700;text-transform:uppercase;">${L.recurringBadge}</span>` : ''}</td>
           <td style="color:${e.paidAt ? '#1a9e43' : '#8a9bac'};font-size:0.75rem;">${pdfFmtDt(e.paidAt)}</td>
           <td class="val-neg">− ${fB(e.valor)}</td>
         </tr>`).join('')
@@ -601,10 +655,10 @@ export default function Financials() {
     const saldoBord  = saldo >= 0 ? '#b8e8c8' : '#f5c6c6'
 
     const html = `<!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="${L.htmlLang}">
 <head>
 <meta charset="UTF-8">
-<title>Relatório Financeiro — ${mesNome}</title>
+<title>${L.docTitle(mesNome)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -678,57 +732,57 @@ export default function Financials() {
         </div>
       </div>
       <div class="header-doc-info">
-        <div class="doc-label">Gerado em</div>
+        <div class="doc-label">${L.generatedOn}</div>
         <div class="doc-date">${dateStr}</div>
       </div>
     </div>
     <div class="header-body">
-      <div class="rel-badge">Relatório Financeiro</div>
+      <div class="rel-badge">${L.badge}</div>
       <div class="rel-title">${mesNome}</div>
-      <div class="rel-sub">Demonstrativo de Ativos e Passivos</div>
+      <div class="rel-sub">${L.subtitle}</div>
     </div>
   </div>
   <div class="pdf-body">
     <div class="summary-grid">
       <div class="sum-card green">
-        <div class="sum-label green">Receitas</div>
+        <div class="sum-label green">${L.incomeLabel}</div>
         <div class="sum-value green">${fB(totalRecebido)}</div>
       </div>
       <div class="sum-card red">
-        <div class="sum-label red">Despesas</div>
+        <div class="sum-label red">${L.expenseLabel}</div>
         <div class="sum-value red">− ${fB(totalDespesas)}</div>
       </div>
       <div class="sum-card saldo">
-        <div class="sum-label saldo">Saldo</div>
+        <div class="sum-label saldo">${L.balanceLabel}</div>
         <div class="sum-value saldo">${fB(saldo)}</div>
       </div>
     </div>
     <div class="section-divider">
       <div class="section-divider-line"></div>
-      <div class="section-divider-label">Ativos — Receitas Registradas</div>
+      <div class="section-divider-label">${L.sectionIncome}</div>
       <div class="section-divider-line"></div>
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Caso</th><th>Descrição</th><th>Confirmado em</th><th>Valor</th></tr></thead>
+        <thead><tr><th>${L.caseLabel}</th><th>${L.descLabel}</th><th>${L.confirmedOnLabel}</th><th>${L.amountLabel}</th></tr></thead>
         <tbody>${ativoRows}</tbody>
       </table>
     </div>
     <div class="section-divider">
       <div class="section-divider-line"></div>
-      <div class="section-divider-label">Passivos — Despesas do Mês</div>
+      <div class="section-divider-label">${L.sectionExpenses}</div>
       <div class="section-divider-line"></div>
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Categoria</th><th>Descrição</th><th>Pago em</th><th>Valor</th></tr></thead>
+        <thead><tr><th>${L.categoryLabel}</th><th>${L.descLabel}</th><th>${L.paidOnLabel}</th><th>${L.amountLabel}</th></tr></thead>
         <tbody>${passivoRows}</tbody>
       </table>
     </div>
   </div>
   <div class="pdf-footer">
     <div class="pdf-footer-brand">${firmName} · ${oabLabel}</div>
-    <div class="pdf-footer-note">Relatório gerado automaticamente · ${dateStr}</div>
+    <div class="pdf-footer-note">${L.footerNote} · ${dateStr}</div>
   </div>
 </div>
 <script>window.onload = () => window.print();<\/script>
@@ -737,7 +791,7 @@ export default function Financials() {
 
     const win = window.open('', '_blank')
     if (win) { win.document.write(html); win.document.close() }
-    else alert('Permita pop-ups para gerar o PDF.')
+    else alert(L.popupBlocked)
   }
 
   return (
@@ -747,7 +801,7 @@ export default function Financials() {
       action={
         tab === 'lancamentos' && (
           <div className={styles.actionBtns}>
-            <button className={styles.btnPDF} onClick={generateFinanceiroPDF} title={t('financials.actions.pdfTitle')}>
+            <button className={styles.btnPDF} onClick={() => generateFinanceiroPDF(lang)} title={t('financials.actions.pdfTitle')}>
               <IconPDF />
               {t('financials.actions.pdf')}
             </button>
