@@ -104,4 +104,11 @@ i18next.use(initReactI18next).init({
   },
 })
 
+if (typeof document !== 'undefined') {
+  document.documentElement.lang = i18next.language === 'en' ? 'en-US' : 'pt-BR'
+  i18next.on('languageChanged', lang => {
+    document.documentElement.lang = lang === 'en' ? 'en-US' : 'pt-BR'
+  })
+}
+
 export default i18next
