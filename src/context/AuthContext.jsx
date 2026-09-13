@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { applyFonts } from '@/lib/fonts'
+import i18n from '@/i18n'
 
 const AuthContext = createContext(null)
 
@@ -120,6 +121,8 @@ export function AuthProvider({ children }) {
     if (font_heading || font_body || font_mono || custom_font_url) {
       applyFonts({ font_heading, font_body, font_mono, font_scope, custom_font_url })
     }
+    const lang = lawyer.preferences.language ?? 'pt'
+    if (i18n.language !== lang) i18n.changeLanguage(lang)
   }, [lawyer])
 
   // teamRole: 'advogado' for owners (and admins); member's role for team members

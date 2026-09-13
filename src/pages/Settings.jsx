@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { loadPreferences, savePreferences, resetPreferences } from '@/hooks/usePreferences'
@@ -258,6 +259,7 @@ function TeamMembersSection({ lawyerId, session, responsaveis = [] }) {
 /* ── Main ───────────────────────────────────────────────────────── */
 export default function Settings() {
   const { lawyer, session, refreshLawyer, isTeamMember } = useAuth()
+  const { t, i18n } = useTranslation()
 
   /* Profile fields */
   const [fullName,  setFullName]  = useState('')
@@ -401,6 +403,19 @@ export default function Settings() {
     await refreshLawyer()
     setSuccess('Listas atualizadas com sucesso!')
     setTimeout(() => setSuccess(''), 3000)
+  }
+
+  async function handleSaveLanguage(lang) {
+    const previous = lawyer?.preferences?.language ?? 'pt'
+    if (previous === lang) return
+    i18n.changeLanguage(lang)
+    const existing = lawyer?.preferences ?? {}
+    const { error } = await supabase
+      .from('lawyers')
+      .update({ preferences: { ...existing, language: lang } })
+      .eq('id', session.user.id)
+    if (error) { i18n.changeLanguage(previous); setError('Erro ao salvar idioma: ' + error.message); return }
+    await refreshLawyer()
   }
 
   async function handleSaveFonts() {
@@ -668,6 +683,23 @@ export default function Settings() {
                 </button>
               )
             })}
+          </div>
+        </Section>
+
+        {/* ── Idioma / Language ── */}
+        <Section
+          title={t('settings.language.label', 'Idioma')}
+          subtitle={t('settings.language.sub', 'Escolha o idioma da interface')}
+        >
+          <div className={styles.prefRow}>
+            <div className={styles.prefOptions}>
+              {[{ v: 'pt', l: 'Português' }, { v: 'en', l: 'English' }].map(({ v, l }) => (
+                <button key={v} type="button"
+                  className={`${styles.prefBtn} ${(lawyer?.preferences?.language ?? 'pt') === v ? styles.prefBtnActive : ''}`}
+                  onClick={() => handleSaveLanguage(v)}
+                >{l}</button>
+              ))}
+            </div>
           </div>
         </Section>
 
