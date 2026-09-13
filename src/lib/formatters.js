@@ -12,8 +12,11 @@ export function formatDate(value, lang, opts) {
   return d.toLocaleDateString(resolveLocale(lang), opts)
 }
 
+const CURRENCY_CODE = { pt: 'BRL', en: 'USD' }
+
 export function formatCurrency(value, lang) {
-  return new Intl.NumberFormat(resolveLocale(lang), { style: 'currency', currency: 'BRL' }).format(value ?? 0)
+  const currency = CURRENCY_CODE[lang] ?? CURRENCY_CODE.pt
+  return new Intl.NumberFormat(resolveLocale(lang), { style: 'currency', currency }).format(value ?? 0)
 }
 
 export function formatNumber(value, lang, opts) {
