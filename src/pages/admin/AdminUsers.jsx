@@ -38,11 +38,9 @@ export default function AdminUsers() {
   async function changeRole(userId, newRole) {
     setUpdating(userId)
     const { error } = await supabase
-      .from('lawyers')
-      .update({ role: newRole })
-      .eq('id', userId)
+      .rpc('admin_set_role', { target_id: userId, new_role: newRole })
     if (error) {
-      toast.error('Erro ao atualizar perfil.')
+      toast.error(error.message || 'Erro ao atualizar perfil.')
     } else {
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u))
       toast.success(`Perfil atualizado para ${roleLabel(newRole)}.`)
