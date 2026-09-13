@@ -1,0 +1,42 @@
+{
+  "title": "Tarefas",
+  "newTask": "Nova tarefa",
+  "editTask": "Editar tarefa",
+  "searchPlaceholder": "Buscar tarefa ou caso...",
+  "filterAll": "Todas",
+  "loadError": "Erro ao carregar tarefas.",
+  "emptyList": "Nenhuma tarefa encontrada",
+  "kanbanEmpty": "Vazio",
+  "overdue": "Vencida",
+  "toastCreated": "Tarefa criada.",
+  "toastUpdated": "Tarefa atualizada.",
+  "countTasks_one": "{{count}} tarefa",
+  "countTasks_other": "{{count}} tarefas",
+  "countPending_one": "{{count}} pendente",
+  "countPending_other": "{{count}} pendentes",
+  "table": {
+    "task": "Tarefa",
+    "case": "Caso",
+    "priority": "Prioridade",
+    "status": "Status",
+    "dueDate": "Vencimento"
+  },
+  "calendar": {
+    "today": "Hoje",
+    "month": "Mês",
+    "week": "Semana",
+    "day": "Dia",
+    "more": "+{{count}} mais",
+    "emptyDay": "Nenhuma tarefa neste dia."
+  },
+  "form": {
+    "titleLabel": "Título da tarefa",
+    "titlePlaceholder": "Ex: Protocolar recurso no TJSP",
+    "assigneeLabel": "Responsável",
+    "unassignedOption": "— Não atribuído —",
+    "assigneePlaceholder": "Nome do responsável",
+    "descriptionLabel": "Descrição",
+    "descriptionPlaceholder": "Detalhes sobre o que precisa ser feito…",
+    "createButton": "Criar tarefa"
+  }
+}

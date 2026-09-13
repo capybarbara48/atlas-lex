@@ -1,0 +1,62 @@
+{
+  "newProposal": "Nova proposta",
+  "newProposalModal": "Nova proposta",
+  "editProposal": "Editar proposta",
+  "searchPlaceholder": "Buscar proposta ou cliente...",
+  "all": "Todas",
+  "loading": "Carregando…",
+  "countSubtitle_one": "{{count}} proposta · {{approved}} aprovado · {{pending}} em avaliação",
+  "countSubtitle_other": "{{count}} propostas · {{approved}} aprovado · {{pending}} em avaliação",
+  "errorLoading": "Erro ao carregar propostas.",
+  "emptyPipeline": "Nenhuma proposta",
+  "emptyList": "Nenhuma proposta encontrada",
+  "generatePdf": "Gerar PDF",
+  "pdfOpened": "PDF aberto em nova aba.",
+  "pdfPopupBlocked": "Permita pop-ups no navegador para gerar o PDF.",
+  "toastCreated": "Proposta criada.",
+  "toastUpdated": "Proposta atualizada.",
+  "validUntil": "Válida até {{date}}",
+  "view": {
+    "pipeline": "Pipeline",
+    "list": "Lista"
+  },
+  "pipeline": {
+    "pendente": "Em Avaliação",
+    "aprovado": "Aprovadas",
+    "recusado": "Recusadas"
+  },
+  "status": {
+    "pendente": "Pendente",
+    "aprovado": "Aprovado",
+    "recusado": "Recusado",
+    "rascunho": "Rascunho",
+    "enviada": "Enviada",
+    "aceita": "Aceita",
+    "recusada": "Recusada",
+    "expirada": "Expirada"
+  },
+  "feeType": {
+    "fixo": "Fixo",
+    "por_hora": "Por Hora",
+    "percentual_exito": "Êxito",
+    "misto": "Misto"
+  },
+  "table": {
+    "proposal": "Proposta",
+    "client": "Cliente",
+    "fee": "Honorário",
+    "value": "Valor",
+    "status": "Status",
+    "created": "Criada",
+    "validUntil": "Validade"
+  },
+  "form": {
+    "titleLabel": "Título da proposta",
+    "titlePlaceholder": "Ex: Proposta de honorários — Ação Trabalhista",
+    "feeTypeLabel": "Tipo de honorário",
+    "amountLabel": "Valor (R$)",
+    "hourlyAmountLabel": "Valor por hora (R$)",
+    "percentageLabel": "Percentual de êxito (%)",
+    "createButton": "Criar proposta"
+  }
+}

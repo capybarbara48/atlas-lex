@@ -1,0 +1,25 @@
+{
+  "case": {
+    "ativo": "Active",
+    "encerrado": "Closed",
+    "arquivado": "Archived",
+    "suspenso": "Suspended"
+  },
+  "task": {
+    "pendente": "Pending",
+    "em_andamento": "In progress",
+    "concluida": "Completed",
+    "cancelada": "Cancelled"
+  },
+  "financial": {
+    "pago": "Paid",
+    "pendente": "Pending",
+    "cancelado": "Cancelled"
+  },
+  "priority": {
+    "alta": "High",
+    "urgente": "Urgent",
+    "media": "Medium",
+    "baixa": "Low"
+  }
+}

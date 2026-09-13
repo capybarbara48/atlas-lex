@@ -1,0 +1,48 @@
+{
+  "greeting": {
+    "morning": "Good morning",
+    "afternoon": "Good afternoon",
+    "evening": "Good evening"
+  },
+  "activeCases": "Active cases",
+  "activeCasesSummary": "{{total}} in total · {{clients}} clients",
+  "statTasksToday": "Tasks today",
+  "statIncomeMonth": "Income / month",
+  "statBalanceMonth": "Balance / month",
+  "newCaseButton": "New case",
+  "newCaseModalTitle": "New Case",
+  "casesBoard": {
+    "title": "Case Board",
+    "subtitle": "{{total}} cases · {{active}} active"
+  },
+  "kanbanEmpty": "Empty",
+  "seeAllTasks": "See all",
+  "overdueCard": {
+    "title": "Overdue & Urgent"
+  },
+  "overdueTasks_one": "{{count}} overdue task",
+  "overdueTasks_other": "{{count}} overdue tasks",
+  "noOverdueTasks": "No overdue tasks",
+  "allCaughtUp": "All caught up!",
+  "todayTasksCard": {
+    "title": "Today's Tasks"
+  },
+  "todayTasksCount_one": "{{count}} task for today",
+  "todayTasksCount_other": "{{count}} tasks for today",
+  "noTasksToday": "No tasks for today",
+  "noTasksScheduledToday": "No tasks scheduled for today",
+  "markAsDone": "Mark as done",
+  "financeCard": {
+    "title": "Finance — current month",
+    "subtitle": "Month summary"
+  },
+  "finance": {
+    "incomeLabel": "Income",
+    "expenseLabel": "Expenses",
+    "balanceLabel": "Balance",
+    "incomeType": "Income",
+    "expenseType": "Expense",
+    "recentEntries": "Recent entries",
+    "noEntries": "No entries recorded"
+  }
+}

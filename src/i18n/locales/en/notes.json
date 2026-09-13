@@ -1,0 +1,39 @@
+{
+  "title": "Notes",
+  "count_one": "{{count}} note",
+  "count_other": "{{count}} notes",
+  "newNote": "New note",
+  "tabs": {
+    "all": "All",
+    "pinned": "Pinned"
+  },
+  "searchPlaceholder": "Search notes…",
+  "titlePlaceholder": "Note title",
+  "bodyPlaceholder": "Write your note…",
+  "bodyPlaceholderWithShortcut": "Write your note… (Ctrl+Enter to save)",
+  "noColor": "No color",
+  "noTitle": "Untitled",
+  "charCount_one": "{{count}} character",
+  "charCount_other": "{{count}} characters",
+  "saving": "Saving…",
+  "saveNote": "Save note",
+  "loading": "Loading…",
+  "emptyPinned": "No pinned notes.",
+  "emptyFiltered": "No notes found.",
+  "emptyAll": "No notes yet. Click + New note to get started.",
+  "pin": "Pin",
+  "unpin": "Unpin",
+  "restore": "Restore",
+  "maximize": "Maximize",
+  "close": "Close",
+  "delete": "Delete",
+  "confirmDelete": "Delete this note?",
+  "colors": {
+    "amarelo": "Yellow",
+    "azul": "Blue",
+    "verde": "Green",
+    "vermelho": "Red",
+    "roxo": "Purple",
+    "laranja": "Orange"
+  }
+}

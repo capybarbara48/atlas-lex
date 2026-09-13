@@ -1,0 +1,112 @@
+{
+  "pageTitle": "Importar dados",
+  "pageSubtitle": "Migre seus dados do sistema HTML para o Atlas Adv",
+  "steps": {
+    "files": "Arquivos",
+    "review": "Revisão",
+    "importing": "Importando",
+    "done": "Concluído"
+  },
+  "sheets": {
+    "clients": "Clientes",
+    "finished": "Finalizados",
+    "finances": "Financeiro",
+    "confirmations": "Confirmações",
+    "despesas": "Despesas",
+    "history": "Histórico",
+    "notes": "Anotações",
+    "clientNotes": "Notas Clientes"
+  },
+  "entities": {
+    "clients": "Clientes",
+    "cases": "Processos",
+    "tasks": "Tarefas",
+    "finances": "Financeiro",
+    "notes": "Anotações"
+  },
+  "upload": {
+    "instructTitle": "Como exportar seus dados da planilha",
+    "step1Pre": "Abra sua planilha no",
+    "step2Pre": "Clique na aba desejada (ex:",
+    "step3Pre": "Menu",
+    "step3Menu": "Arquivo → Fazer download → Valores separados por vírgulas (.csv)",
+    "step4": "Repita para cada aba da lista abaixo",
+    "requiredNote": "* Obrigatório para importação básica",
+    "dropText": "Arraste os CSVs aqui ou clique para selecionar",
+    "dropSub": "Você pode selecionar múltiplos arquivos de uma vez",
+    "fileRecognized": "{{label}} · {{count}} linhas",
+    "fileUnrecognized": "Não reconhecido — verifique se é o CSV correto",
+    "reviewButton": "Revisar dados",
+    "minFilesHintPre": "Carregue pelo menos o arquivo",
+    "minFilesHintOr": "ou",
+    "minFilesHintPost": "para continuar"
+  },
+  "preview": {
+    "securityBadgePre": "Importando para a conta",
+    "securityBadgePost": "— dados protegidos por RLS",
+    "attentionLabel": "Atenção:",
+    "attentionBody": "você já tem {{count}} cliente(s) cadastrado(s). Importar novamente criará registros duplicados.",
+    "panelTitle": "O que será importado",
+    "cases": "Processos",
+    "casesSub": "{{active}} ativos · {{finished}} finalizados",
+    "uniqueClients": "Clientes únicos",
+    "tasks": "Tarefas",
+    "tasksSub": "do Histórico",
+    "entries": "Lançamentos",
+    "entriesSub": "{{plans}} planos · {{expenses}} despesas",
+    "notes": "Anotações",
+    "notImportedLabel": "Não será importado:",
+    "notImported1": "Dados do estagiário (tarefas, agenda, histórico)",
+    "notImported2": "Despachos e taxas de parcelamento",
+    "notImported3": "CPF/CNPJ, e-mail e telefone — não existem no sistema anterior",
+    "backButton": "Voltar",
+    "importNowButton": "Importar agora"
+  },
+  "importing": {
+    "title": "Importando dados…",
+    "subtitle": "Não feche esta página.",
+    "progressCount": "{{done}} / {{total}}"
+  },
+  "done": {
+    "title": "Importação concluída",
+    "subtitle": "Verifique os resultados abaixo",
+    "tableType": "Tipo",
+    "tableImported": "Importado",
+    "tableSkipped": "Ignorado",
+    "tableErrors": "Erros",
+    "unlinkedSummary": "{{count}} item(ns) não vinculado(s)",
+    "insertErrorsSummary": "Erros de inserção",
+    "guidanceTitle": "Próximos passos recomendados",
+    "guidance1Pre": "Acesse",
+    "guidance1Post": "e adicione CPF/CNPJ, e-mail e telefone de cada cliente",
+    "guidance2Pre": "Revise os",
+    "guidance2Post": "— confirme status e dados de cada caso",
+    "guidance3Pre": "Em",
+    "guidance3Post": "confirme os pagamentos marcados como",
+    "guidanceSkipped": "{{count}} item(ns) ignorado(s) precisam ser adicionados manualmente",
+    "viewClients": "Ver clientes",
+    "viewCases": "Ver processos"
+  },
+  "reasons": {
+    "emptyName": "Nome vazio",
+    "clientNotFound": "Cliente não encontrado",
+    "caseNotFound": "Processo não encontrado",
+    "caseNotFoundWithId": "Processo não encontrado (id: {{id}})",
+    "noName": "(sem nome)"
+  },
+  "skippedTypes": {
+    "client": "Cliente",
+    "case": "Processo",
+    "task": "Tarefa",
+    "clientNote": "Nota de cliente"
+  },
+  "notImportedList": {
+    "intern": "Dados do estagiário (tarefas, agenda, histórico de estágio)",
+    "dispatches": "Despachos",
+    "installmentFees": "Taxas de parcelamento",
+    "contactInfo": "CPF/CNPJ, e-mail, telefone dos clientes (não existem no sistema anterior)"
+  },
+  "errors": {
+    "unexpected": "Erro inesperado: {{message}}"
+  }
+}

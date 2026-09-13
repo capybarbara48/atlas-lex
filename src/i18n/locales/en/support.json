@@ -1,0 +1,28 @@
+{
+  "status": {
+    "aberto": "Open",
+    "em_andamento": "In progress",
+    "resolvido": "Resolved"
+  },
+  "errorSendReply": "Error sending reply.",
+  "errorCreateTicket": "Error creating ticket.",
+  "ticketOpened": "Ticket opened.",
+  "noReplies": "No replies yet. We'll respond soon.",
+  "supportTeamName": "Atlas Adv Support",
+  "you": "You",
+  "replyPlaceholder": "Add a reply…",
+  "sending": "Sending…",
+  "reply": "Reply",
+  "hint": "Open a ticket for questions, technical issues or support suggestions. Our team responds within 48 business hours.",
+  "newTicket": "+ New ticket",
+  "form": {
+    "subjectLabel": "Subject",
+    "subjectPlaceholder": "Briefly describe the issue…",
+    "detailsLabel": "Details",
+    "detailsPlaceholder": "Describe in more detail what is happening…"
+  },
+  "opening": "Opening…",
+  "openTicket": "Open ticket",
+  "emptyTickets": "No tickets opened yet.",
+  "originalMessage": "Original message"
+}

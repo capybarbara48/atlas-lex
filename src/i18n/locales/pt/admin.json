@@ -1,0 +1,112 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "users": "Usuários",
+    "feedback": "Feedback",
+    "tickets": "Suporte",
+    "backToApp": "Voltar ao app"
+  },
+  "role": {
+    "admin": "Admin",
+    "beta": "Beta",
+    "member": "Membro"
+  },
+  "status": {
+    "active": "Ativo",
+    "pending": "Pendente"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Visão geral da plataforma Atlas Adv",
+    "kpi": {
+      "totalUsers": "Usuários totais",
+      "newThisMonthSub": "{{count}} novos este mês",
+      "onboardingComplete": "Onboarding completo",
+      "percentOfTotal": "{{percent}}% do total",
+      "newThisMonth": "Novos este mês",
+      "feedbackReceived": "Feedbacks recebidos",
+      "feedbackSub": "sugestões, bugs e elogios"
+    },
+    "recentUsers": "Usuários recentes",
+    "seeAll": "Ver todos →",
+    "table": {
+      "name": "Nome",
+      "email": "E-mail",
+      "firm": "Escritório",
+      "role": "Perfil",
+      "status": "Status",
+      "signupDate": "Cadastro"
+    },
+    "noUsers": "Nenhum usuário encontrado."
+  },
+  "users": {
+    "title": "Usuários",
+    "subtitle_one": "{{count}} usuário cadastrado",
+    "subtitle_other": "{{count}} usuários cadastrados",
+    "searchPlaceholder": "Buscar por nome, e-mail ou escritório…",
+    "allRoles": "Todos os perfis",
+    "table": {
+      "user": "Usuário",
+      "firm": "Escritório",
+      "oab": "OAB",
+      "role": "Perfil",
+      "status": "Status",
+      "signupDate": "Cadastro",
+      "actions": "Ações"
+    },
+    "noResults": "Nenhum resultado encontrado.",
+    "noUsers": "Nenhum usuário.",
+    "loadError": "Erro ao carregar usuários.",
+    "updateError": "Erro ao atualizar perfil.",
+    "lastAdminError": "Não é possível remover o último administrador.",
+    "roleUpdated": "Perfil atualizado para {{role}}."
+  },
+  "feedback": {
+    "title": "Feedback",
+    "newBadge_one": "{{count}} novo",
+    "newBadge_other": "{{count}} novos",
+    "subtitle_one": "{{count}} envio recebido",
+    "subtitle_other": "{{count}} envios recebidos",
+    "allTypes": "Todos os tipos",
+    "type": {
+      "sugestao": "Sugestão",
+      "bug": "Bug",
+      "elogio": "Elogio"
+    },
+    "allReadStatus": "Todos",
+    "unread": "Não lido",
+    "read": "Lido",
+    "noResults": "Nenhum feedback encontrado.",
+    "loadError": "Erro ao carregar feedbacks.",
+    "updateError": "Erro ao atualizar.",
+    "markUnread": "Marcar como não lido",
+    "markRead": "Marcar como lido",
+    "markReadShort": "Marcar lido"
+  },
+  "tickets": {
+    "title": "Suporte",
+    "subtitle_one": "{{count}} chamado no total",
+    "subtitle_other": "{{count}} chamados no total",
+    "status": {
+      "aberto": "Aberto",
+      "em_andamento": "Em andamento",
+      "resolvido": "Resolvido"
+    },
+    "filterAll": "Todos ({{count}})",
+    "filterOpen": "Abertos ({{count}})",
+    "filterInProgress": "Em andamento ({{count}})",
+    "filterResolved": "Resolvidos ({{count}})",
+    "noResults": "Nenhum chamado encontrado.",
+    "loadError": "Erro ao carregar chamados.",
+    "statusUpdateError": "Erro ao atualizar status.",
+    "replyError": "Erro ao enviar resposta.",
+    "close": "Fechar",
+    "originalMessage": "Mensagem original",
+    "noReplies": "Nenhuma resposta ainda.",
+    "supportAdmin": "Suporte (admin)",
+    "replyPlaceholder": "Escrever resposta como suporte…",
+    "replyHint": "⌘ + Enter para enviar",
+    "sending": "Enviando…",
+    "reply": "Responder"
+  }
+}

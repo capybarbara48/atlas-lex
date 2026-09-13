@@ -1,0 +1,42 @@
+{
+  "title": "Tasks",
+  "newTask": "New task",
+  "editTask": "Edit task",
+  "searchPlaceholder": "Search task or case...",
+  "filterAll": "All",
+  "loadError": "Error loading tasks.",
+  "emptyList": "No tasks found",
+  "kanbanEmpty": "Empty",
+  "overdue": "Overdue",
+  "toastCreated": "Task created.",
+  "toastUpdated": "Task updated.",
+  "countTasks_one": "{{count}} task",
+  "countTasks_other": "{{count}} tasks",
+  "countPending_one": "{{count}} pending",
+  "countPending_other": "{{count}} pending",
+  "table": {
+    "task": "Task",
+    "case": "Case",
+    "priority": "Priority",
+    "status": "Status",
+    "dueDate": "Due date"
+  },
+  "calendar": {
+    "today": "Today",
+    "month": "Month",
+    "week": "Week",
+    "day": "Day",
+    "more": "+{{count}} more",
+    "emptyDay": "No tasks on this day."
+  },
+  "form": {
+    "titleLabel": "Task title",
+    "titlePlaceholder": "E.g.: File appeal with TJSP",
+    "assigneeLabel": "Assignee",
+    "unassignedOption": "— Unassigned —",
+    "assigneePlaceholder": "Assignee name",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Details about what needs to be done…",
+    "createButton": "Create task"
+  }
+}

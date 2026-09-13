@@ -1,0 +1,106 @@
+{
+  "phrases": [
+    "A lei está nos livros. A justiça, no coração de quem a pratica.",
+    "O direito não existe para os fortes — existe para proteger os vulneráveis.",
+    "A justiça lenta é uma injustiça — por isso cada prazo importa.",
+    "A lei é o instrumento. A justiça é o destino.",
+    "Cada vitória jurídica começa com um advogado que acreditou antes de todos.",
+    "Justiça não é favor concedido — é direito conquistado com dedicação.",
+    "O processo pode acabar. O impacto de uma boa defesa, nunca.",
+    "Advocacia é a arte de transformar o sofrimento alheio em argumentos precisos.",
+    "Advocacia não é profissão — é vocação vestida de responsabilidade.",
+    "O melhor advogado não é o que fala mais alto — é o que ouve mais fundo.",
+    "Cada prazo cumprido é uma promessa honrada.",
+    "Um bom advogado não apenas defende — ele restaura dignidade.",
+    "Excelência na advocacia é consistência nos dias sem aplausos.",
+    "A maior homenagem ao direito é exercê-lo com integridade todos os dias.",
+    "Sua tese mais forte começa na sua escuta mais atenta.",
+    "Cada cliente carrega uma história que merece ser ouvida com inteireza.",
+    "A confiança do cliente não se conquista em contratos — conquista-se em atitudes.",
+    "O cliente não contrata um advogado — contrata a segurança de ser ouvido.",
+    "Nenhuma causa é pequena para quem a vive intensamente.",
+    "Cada cliente que confia em você está entregando um pedaço da própria vida.",
+    "Advocacia de excelência é aquela que o cliente sente antes de ler a petição.",
+    "Atender bem um cliente hoje é construir um legado para amanhã.",
+    "A empatia não enfraquece o argumento — ela o torna irrefutável.",
+    "Todo processo tem dois lados. O melhor advogado entende os dois.",
+    "Ouvir com atenção é o primeiro ato jurídico de todo bom advogado.",
+    "O crescimento do escritório começa no crescimento de cada causa abraçada.",
+    "Crescer na advocacia é crescer em humanidade.",
+    "Seu escritório cresce quando cada cliente sai maior do que entrou.",
+    "O crescimento real acontece quando o sucesso do cliente vira o seu.",
+    "Sua dedicação diária é o tijolo que constrói o templo da justiça."
+  ],
+  "watermark": {
+    "name": "Atlas Adv",
+    "sub": "Gestão Jurídica"
+  },
+  "page": {
+    "title": "Vitrine",
+    "subtitle": "Card para compartilhar — seus dados reais, sem nenhum nome privado",
+    "fullscreen": "Tela cheia ↗"
+  },
+  "mix": {
+    "firmSub": "Advocacia",
+    "focusActive": "foco ativo",
+    "pomodoro": "pomodoro",
+    "cycle_one": "{{count}} ciclo",
+    "cycle_other": "{{count}} ciclos",
+    "reset": "Reiniciar",
+    "pause": "⏸ Pausar",
+    "start": "▶ Iniciar foco",
+    "taskPending_one": "tarefa pendente hoje",
+    "taskPending_other": "tarefas pendentes hoje",
+    "taskDone_one": "tarefa concluída esta semana",
+    "taskDone_other": "tarefas concluídas esta semana"
+  },
+  "optionA": {
+    "dueToday_one": "{{count}} prazo hoje",
+    "dueToday_other": "{{count}} prazos hoje",
+    "focusActive": "foco ativo",
+    "ready": "pronto",
+    "start": "▶ Iniciar",
+    "pause": "⏸ Pausar"
+  },
+  "optionB": {
+    "activeCases": "processos ativos",
+    "clients": "clientes",
+    "tasksDone": "tarefas concluídas",
+    "received": "recebidos",
+    "stamp": "SEMANA\nEM NÚMEROS",
+    "footerBrand": "Atlas Adv · Gestão Jurídica"
+  },
+  "optionC": {
+    "title": "Conquistas & Metas",
+    "message": "Em breve — selos desbloqueáveis,\nmetas do escritório e notificações."
+  },
+  "optionD": {
+    "live": "ao vivo",
+    "active": "Ativos",
+    "suspended": "Suspensos",
+    "closed": "Encerrados",
+    "activeCases": "processos ativos",
+    "clients": "clientes",
+    "dueToday": "prazos hoje",
+    "tasksToday": "tarefas hoje",
+    "received": "Recebido",
+    "toReceive": "A receber"
+  },
+  "optionE": {
+    "topLabel": "ADVOCACIA EM MOVIMENTO",
+    "activeCases": "processos\nativos",
+    "tasksDone": "tarefas\nconcluídas",
+    "clientsServed": "clientes\natendidos",
+    "sealText": "ATLAS ADV · GESTÃO JURÍDICA"
+  },
+  "options": {
+    "optionPrefix": "Opção",
+    "A": { "label": "Modo Foco", "tag": "Pomodoro + frase do dia" },
+    "B": { "label": "Semana em Números", "tag": "Recap semanal" },
+    "C": { "label": "Conquistas", "tag": "Selos e metas — em breve" },
+    "D": { "label": "Dashboard Vitrine", "tag": "Painel ao vivo, dados ocultos" },
+    "E": { "label": "Selo Mensal", "tag": "Poster formato stories" }
+  },
+  "showAlts": "▼ Ver outras 5 opções",
+  "hideAlts": "▲ Ocultar outras opções"
+}

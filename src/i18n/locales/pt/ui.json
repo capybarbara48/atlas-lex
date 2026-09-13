@@ -1,0 +1,60 @@
+{
+  "pagination": {
+    "summary": "{{from}}–{{to}} de {{total}}",
+    "pageLabel": "Página {{page}} de {{totalPages}}"
+  },
+  "searchPalette": {
+    "placeholder": "Buscar clientes, casos, tarefas…",
+    "hintDefault": "Digite para buscar em toda a plataforma",
+    "noResults": "Nenhum resultado para \"{{query}}\"",
+    "groupClients": "Clientes",
+    "groupCases": "Casos",
+    "groupTasks": "Tarefas",
+    "kbdNavigate": "navegar",
+    "kbdOpen": "abrir",
+    "kbdClose": "fechar"
+  },
+  "feedbackButton": {
+    "trigger": "Enviar feedback",
+    "modalTitle": "Enviar feedback",
+    "typeSuggestion": "Sugestão",
+    "typeBug": "Bug",
+    "typePraise": "Elogio",
+    "titleLabel": "Título",
+    "titlePlaceholder": "Resumo em uma linha…",
+    "messageLabel": "Mensagem",
+    "messagePlaceholder": "Descreva com detalhes…",
+    "sendButton": "Enviar feedback",
+    "sending": "Enviando…",
+    "errorToast": "Erro ao enviar feedback.",
+    "successToast": "Feedback enviado. Obrigado!"
+  },
+  "fontUpload": {
+    "invalidFormat": "Formato inválido. Use WOFF2, TTF ou OTF.",
+    "tooLarge": "Arquivo muito grande. Máximo 5 MB.",
+    "uploadError": "Erro ao enviar: {{message}}",
+    "loadedLabel": "Fonte carregada:",
+    "changeButton": "Trocar",
+    "removeButton": "Remover",
+    "uploadButton": "Upload sua fonte",
+    "uploading": "Enviando…",
+    "hint": "WOFF2, TTF ou OTF · máx. 5 MB",
+    "defaultName": "Fonte Personalizada"
+  },
+  "logoUpload": {
+    "invalidFormat": "Formato inválido. Use PNG, JPG, WebP ou SVG.",
+    "tooLarge": "Arquivo muito grande. Máximo 2 MB.",
+    "uploadError": "Erro ao enviar: {{message}}",
+    "changeButton": "Trocar",
+    "removeButton": "Remover",
+    "dropLink": "Clique para selecionar",
+    "dropText": "ou arraste seu logo aqui",
+    "hint": "PNG, JPG, WebP ou SVG · máx. 2 MB",
+    "alt": "logo"
+  },
+  "viewToggle": {
+    "kanban": "Visão Kanban",
+    "list": "Visão Lista",
+    "calendar": "Visão Calendário"
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "pagination": {
+    "summary": "{{from}}–{{to}} of {{total}}",
+    "pageLabel": "Page {{page}} of {{totalPages}}"
+  },
+  "searchPalette": {
+    "placeholder": "Search clients, cases, tasks…",
+    "hintDefault": "Type to search across the whole platform",
+    "noResults": "No results for \"{{query}}\"",
+    "groupClients": "Clients",
+    "groupCases": "Cases",
+    "groupTasks": "Tasks",
+    "kbdNavigate": "navigate",
+    "kbdOpen": "open",
+    "kbdClose": "close"
+  },
+  "feedbackButton": {
+    "trigger": "Send feedback",
+    "modalTitle": "Send feedback",
+    "typeSuggestion": "Suggestion",
+    "typeBug": "Bug",
+    "typePraise": "Praise",
+    "titleLabel": "Title",
+    "titlePlaceholder": "One-line summary…",
+    "messageLabel": "Message",
+    "messagePlaceholder": "Describe in detail…",
+    "sendButton": "Send feedback",
+    "sending": "Sending…",
+    "errorToast": "Error sending feedback.",
+    "successToast": "Feedback sent. Thank you!"
+  },
+  "fontUpload": {
+    "invalidFormat": "Invalid format. Use WOFF2, TTF or OTF.",
+    "tooLarge": "File too large. Maximum 5 MB.",
+    "uploadError": "Upload failed: {{message}}",
+    "loadedLabel": "Font loaded:",
+    "changeButton": "Change",
+    "removeButton": "Remove",
+    "uploadButton": "Upload your font",
+    "uploading": "Uploading…",
+    "hint": "WOFF2, TTF or OTF · max. 5 MB",
+    "defaultName": "Custom Font"
+  },
+  "logoUpload": {
+    "invalidFormat": "Invalid format. Use PNG, JPG, WebP or SVG.",
+    "tooLarge": "File too large. Maximum 2 MB.",
+    "uploadError": "Upload failed: {{message}}",
+    "changeButton": "Change",
+    "removeButton": "Remove",
+    "dropLink": "Click to select",
+    "dropText": "or drag your logo here",
+    "hint": "PNG, JPG, WebP or SVG · max. 2 MB",
+    "alt": "logo"
+  },
+  "viewToggle": {
+    "kanban": "Kanban view",
+    "list": "List view",
+    "calendar": "Calendar view"
+  }
+}

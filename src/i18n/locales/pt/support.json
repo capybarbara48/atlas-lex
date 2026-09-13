@@ -1,0 +1,28 @@
+{
+  "status": {
+    "aberto": "Aberto",
+    "em_andamento": "Em andamento",
+    "resolvido": "Resolvido"
+  },
+  "errorSendReply": "Erro ao enviar resposta.",
+  "errorCreateTicket": "Erro ao criar chamado.",
+  "ticketOpened": "Chamado aberto.",
+  "noReplies": "Nenhuma resposta ainda. Responderemos em breve.",
+  "supportTeamName": "Suporte Atlas Adv",
+  "you": "Você",
+  "replyPlaceholder": "Adicionar uma resposta…",
+  "sending": "Enviando…",
+  "reply": "Responder",
+  "hint": "Abra um chamado para dúvidas, problemas técnicos ou sugestões de suporte. Nossa equipe responde em até 48 h úteis.",
+  "newTicket": "+ Novo chamado",
+  "form": {
+    "subjectLabel": "Assunto",
+    "subjectPlaceholder": "Descreva o problema brevemente…",
+    "detailsLabel": "Detalhes",
+    "detailsPlaceholder": "Descreva com mais detalhes o que está acontecendo…"
+  },
+  "opening": "Abrindo…",
+  "openTicket": "Abrir chamado",
+  "emptyTickets": "Nenhum chamado aberto ainda.",
+  "originalMessage": "Mensagem original"
+}

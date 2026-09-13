@@ -1,0 +1,112 @@
+{
+  "pageTitle": "Import data",
+  "pageSubtitle": "Migrate your data from the HTML system to Atlas Adv",
+  "steps": {
+    "files": "Files",
+    "review": "Review",
+    "importing": "Importing",
+    "done": "Done"
+  },
+  "sheets": {
+    "clients": "Clients",
+    "finished": "Finished",
+    "finances": "Finances",
+    "confirmations": "Confirmations",
+    "despesas": "Expenses",
+    "history": "History",
+    "notes": "Notes",
+    "clientNotes": "Client Notes"
+  },
+  "entities": {
+    "clients": "Clients",
+    "cases": "Cases",
+    "tasks": "Tasks",
+    "finances": "Finances",
+    "notes": "Notes"
+  },
+  "upload": {
+    "instructTitle": "How to export your data from the spreadsheet",
+    "step1Pre": "Open your spreadsheet in",
+    "step2Pre": "Click the desired tab (e.g.:",
+    "step3Pre": "Menu",
+    "step3Menu": "File → Download → Comma Separated Values (.csv)",
+    "step4": "Repeat for each tab in the list below",
+    "requiredNote": "* Required for basic import",
+    "dropText": "Drag the CSVs here or click to select",
+    "dropSub": "You can select multiple files at once",
+    "fileRecognized": "{{label}} · {{count}} rows",
+    "fileUnrecognized": "Not recognized — check if this is the correct CSV",
+    "reviewButton": "Review data",
+    "minFilesHintPre": "Upload at least the",
+    "minFilesHintOr": "or",
+    "minFilesHintPost": "file to continue"
+  },
+  "preview": {
+    "securityBadgePre": "Importing to account",
+    "securityBadgePost": "— data protected by RLS",
+    "attentionLabel": "Attention:",
+    "attentionBody": "you already have {{count}} client(s) registered. Importing again will create duplicate records.",
+    "panelTitle": "What will be imported",
+    "cases": "Cases",
+    "casesSub": "{{active}} active · {{finished}} finished",
+    "uniqueClients": "Unique clients",
+    "tasks": "Tasks",
+    "tasksSub": "from History",
+    "entries": "Entries",
+    "entriesSub": "{{plans}} plans · {{expenses}} expenses",
+    "notes": "Notes",
+    "notImportedLabel": "Will not be imported:",
+    "notImported1": "Intern data (tasks, schedule, history)",
+    "notImported2": "Dispatches and installment fees",
+    "notImported3": "CPF/CNPJ, email and phone — do not exist in the previous system",
+    "backButton": "Back",
+    "importNowButton": "Import now"
+  },
+  "importing": {
+    "title": "Importing data…",
+    "subtitle": "Do not close this page.",
+    "progressCount": "{{done}} / {{total}}"
+  },
+  "done": {
+    "title": "Import completed",
+    "subtitle": "Check the results below",
+    "tableType": "Type",
+    "tableImported": "Imported",
+    "tableSkipped": "Skipped",
+    "tableErrors": "Errors",
+    "unlinkedSummary": "{{count}} item(s) not linked",
+    "insertErrorsSummary": "Insertion errors",
+    "guidanceTitle": "Recommended next steps",
+    "guidance1Pre": "Go to",
+    "guidance1Post": "and add CPF/CNPJ, email and phone for each client",
+    "guidance2Pre": "Review the",
+    "guidance2Post": "— confirm status and details of each case",
+    "guidance3Pre": "In",
+    "guidance3Post": "confirm payments marked as",
+    "guidanceSkipped": "{{count}} item(s) skipped need to be added manually",
+    "viewClients": "View clients",
+    "viewCases": "View cases"
+  },
+  "reasons": {
+    "emptyName": "Empty name",
+    "clientNotFound": "Client not found",
+    "caseNotFound": "Case not found",
+    "caseNotFoundWithId": "Case not found (id: {{id}})",
+    "noName": "(no name)"
+  },
+  "skippedTypes": {
+    "client": "Client",
+    "case": "Case",
+    "task": "Task",
+    "clientNote": "Client note"
+  },
+  "notImportedList": {
+    "intern": "Intern data (tasks, schedule, internship history)",
+    "dispatches": "Dispatches",
+    "installmentFees": "Installment fees",
+    "contactInfo": "Clients' CPF/CNPJ, email, phone (do not exist in the previous system)"
+  },
+  "errors": {
+    "unexpected": "Unexpected error: {{message}}"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "priority": {
+    "urgente": "Urgente",
+    "alta": "Alta",
+    "media": "Média",
+    "baixa": "Baixa"
+  },
+  "status": {
+    "pendente": "Pendente",
+    "em_andamento": "Em andamento",
+    "concluida": "Concluída",
+    "cancelada": "Cancelada"
+  },
+  "overdueBadge_one": "{{count}} atrasada",
+  "overdueBadge_other": "{{count}} atrasadas",
+  "overdueTag": "Atrasada",
+  "tasksCount_one": "{{count}} tarefa",
+  "tasksCount_other": "{{count}} tarefas",
+  "activeCount": "ativas",
+  "donePercent": "{{pct}}% concluídas",
+  "addMember": "+ Adicionar membro",
+  "editMember": "Editar membro",
+  "addMemberModal": "Adicionar membro à equipe",
+  "emptySetup": {
+    "title": "Nenhum membro cadastrado",
+    "text": "Adicione membros da equipe para atribuir tarefas e acompanhar a produtividade de cada pessoa.",
+    "button": "+ Adicionar primeiro membro"
+  },
+  "page": {
+    "title": "Equipe",
+    "subtitle": "Gestão de tarefas por responsável",
+    "loading": "Carregando…",
+    "countSubtitle": "{{taskCount}} tarefas · {{memberCount}} membros"
+  },
+  "all": "Todos",
+  "unassigned": "Sem atribuição",
+  "sectionTitle": {
+    "all": "Todas as tarefas",
+    "unassigned": "Sem atribuição",
+    "member": "Tarefas — {{member}}"
+  },
+  "filters": {
+    "all": "Todas",
+    "pendente": "Pendente",
+    "em_andamento": "Em andamento",
+    "concluida": "Concluída"
+  },
+  "stats": {
+    "total": "Total",
+    "pendente": "Pendente",
+    "em_andamento": "Em andamento",
+    "concluida": "Concluída",
+    "atrasada": "Atrasada"
+  },
+  "emptyTasks": "Nenhuma tarefa encontrada"
+}

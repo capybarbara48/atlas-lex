@@ -1,0 +1,39 @@
+{
+  "title": "Notas",
+  "count_one": "{{count}} anotação",
+  "count_other": "{{count}} anotações",
+  "newNote": "Nova nota",
+  "tabs": {
+    "all": "Todas",
+    "pinned": "Fixadas"
+  },
+  "searchPlaceholder": "Buscar nas notas…",
+  "titlePlaceholder": "Título da nota",
+  "bodyPlaceholder": "Escreva sua nota…",
+  "bodyPlaceholderWithShortcut": "Escreva sua nota… (Ctrl+Enter para salvar)",
+  "noColor": "Sem cor",
+  "noTitle": "Sem título",
+  "charCount_one": "{{count}} caractere",
+  "charCount_other": "{{count}} caracteres",
+  "saving": "Salvando…",
+  "saveNote": "Salvar nota",
+  "loading": "Carregando…",
+  "emptyPinned": "Nenhuma nota fixada.",
+  "emptyFiltered": "Nenhuma nota encontrada.",
+  "emptyAll": "Nenhuma anotação ainda. Clique em + Nova nota para começar.",
+  "pin": "Fixar",
+  "unpin": "Desafixar",
+  "restore": "Restaurar",
+  "maximize": "Maximizar",
+  "close": "Fechar",
+  "delete": "Excluir",
+  "confirmDelete": "Excluir esta anotação?",
+  "colors": {
+    "amarelo": "Amarelo",
+    "azul": "Azul",
+    "verde": "Verde",
+    "vermelho": "Vermelho",
+    "roxo": "Roxo",
+    "laranja": "Laranja"
+  }
+}

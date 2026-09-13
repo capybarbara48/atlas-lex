@@ -1,0 +1,56 @@
+{
+  "title": "Financeiro",
+  "subtitleAll": "Todos os lançamentos",
+  "pdfMonthly": "PDF Mensal",
+  "pdfAnnual": "PDF Anual",
+  "pdfMonthlyTitle": "Relatório do mês atual",
+  "pdfAnnualTitle": "Relatório do ano atual",
+  "newEntry": "Novo lançamento",
+  "editEntry": "Editar lançamento",
+  "searchPlaceholder": "Buscar lançamento ou caso...",
+  "filters": {
+    "all": "Tudo",
+    "income": "Receitas",
+    "expense": "Despesas",
+    "statusAll": "Todos"
+  },
+  "summary": {
+    "incomeReceived": "Receitas recebidas",
+    "expensesPaid": "Despesas pagas",
+    "balance": "Saldo",
+    "receivable": "A receber",
+    "entriesCount_one": "{{count}} lançamento",
+    "entriesCount_other": "{{count}} lançamentos",
+    "pendingEntriesCount_one": "{{count}} lançamento pendente",
+    "pendingEntriesCount_other": "{{count}} lançamentos pendentes"
+  },
+  "chart": {
+    "title": "Últimos 6 meses (pagamentos)",
+    "income": "Receitas",
+    "expense": "Despesas"
+  },
+  "table": {
+    "description": "Descrição",
+    "case": "Caso",
+    "type": "Tipo",
+    "status": "Status",
+    "amount": "Valor",
+    "date": "Data"
+  },
+  "type": {
+    "income": "Receita",
+    "expense": "Despesa"
+  },
+  "loading": "Carregando…",
+  "loadError": "Erro ao carregar lançamentos.",
+  "empty": "Nenhum lançamento encontrado",
+  "form": {
+    "descriptionPlaceholder": "Ex: Honorários — Processo Costa vs. Alfa",
+    "amountLabel": "Valor (R$)",
+    "categoryLabel": "Categoria",
+    "categoryPlaceholder": "Ex: Honorários, Custas, Diligências…",
+    "dueDateLabel": "Vencimento",
+    "paidAtLabel": "Data de pagamento",
+    "createButton": "Criar lançamento"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "menu": "Menu",
+  "painel": "Dashboard",
+  "casos": "Cases",
+  "clientes": "Clients",
+  "propostas": "Proposals",
+  "tarefas": "Tasks",
+  "notas": "Notes",
+  "financeiro": "Financials",
+  "estagiarios": "Team",
+  "vitrine": "Showcase",
+  "configuracoes": "Settings",
+  "importar": "Import data",
+  "cliente": "Client",
+  "processo": "Case",
+  "adminPanel": "Admin Panel",
+  "search": "Search",
+  "searchGlobal": "Global search (⌘K)",
+  "online": "Online",
+  "openMenu": "Open menu",
+  "closeMenu": "Close menu",
+  "beta": "Beta"
+}

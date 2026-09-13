@@ -1,0 +1,48 @@
+{
+  "save": "Salvar",
+  "cancel": "Cancelar",
+  "delete": "Excluir",
+  "edit": "Editar",
+  "add": "Adicionar",
+  "new": "Novo",
+  "search": "Buscar",
+  "loading": "Carregando...",
+  "confirm": "Confirmar",
+  "close": "Fechar",
+  "back": "Voltar",
+  "next": "Próximo",
+  "previous": "Anterior",
+  "yes": "Sim",
+  "no": "Não",
+  "success": "Sucesso",
+  "error": "Erro",
+  "errorGeneric": "Algo deu errado. Tente novamente.",
+  "required": "Obrigatório",
+  "optional": "Opcional",
+  "actions": "Ações",
+  "noResults": "Nenhum resultado encontrado",
+  "seeMore": "Ver mais",
+  "seeAll": "Ver todos",
+  "confirmDelete": "Tem certeza que deseja excluir? Esta ação não pode ser desfeita.",
+  "signOut": "Sair",
+  "settings": "Configurações",
+  "saving": "Salvando…",
+  "saveChanges": "Salvar alterações",
+  "selectPlaceholder": "— Selecionar —",
+  "nameRequired": "Nome é obrigatório.",
+  "currencyPlaceholder": "0,00",
+  "errorBoundary": {
+    "page": {
+      "title": "Algo deu errado",
+      "message": "Ocorreu um erro inesperado nesta página. Tente novamente ou volte ao painel.",
+      "retryButton": "Tentar novamente",
+      "dashboardButton": "Ir ao painel"
+    },
+    "app": {
+      "title": "Atlas Adv encontrou um problema",
+      "message": "Ocorreu um erro inesperado. Recarregue a página ou limpe o cache do navegador.",
+      "reloadButton": "Recarregar página",
+      "retryButton": "Tentar novamente"
+    }
+  }
+}

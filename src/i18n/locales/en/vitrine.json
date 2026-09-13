@@ -1,0 +1,106 @@
+{
+  "phrases": [
+    "The law lives in books. Justice lives in the heart of those who practice it.",
+    "The law does not exist for the strong — it exists to protect the vulnerable.",
+    "Slow justice is injustice — that's why every deadline matters.",
+    "The law is the instrument. Justice is the destination.",
+    "Every legal victory begins with a lawyer who believed before anyone else did.",
+    "Justice is not a favor granted — it is a right earned through dedication.",
+    "A case can end. The impact of a good defense never does.",
+    "Advocacy is the art of turning another's suffering into precise arguments.",
+    "Law is not a profession — it's a calling dressed in responsibility.",
+    "The best lawyer isn't the one who speaks the loudest — it's the one who listens the deepest.",
+    "Every deadline met is a promise kept.",
+    "A good lawyer doesn't just defend — they restore dignity.",
+    "Excellence in law is consistency on the days no one applauds.",
+    "The greatest tribute to the law is practicing it with integrity every day.",
+    "Your strongest argument begins with your most attentive listening.",
+    "Every client carries a story that deserves to be heard in full.",
+    "A client's trust isn't won through contracts — it's won through actions.",
+    "A client doesn't hire a lawyer — they hire the certainty of being heard.",
+    "No case is small to the person living through it intensely.",
+    "Every client who trusts you is handing over a piece of their own life.",
+    "Excellent advocacy is the kind the client feels before ever reading the filing.",
+    "Serving a client well today builds a legacy for tomorrow.",
+    "Empathy doesn't weaken an argument — it makes it irrefutable.",
+    "Every case has two sides. The best lawyer understands both.",
+    "Listening carefully is the first legal act of every good lawyer.",
+    "A firm's growth begins with the growth of every case it takes on.",
+    "To grow in law is to grow in humanity.",
+    "Your firm grows every time a client leaves bigger than they arrived.",
+    "Real growth happens when your client's success becomes your own.",
+    "Your daily dedication is the brick that builds the temple of justice."
+  ],
+  "watermark": {
+    "name": "Atlas Adv",
+    "sub": "Legal Management"
+  },
+  "page": {
+    "title": "Showcase",
+    "subtitle": "A shareable card — your real data, with no private names",
+    "fullscreen": "Full screen ↗"
+  },
+  "mix": {
+    "firmSub": "Law Firm",
+    "focusActive": "focus active",
+    "pomodoro": "pomodoro",
+    "cycle_one": "{{count}} cycle",
+    "cycle_other": "{{count}} cycles",
+    "reset": "Reset",
+    "pause": "⏸ Pause",
+    "start": "▶ Start focus",
+    "taskPending_one": "task due today",
+    "taskPending_other": "tasks due today",
+    "taskDone_one": "task completed this week",
+    "taskDone_other": "tasks completed this week"
+  },
+  "optionA": {
+    "dueToday_one": "{{count}} deadline today",
+    "dueToday_other": "{{count}} deadlines today",
+    "focusActive": "focus active",
+    "ready": "ready",
+    "start": "▶ Start",
+    "pause": "⏸ Pause"
+  },
+  "optionB": {
+    "activeCases": "active cases",
+    "clients": "clients",
+    "tasksDone": "tasks completed",
+    "received": "received",
+    "stamp": "WEEK\nIN NUMBERS",
+    "footerBrand": "Atlas Adv · Legal Management"
+  },
+  "optionC": {
+    "title": "Achievements & Goals",
+    "message": "Coming soon — unlockable badges,\nfirm goals and notifications."
+  },
+  "optionD": {
+    "live": "live",
+    "active": "Active",
+    "suspended": "Suspended",
+    "closed": "Closed",
+    "activeCases": "active cases",
+    "clients": "clients",
+    "dueToday": "due today",
+    "tasksToday": "tasks today",
+    "received": "Received",
+    "toReceive": "To receive"
+  },
+  "optionE": {
+    "topLabel": "LAW IN MOTION",
+    "activeCases": "active\ncases",
+    "tasksDone": "tasks\ncompleted",
+    "clientsServed": "clients\nserved",
+    "sealText": "ATLAS ADV · LEGAL MANAGEMENT"
+  },
+  "options": {
+    "optionPrefix": "Option",
+    "A": { "label": "Focus Mode", "tag": "Pomodoro + quote of the day" },
+    "B": { "label": "Week in Numbers", "tag": "Weekly recap" },
+    "C": { "label": "Achievements", "tag": "Badges and goals — coming soon" },
+    "D": { "label": "Live Dashboard", "tag": "Live panel, hidden data" },
+    "E": { "label": "Monthly Seal", "tag": "Story-format poster" }
+  },
+  "showAlts": "▼ See other 5 options",
+  "hideAlts": "▲ Hide other options"
+}

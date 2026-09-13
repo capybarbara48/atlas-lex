@@ -1,0 +1,48 @@
+{
+  "save": "Save",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "edit": "Edit",
+  "add": "Add",
+  "new": "New",
+  "search": "Search",
+  "loading": "Loading...",
+  "confirm": "Confirm",
+  "close": "Close",
+  "back": "Back",
+  "next": "Next",
+  "previous": "Previous",
+  "yes": "Yes",
+  "no": "No",
+  "success": "Success",
+  "error": "Error",
+  "errorGeneric": "Something went wrong. Please try again.",
+  "required": "Required",
+  "optional": "Optional",
+  "actions": "Actions",
+  "noResults": "No results found",
+  "seeMore": "See more",
+  "seeAll": "See all",
+  "confirmDelete": "Are you sure you want to delete this? This action cannot be undone.",
+  "signOut": "Sign out",
+  "settings": "Settings",
+  "saving": "Saving…",
+  "saveChanges": "Save changes",
+  "selectPlaceholder": "— Select —",
+  "nameRequired": "Name is required.",
+  "currencyPlaceholder": "0.00",
+  "errorBoundary": {
+    "page": {
+      "title": "Something went wrong",
+      "message": "An unexpected error occurred on this page. Try again or go back to the dashboard.",
+      "retryButton": "Try again",
+      "dashboardButton": "Go to dashboard"
+    },
+    "app": {
+      "title": "Atlas Adv ran into a problem",
+      "message": "An unexpected error occurred. Reload the page or clear your browser cache.",
+      "reloadButton": "Reload page",
+      "retryButton": "Try again"
+    }
+  }
+}

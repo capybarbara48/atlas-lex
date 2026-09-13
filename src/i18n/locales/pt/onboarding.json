@@ -1,0 +1,85 @@
+{
+  "fonts": {
+    "headingDefault": "Padrão Atlas",
+    "bodyDefault": "Padrão (sistema)",
+    "monoDefault": "Padrão (mono)"
+  },
+  "presets": {
+    "navyClassic": "Navy Clássico",
+    "midnightBlue": "Azul Noturno",
+    "deepBlue": "Azul Profundo",
+    "forestGreen": "Verde Floresta",
+    "burgundy": "Bordô",
+    "graphite": "Grafite",
+    "executiveBrown": "Marrom Executivo",
+    "royalPurple": "Roxo Real"
+  },
+  "stepLabel": "Passo {{current}} de {{total}}",
+  "nav": {
+    "back": "← Voltar",
+    "next": "Próximo →",
+    "start": "Começar →",
+    "finish": "🚀 Entrar no Atlas Adv",
+    "finishing": "Salvando…"
+  },
+  "step0": {
+    "title": "Bem-vindo ao Atlas Adv!",
+    "descPre": "Vamos configurar seu espaço em",
+    "descBold": "3 passos rápidos",
+    "descPost": ". Cada advogado tem o seu próprio ambiente — com sua marca, sua cor e seus dados.",
+    "fullNameLabel": "Seu nome completo",
+    "fullNamePlaceholder": "Dr. Elcimar Reis",
+    "oabLabel": "Número da OAB",
+    "oabPlaceholder": "123456/SP",
+    "verifiedAccount": "Conta Google verificada:"
+  },
+  "step1": {
+    "title": "Seu Escritório",
+    "desc": "Este nome aparecerá no cabeçalho de todas as páginas e será visível apenas para você.",
+    "firmNameLabel": "Nome do escritório",
+    "firmNamePlaceholder": "Reis Advocacia",
+    "logoLabel": "Logo"
+  },
+  "step2": {
+    "title": "Identidade Visual",
+    "desc": "Escolha a cor que representa seu escritório. Ela aparece no cabeçalho, botões e elementos de destaque.",
+    "customColorTitle": "Cor personalizada",
+    "customColorLabel": "ou escolha uma cor personalizada"
+  },
+  "step3": {
+    "title": "Tipografia",
+    "desc": "Escolha as fontes que representam seu escritório. Você pode alterá-las a qualquer momento em Configurações.",
+    "scopeLabel": "Aplicar em:",
+    "scopeAll": "Todo o sistema",
+    "scopePdfOnly": "Só em PDF / documentos",
+    "customFontLabel": "Sua fonte personalizada",
+    "headingFontLabel": "Fonte principal (títulos)",
+    "bodyFontLabel": "Fonte secundária (texto)",
+    "monoFontLabel": "Fonte terciária (números, processos)",
+    "previewHeading": "Assessoria Jurídica Especializada",
+    "previewBody": "Atendemos famílias e empresas com comprometimento, ética e excelência. Cada caso é tratado com dedicação e rigor técnico.",
+    "previewMono": "Proc. nº 1234.567.2024.8.00"
+  },
+  "step4": {
+    "title": "Tudo pronto, {{name}}!",
+    "defaultName": "Advogado",
+    "desc": "Seu ambiente está configurado. Aqui está um resumo:",
+    "lawyer": "Advogado",
+    "firm": "Escritório",
+    "brandColor": "Cor da marca",
+    "logo": "Logo",
+    "logoConfigured": "Configurado ✓",
+    "logoNotConfigured": "Não configurado (usaremos as iniciais)",
+    "fonts": "Fontes",
+    "fontsDefault": "Padrão",
+    "monoDefault": "Mono padrão",
+    "pdfOnlySuffix": "(só PDF)",
+    "account": "Conta",
+    "editNotePre": "Você pode alterar qualquer configuração a qualquer momento em",
+    "editNoteBold": "Configurações",
+    "saveError": "Erro ao salvar: {{message}}"
+  },
+  "headerPreview": {
+    "defaultFirmName": "Seu Escritório"
+  }
+}

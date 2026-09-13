@@ -1,0 +1,48 @@
+{
+  "greeting": {
+    "morning": "Bom dia",
+    "afternoon": "Boa tarde",
+    "evening": "Boa noite"
+  },
+  "activeCases": "Casos ativos",
+  "activeCasesSummary": "{{total}} no total · {{clients}} clientes",
+  "statTasksToday": "Tarefas hoje",
+  "statIncomeMonth": "Receitas / mês",
+  "statBalanceMonth": "Saldo / mês",
+  "newCaseButton": "Novo caso",
+  "newCaseModalTitle": "Novo Caso",
+  "casesBoard": {
+    "title": "Quadro de Casos",
+    "subtitle": "{{total}} processos · {{active}} ativos"
+  },
+  "kanbanEmpty": "Vazio",
+  "seeAllTasks": "Ver todas",
+  "overdueCard": {
+    "title": "Atrasadas & Urgentes"
+  },
+  "overdueTasks_one": "{{count}} tarefa vencida",
+  "overdueTasks_other": "{{count}} tarefas vencidas",
+  "noOverdueTasks": "Nenhuma tarefa atrasada",
+  "allCaughtUp": "Tudo em dia!",
+  "todayTasksCard": {
+    "title": "Tarefas de Hoje"
+  },
+  "todayTasksCount_one": "{{count}} tarefa para hoje",
+  "todayTasksCount_other": "{{count}} tarefas para hoje",
+  "noTasksToday": "Nenhuma tarefa para hoje",
+  "noTasksScheduledToday": "Nenhuma tarefa agendada para hoje",
+  "markAsDone": "Marcar como concluída",
+  "financeCard": {
+    "title": "Financeiro — mês corrente",
+    "subtitle": "Resumo do mês"
+  },
+  "finance": {
+    "incomeLabel": "Receitas",
+    "expenseLabel": "Despesas",
+    "balanceLabel": "Saldo",
+    "incomeType": "Receita",
+    "expenseType": "Despesa",
+    "recentEntries": "Lançamentos recentes",
+    "noEntries": "Nenhum lançamento registrado"
+  }
+}

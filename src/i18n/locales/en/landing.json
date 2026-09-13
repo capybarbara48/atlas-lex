@@ -1,0 +1,193 @@
+{
+  "nav": {
+    "recursos": "Features",
+    "comparativo": "Comparison",
+    "precos": "Pricing",
+    "cta": "Sign in with Google"
+  },
+  "hero": {
+    "badge": "Free beta · Instant access",
+    "titleLine1": "The legal system",
+    "titleAccent": "that grows with you",
+    "subtitle": "Case management, clients, finances, team and professional proposals — all in one platform built for Brazilian lawyers.",
+    "ctaPrimary": "Sign in with Google — it's free",
+    "ctaSecondary": "See features →",
+    "note": "No credit card required · Set up in under 2 minutes"
+  },
+  "strip": {
+    "cases": "Cases & filings",
+    "clients": "Clients",
+    "financials": "Financials",
+    "proposals": "PDF proposals",
+    "team": "Team",
+    "showcase": "Public showcase"
+  },
+  "features": {
+    "eyebrow": "Features",
+    "title": "Everything your firm needs, in one place",
+    "subtitle": "No spreadsheets. No workarounds. Built specifically for Brazilian legal practice.",
+    "cases": {
+      "title": "Case Management",
+      "desc": "Track cases with status, area of law, court, dates and documents. Everything linked to the client."
+    },
+    "clients": {
+      "title": "Clients & History",
+      "desc": "Complete profiles with contacts, tax IDs, linked cases and an activity timeline."
+    },
+    "financials": {
+      "title": "Integrated Finances",
+      "desc": "Income, expenses, fees and overdue payments. Real-time reports, no spreadsheets needed."
+    },
+    "proposals": {
+      "title": "Professional Proposals",
+      "desc": "Generate PDF proposals with a custom layout, fee tables and a digital signature."
+    },
+    "team": {
+      "title": "Team Management",
+      "desc": "Assign tasks to interns and partners, track progress and set who's responsible for each case."
+    },
+    "showcase": {
+      "title": "Firm Showcase",
+      "desc": "A public page for your firm with practice areas, team and a contact form."
+    }
+  },
+  "diff": {
+    "eyebrow": "Why Atlas Adv?",
+    "title": "Four reasons that make the difference",
+    "card1": {
+      "title": "Open it, understand it.",
+      "subtitle": "Ready in 2 minutes, not 2 weeks.",
+      "body": "There's no confusion button in Atlas Adv. The interface speaks for itself — you focus on the law, not on learning software."
+    },
+    "card2": {
+      "title": "Built for lawyers. Not for engineers.",
+      "body": "No more menus with 40 options. No more reports nobody reads. No more integrations nobody set up. Just what you use, every day."
+    },
+    "card3": {
+      "title": "Your brand. Your color. Your identity.",
+      "body": "Logo, brand color and firm name on every proposal and every screen. Atlas Adv stays behind the scenes. You stay in front."
+    },
+    "card4": {
+      "title": "Half the price. Twice the focus.",
+      "body": "Why pay R$2,000/year for features you never open?",
+      "table": {
+        "system": "System",
+        "monthly": "Monthly",
+        "yearly": "Per year",
+        "savings": "Savings",
+        "youSave": "you save {{amount}}",
+        "perMonth": "/mo",
+        "atlasName": "Atlas Adv Pro"
+      }
+    }
+  },
+  "stats": {
+    "offices": "firms in beta",
+    "cases": "cases managed",
+    "rating": "average rating",
+    "setup": "to get started"
+  },
+  "how": {
+    "eyebrow": "How it works",
+    "title": "Get started in under 2 minutes",
+    "step1": {
+      "title": "Create your account",
+      "desc": "Sign in with Google. No long forms, no waiting for approval."
+    },
+    "step2": {
+      "title": "Set up your firm",
+      "desc": "Add your name, bar number, logo and brand color. Customize it in seconds."
+    },
+    "step3": {
+      "title": "Start managing",
+      "desc": "Add clients, open cases and track your finances from day one."
+    }
+  },
+  "testimonials": {
+    "eyebrow": "Testimonials",
+    "title": "What early users are saying",
+    "t1": {
+      "quote": "Finally a system built for real lawyers. In one week I had all my cases and clients organized. The integrated finances saved my practice.",
+      "role": "Criminal Defense Attorney"
+    },
+    "t2": {
+      "quote": "The PDF proposals impress clients. I used to use Word and it took hours. Now I have a professional, branded document in minutes.",
+      "role": "Family Law"
+    },
+    "t3": {
+      "quote": "Managing interns and tasks changed how my firm operates. Every case has an owner and a deadline. Nothing falls through the cracks anymore.",
+      "role": "Labor Law"
+    }
+  },
+  "comparison": {
+    "eyebrow": "Comparison",
+    "title": "Why Atlas Adv?",
+    "subtitle": "Compare with the alternatives firms use today.",
+    "colFeature": "Feature",
+    "colAtlas": "Atlas Adv",
+    "colSpreadsheets": "Spreadsheets",
+    "colGeneric": "Generic systems",
+    "rows": {
+      "caseManagement": "Legal case management",
+      "financialControl": "Integrated financial control",
+      "pdfProposals": "PDF business proposals",
+      "teamManagement": "Team / intern management",
+      "notes": "Notes and documentation",
+      "publicShowcase": "Public firm showcase",
+      "brazilianLaw": "Built for Brazilian law",
+      "rls": "Per-user privacy with row-level security",
+      "freeStart": "Free to start"
+    }
+  },
+  "pricing": {
+    "eyebrow": "Pricing",
+    "title": "Simple and transparent",
+    "subtitle": "Start for free. Grow when you need to.",
+    "perMonth": "/mo",
+    "beta": {
+      "name": "Free Beta",
+      "desc": "Full access during the beta period. No limitations.",
+      "feat1": "Unlimited cases",
+      "feat2": "Unlimited clients",
+      "feat3": "PDF proposals",
+      "feat4": "Team of up to 5 members",
+      "feat5": "Email support",
+      "cta": "Get started — it's free"
+    },
+    "pro": {
+      "badge": "Coming soon",
+      "name": "Pro",
+      "desc": "For growing firms that need more power.",
+      "feat1": "Everything in Beta",
+      "feat2": "Unlimited team",
+      "feat3": "Advanced reports",
+      "feat4": "WhatsApp integration",
+      "feat5": "Priority support",
+      "cta": "Coming soon"
+    }
+  },
+  "security": {
+    "title": "Your data, protected. Always.",
+    "card1": {
+      "title": "Total isolation per firm",
+      "desc": "Row Level Security ensures no data leaks between accounts. Each firm only accesses its own."
+    },
+    "card2": {
+      "title": "Enterprise-grade infrastructure",
+      "desc": "Hosted on Supabase with PostgreSQL, automatic backups and encryption in transit and at rest."
+    },
+    "card3": {
+      "title": "LGPD compliant",
+      "desc": "Built with privacy in mind. You control your data and can export or delete it at any time."
+    }
+  },
+  "finalCta": {
+    "title": "Ready to modernize your firm?",
+    "subtitle": "Free access during the beta. Start today.",
+    "cta": "Sign in with Google — it's free"
+  },
+  "footer": {
+    "tagline": "Intelligent legal management",
+    "copyright": "© {{year}} Atlas Adv. All rights reserved."
+  }
+}

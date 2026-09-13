@@ -1,0 +1,112 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "feedback": "Feedback",
+    "tickets": "Support",
+    "backToApp": "Back to app"
+  },
+  "role": {
+    "admin": "Admin",
+    "beta": "Beta",
+    "member": "Member"
+  },
+  "status": {
+    "active": "Active",
+    "pending": "Pending"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Overview of the Atlas Adv platform",
+    "kpi": {
+      "totalUsers": "Total users",
+      "newThisMonthSub": "{{count}} new this month",
+      "onboardingComplete": "Onboarding complete",
+      "percentOfTotal": "{{percent}}% of total",
+      "newThisMonth": "New this month",
+      "feedbackReceived": "Feedback received",
+      "feedbackSub": "suggestions, bugs and compliments"
+    },
+    "recentUsers": "Recent users",
+    "seeAll": "See all →",
+    "table": {
+      "name": "Name",
+      "email": "Email",
+      "firm": "Firm",
+      "role": "Role",
+      "status": "Status",
+      "signupDate": "Signed up"
+    },
+    "noUsers": "No users found."
+  },
+  "users": {
+    "title": "Users",
+    "subtitle_one": "{{count}} registered user",
+    "subtitle_other": "{{count}} registered users",
+    "searchPlaceholder": "Search by name, email or firm…",
+    "allRoles": "All roles",
+    "table": {
+      "user": "User",
+      "firm": "Firm",
+      "oab": "Bar number",
+      "role": "Role",
+      "status": "Status",
+      "signupDate": "Signed up",
+      "actions": "Actions"
+    },
+    "noResults": "No results found.",
+    "noUsers": "No users.",
+    "loadError": "Error loading users.",
+    "updateError": "Error updating role.",
+    "lastAdminError": "You cannot remove the last remaining administrator.",
+    "roleUpdated": "Role updated to {{role}}."
+  },
+  "feedback": {
+    "title": "Feedback",
+    "newBadge_one": "{{count}} new",
+    "newBadge_other": "{{count}} new",
+    "subtitle_one": "{{count}} submission received",
+    "subtitle_other": "{{count}} submissions received",
+    "allTypes": "All types",
+    "type": {
+      "sugestao": "Suggestion",
+      "bug": "Bug",
+      "elogio": "Compliment"
+    },
+    "allReadStatus": "All",
+    "unread": "Unread",
+    "read": "Read",
+    "noResults": "No feedback found.",
+    "loadError": "Error loading feedback.",
+    "updateError": "Error updating.",
+    "markUnread": "Mark as unread",
+    "markRead": "Mark as read",
+    "markReadShort": "Mark read"
+  },
+  "tickets": {
+    "title": "Support",
+    "subtitle_one": "{{count}} ticket in total",
+    "subtitle_other": "{{count}} tickets in total",
+    "status": {
+      "aberto": "Open",
+      "em_andamento": "In progress",
+      "resolvido": "Resolved"
+    },
+    "filterAll": "All ({{count}})",
+    "filterOpen": "Open ({{count}})",
+    "filterInProgress": "In progress ({{count}})",
+    "filterResolved": "Resolved ({{count}})",
+    "noResults": "No tickets found.",
+    "loadError": "Error loading tickets.",
+    "statusUpdateError": "Error updating status.",
+    "replyError": "Error sending reply.",
+    "close": "Close",
+    "originalMessage": "Original message",
+    "noReplies": "No replies yet.",
+    "supportAdmin": "Support (admin)",
+    "replyPlaceholder": "Write a reply as support…",
+    "replyHint": "⌘ + Enter to send",
+    "sending": "Sending…",
+    "reply": "Reply"
+  }
+}

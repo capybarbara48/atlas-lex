@@ -1,0 +1,176 @@
+{
+  "pageTitle": "Settings",
+  "pageSubtitle": "Customize Atlas Adv for your firm",
+  "language": {
+    "label": "Language",
+    "sub": "Choose the interface language",
+    "saveError": "Error saving language: {{error}}"
+  },
+  "profile": {
+    "title": "Lawyer Profile",
+    "subtitle": "Your personal and professional information",
+    "fullName": "Full name",
+    "fullNamePlaceholder": "Dr. Elcimar Reis",
+    "oabNumber": "Bar Number (OAB)",
+    "oabHint": "E.g.: 123456/SP",
+    "oabPlaceholder": "123456/SP",
+    "email": "Email",
+    "emailHint": "Managed by Google — not editable",
+    "saveButton": "Save profile",
+    "saveError": "Error saving profile: {{error}}",
+    "saveSuccess": "Profile updated successfully!"
+  },
+  "branding": {
+    "title": "Visual Identity",
+    "subtitle": "Your firm's brand, accent color and typography",
+    "previewLabel": "Header preview",
+    "firmName": "Firm name",
+    "firmNameHint": "Appears in the header on every page",
+    "firmNamePlaceholder": "Reis Advocacia",
+    "logo": "Logo",
+    "logoHint": "PNG, JPG, WebP or SVG · max. 2 MB",
+    "accentColor": "Accent color",
+    "accentHint": "Used in the header, buttons and active elements",
+    "customColorTitle": "Custom color",
+    "darkVariant": "Dark variant",
+    "saveButton": "Save visual identity",
+    "saveError": "Error saving branding: {{error}}",
+    "saveSuccess": "Visual identity updated!"
+  },
+  "typography": {
+    "title": "Typography",
+    "subtitle": "Choose your firm's fonts. Changes apply in real time.",
+    "customFontTitle": "Your custom font",
+    "applyTo": "Apply to",
+    "applyToSub": "The whole system or only PDF documents",
+    "applyToAll": "Whole system",
+    "applyToPdfOnly": "PDF only",
+    "headingFont": "Primary font (headings)",
+    "bodyFont": "Secondary font (body text)",
+    "monoFont": "Tertiary font (numbers, case codes)",
+    "previewTitle": "Specialized Legal Advisory",
+    "previewBody": "We serve families and businesses with commitment, ethics and legal excellence.",
+    "previewMono": "Case No. 1234.567.2024.8.00",
+    "saveButton": "Save typography",
+    "saving": "Saving…",
+    "saveError": "Error saving typography: {{error}}",
+    "saveSuccess": "Typography saved!"
+  },
+  "display": {
+    "title": "Display Preferences",
+    "subtitle": "Customize how content is presented. Saved locally on this device.",
+    "density": {
+      "label": "List density",
+      "sub": "Controls the spacing in tables and lists",
+      "compact": "Compact",
+      "normal": "Normal",
+      "spacious": "Spacious"
+    },
+    "taskSort": {
+      "label": "Default task sorting",
+      "sub": "Applied when opening the Tasks page",
+      "dueDate": "By due date",
+      "priority": "By priority"
+    },
+    "dashboardCards": {
+      "label": "Dashboard cards",
+      "sub": "Choose which cards appear on the dashboard",
+      "cases": "Cases",
+      "tasks": "Tasks",
+      "financial": "Financial",
+      "overdue": "Overdue"
+    },
+    "resetButton": "Reset preferences",
+    "resetNote": "Preferences saved locally on this device",
+    "resetSuccess": "Preferences reset to default!"
+  },
+  "lists": {
+    "title": "Customizable Lists",
+    "subtitle": "Configure the options available in Proposals and Fees. Changes are saved instantly to the cloud.",
+    "loading": "Loading lists…",
+    "loadDefaults": "Load defaults",
+    "removeTitle": "Remove",
+    "addError": "Error adding: {{error}}",
+    "serviceTypes": {
+      "title": "Service types (Proposals)",
+      "empty": "No types registered yet.",
+      "placeholder": "New service type…"
+    },
+    "quotaLitis": {
+      "title": "Contingency Fee Percentages",
+      "empty": "No percentages registered yet.",
+      "placeholder": "E.g.: 40%",
+      "invalidPercent": "Invalid percentage. Enter a number between 0 and 100 (e.g.: 30)."
+    },
+    "tribunals": {
+      "title": "Courts and Divisions (Cases)",
+      "empty": "No courts registered yet.",
+      "placeholder": "E.g.: Criminal Enforcement Division"
+    },
+    "responsibles": {
+      "title": "Responsible parties (Lawyers / Interns)",
+      "empty": "None registered yet.",
+      "placeholder": "E.g.: Dr. Elcimar Reis"
+    }
+  },
+  "team": {
+    "title": "Team",
+    "subtitle": "Firm members — partners, lawyers, interns and assistants",
+    "empty": "No members registered yet.",
+    "addButton": "Add member",
+    "editButton": "Edit",
+    "removeConfirm": "Remove {{name}}?",
+    "role": {
+      "parceiro": "Partner",
+      "advogado": "Lawyer",
+      "estagiario": "Intern",
+      "assistente": "Assistant"
+    },
+    "modal": {
+      "addTitle": "Add team member",
+      "editTitle": "Edit member"
+    },
+    "form": {
+      "fullName": "Full name *",
+      "fullNamePlaceholder": "Dr. John Smith",
+      "role": "Role",
+      "roles": {
+        "parceiro": "Partner",
+        "advogado": "Lawyer",
+        "estagiario": "Intern",
+        "assistente": "Assistant / Secretary"
+      },
+      "email": "Email",
+      "emailPlaceholder": "john@firm.com",
+      "phone": "Phone",
+      "phonePlaceholder": "(11) 91234-5678",
+      "oab": "Bar Number (optional)",
+      "oabPlaceholder": "SP 123456",
+      "nameRequired": "Name is required.",
+      "update": "Update"
+    }
+  },
+  "account": {
+    "title": "Account",
+    "subtitle": "Your Atlas Adv account information",
+    "authProvider": "Authentication provider",
+    "userId": "User ID",
+    "lastAccess": "Last sign-in",
+    "importButton": "Import data from previous system",
+    "signOutButton": "Sign out"
+  },
+  "support": {
+    "title": "Support",
+    "subtitle": "Open tickets, track responses and get help from our team."
+  },
+  "dev": {
+    "title": "Development",
+    "subtitle": "Testing tools — not shown in production to other users",
+    "simulateNewUser": "Simulate new user",
+    "simulateDescPre": "Resets the onboarding flag to",
+    "simulateDescPost": "in the database. On the next render, the welcome wizard will be shown again.",
+    "resetButton": "Restart onboarding",
+    "resetConfirm": "Reset onboarding? The wizard will appear now.",
+    "resetError": "Error: {{error}}"
+  }
+}

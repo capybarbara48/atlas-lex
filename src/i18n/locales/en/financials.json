@@ -1,0 +1,56 @@
+{
+  "title": "Financials",
+  "subtitleAll": "All entries",
+  "pdfMonthly": "Monthly PDF",
+  "pdfAnnual": "Annual PDF",
+  "pdfMonthlyTitle": "Current month report",
+  "pdfAnnualTitle": "Current year report",
+  "newEntry": "New entry",
+  "editEntry": "Edit entry",
+  "searchPlaceholder": "Search entry or case...",
+  "filters": {
+    "all": "All",
+    "income": "Income",
+    "expense": "Expenses",
+    "statusAll": "All"
+  },
+  "summary": {
+    "incomeReceived": "Income received",
+    "expensesPaid": "Expenses paid",
+    "balance": "Balance",
+    "receivable": "Receivable",
+    "entriesCount_one": "{{count}} entry",
+    "entriesCount_other": "{{count}} entries",
+    "pendingEntriesCount_one": "{{count}} pending entry",
+    "pendingEntriesCount_other": "{{count}} pending entries"
+  },
+  "chart": {
+    "title": "Last 6 months (payments)",
+    "income": "Income",
+    "expense": "Expenses"
+  },
+  "table": {
+    "description": "Description",
+    "case": "Case",
+    "type": "Type",
+    "status": "Status",
+    "amount": "Amount",
+    "date": "Date"
+  },
+  "type": {
+    "income": "Income",
+    "expense": "Expense"
+  },
+  "loading": "Loading…",
+  "loadError": "Error loading entries.",
+  "empty": "No entries found",
+  "form": {
+    "descriptionPlaceholder": "E.g.: Fees — Costa vs. Alfa case",
+    "amountLabel": "Amount (R$)",
+    "categoryLabel": "Category",
+    "categoryPlaceholder": "E.g.: Fees, Court costs, Errands…",
+    "dueDateLabel": "Due date",
+    "paidAtLabel": "Payment date",
+    "createButton": "Create entry"
+  }
+}

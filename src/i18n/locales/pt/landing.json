@@ -1,0 +1,193 @@
+{
+  "nav": {
+    "recursos": "Recursos",
+    "comparativo": "Comparativo",
+    "precos": "Preços",
+    "cta": "Entrar com Google"
+  },
+  "hero": {
+    "badge": "Beta gratuito · Acesso imediato",
+    "titleLine1": "O sistema jurídico",
+    "titleAccent": "que cresce com você",
+    "subtitle": "Gestão de casos, clientes, financeiro, equipe e propostas profissionais — tudo em uma plataforma feita para advogados brasileiros.",
+    "ctaPrimary": "Entrar com Google — é grátis",
+    "ctaSecondary": "Ver recursos →",
+    "note": "Sem cartão de crédito · Setup em menos de 2 minutos"
+  },
+  "strip": {
+    "cases": "Casos & processos",
+    "clients": "Clientes",
+    "financials": "Financeiro",
+    "proposals": "Propostas em PDF",
+    "team": "Equipe",
+    "showcase": "Vitrine pública"
+  },
+  "features": {
+    "eyebrow": "Recursos",
+    "title": "Tudo que seu escritório precisa, em um só lugar",
+    "subtitle": "Sem planilhas. Sem gambiarras. Desenvolvido especificamente para a advocacia brasileira.",
+    "cases": {
+      "title": "Gestão de Casos",
+      "desc": "Acompanhe processos com status, área do direito, tribunal, datas e documentos. Tudo vinculado ao cliente."
+    },
+    "clients": {
+      "title": "Clientes & Histórico",
+      "desc": "Perfil completo com contatos, CPF/CNPJ, casos vinculados e timeline de atividades."
+    },
+    "financials": {
+      "title": "Financeiro Integrado",
+      "desc": "Receitas, despesas, honorários e inadimplência. Relatórios em tempo real sem planilha nenhuma."
+    },
+    "proposals": {
+      "title": "Propostas Profissionais",
+      "desc": "Gere propostas comerciais em PDF com layout personalizado, tabelas de honorários e assinatura digital."
+    },
+    "team": {
+      "title": "Gestão de Equipe",
+      "desc": "Distribua tarefas entre estagiários e sócios, acompanhe progresso e defina responsáveis por caso."
+    },
+    "showcase": {
+      "title": "Vitrine do Escritório",
+      "desc": "Página pública do seu escritório com áreas de atuação, equipe e formulário de contato."
+    }
+  },
+  "diff": {
+    "eyebrow": "Por que Atlas Adv?",
+    "title": "Quatro razões que fazem a diferença",
+    "card1": {
+      "title": "Abriu, entendeu.",
+      "subtitle": "Pronto em 2 minutos, não em 2 semanas.",
+      "body": "Não existe botão de dúvida no Atlas Adv. A interface fala por si — você foca no direito, não em aprender software."
+    },
+    "card2": {
+      "title": "Feito para advogados. Não para engenheiros.",
+      "body": "Chega de menus com 40 opções. De relatórios que ninguém lê. De integrações que ninguém configurou. Só o que você usa, todo dia."
+    },
+    "card3": {
+      "title": "Sua marca. Sua cor. Sua identidade.",
+      "body": "Logo, cor de marca, nome do escritório em cada proposta e cada tela. Atlas Adv fica nos bastidores. Você fica na frente."
+    },
+    "card4": {
+      "title": "Metade do preço. O dobro de foco.",
+      "body": "Por que pagar R$2.000/ano por funcionalidades que você nunca abre?",
+      "table": {
+        "system": "Sistema",
+        "monthly": "Mensalidade",
+        "yearly": "Por ano",
+        "savings": "Economia",
+        "youSave": "você economiza {{amount}}",
+        "perMonth": "/mês",
+        "atlasName": "Atlas Adv Pro"
+      }
+    }
+  },
+  "stats": {
+    "offices": "escritórios em beta",
+    "cases": "casos gerenciados",
+    "rating": "avaliação média",
+    "setup": "para começar"
+  },
+  "how": {
+    "eyebrow": "Como funciona",
+    "title": "Comece em menos de 2 minutos",
+    "step1": {
+      "title": "Crie sua conta",
+      "desc": "Login com Google. Sem formulários longos, sem espera de aprovação."
+    },
+    "step2": {
+      "title": "Configure seu escritório",
+      "desc": "Adicione nome, OAB, logo e cor de marca. Personalize em segundos."
+    },
+    "step3": {
+      "title": "Comece a gerenciar",
+      "desc": "Cadastre clientes, abra casos e controle o financeiro desde o primeiro dia."
+    }
+  },
+  "testimonials": {
+    "eyebrow": "Depoimentos",
+    "title": "O que dizem os primeiros usuários",
+    "t1": {
+      "quote": "Finalmente um sistema feito para advogado de verdade. Em uma semana já organizei todos os meus processos e clientes. O financeiro integrado salvou meu escritório.",
+      "role": "Advogado Criminalista"
+    },
+    "t2": {
+      "quote": "As propostas em PDF impressionam os clientes. Antes eu usava Word e levava horas. Agora em minutos tenho um documento profissional com minha marca.",
+      "role": "Direito de Família"
+    },
+    "t3": {
+      "quote": "O controle de estagiários e a gestão de tarefas mudaram como meu escritório opera. Cada processo tem responsável e prazo. Nada cai mais no esquecimento.",
+      "role": "Direito Trabalhista"
+    }
+  },
+  "comparison": {
+    "eyebrow": "Comparativo",
+    "title": "Por que Atlas Adv?",
+    "subtitle": "Compare com as alternativas que os escritórios usam hoje.",
+    "colFeature": "Recurso",
+    "colAtlas": "Atlas Adv",
+    "colSpreadsheets": "Planilhas",
+    "colGeneric": "Sistemas genéricos",
+    "rows": {
+      "caseManagement": "Gestão de casos jurídicos",
+      "financialControl": "Controle financeiro integrado",
+      "pdfProposals": "Propostas comerciais em PDF",
+      "teamManagement": "Gestão de equipe / estagiários",
+      "notes": "Notas e documentação",
+      "publicShowcase": "Vitrine pública do escritório",
+      "brazilianLaw": "Feito para o direito brasileiro",
+      "rls": "Privacidade com RLS por usuário",
+      "freeStart": "Gratuito para começar"
+    }
+  },
+  "pricing": {
+    "eyebrow": "Preços",
+    "title": "Simples e transparente",
+    "subtitle": "Comece de graça. Cresça quando precisar.",
+    "perMonth": "/mês",
+    "beta": {
+      "name": "Beta Gratuito",
+      "desc": "Acesso completo durante o período beta. Sem limitações.",
+      "feat1": "Casos ilimitados",
+      "feat2": "Clientes ilimitados",
+      "feat3": "Propostas em PDF",
+      "feat4": "Equipe até 5 membros",
+      "feat5": "Suporte por e-mail",
+      "cta": "Começar agora — é grátis"
+    },
+    "pro": {
+      "badge": "Em breve",
+      "name": "Pro",
+      "desc": "Para escritórios em crescimento que precisam de mais poder.",
+      "feat1": "Tudo do Beta",
+      "feat2": "Equipe ilimitada",
+      "feat3": "Relatórios avançados",
+      "feat4": "Integração com WhatsApp",
+      "feat5": "Suporte prioritário",
+      "cta": "Em breve"
+    }
+  },
+  "security": {
+    "title": "Seus dados protegidos. Sempre.",
+    "card1": {
+      "title": "Isolamento total por escritório",
+      "desc": "Row Level Security garante que nenhum dado vaze entre contas. Cada escritório acessa apenas o próprio."
+    },
+    "card2": {
+      "title": "Infraestrutura de nível enterprise",
+      "desc": "Hospedado na Supabase com PostgreSQL, backups automáticos e criptografia em trânsito e em repouso."
+    },
+    "card3": {
+      "title": "Conforme com a LGPD",
+      "desc": "Desenvolvido com privacidade em mente. Você controla seus dados e pode exportar ou excluir a qualquer momento."
+    }
+  },
+  "finalCta": {
+    "title": "Pronto para modernizar seu escritório?",
+    "subtitle": "Acesso gratuito durante o beta. Comece hoje.",
+    "cta": "Entrar com Google — é grátis"
+  },
+  "footer": {
+    "tagline": "Gestão jurídica inteligente",
+    "copyright": "© {{year}} Atlas Adv. Todos os direitos reservados."
+  }
+}

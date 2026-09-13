@@ -1,0 +1,176 @@
+{
+  "pageTitle": "Configurações",
+  "pageSubtitle": "Personalize o Atlas Adv para o seu escritório",
+  "language": {
+    "label": "Idioma",
+    "sub": "Escolha o idioma da interface",
+    "saveError": "Erro ao salvar idioma: {{error}}"
+  },
+  "profile": {
+    "title": "Perfil do Advogado",
+    "subtitle": "Suas informações pessoais e profissionais",
+    "fullName": "Nome completo",
+    "fullNamePlaceholder": "Dr. Elcimar Reis",
+    "oabNumber": "Número OAB",
+    "oabHint": "Ex: 123456/SP",
+    "oabPlaceholder": "123456/SP",
+    "email": "E-mail",
+    "emailHint": "Gerenciado pelo Google — não editável",
+    "saveButton": "Salvar perfil",
+    "saveError": "Erro ao salvar perfil: {{error}}",
+    "saveSuccess": "Perfil atualizado com sucesso!"
+  },
+  "branding": {
+    "title": "Identidade Visual",
+    "subtitle": "Marca, cor de destaque e tipografia do seu escritório",
+    "previewLabel": "Pré-visualização do cabeçalho",
+    "firmName": "Nome do escritório",
+    "firmNameHint": "Aparece no cabeçalho de todas as páginas",
+    "firmNamePlaceholder": "Reis Advocacia",
+    "logo": "Logotipo",
+    "logoHint": "PNG, JPG, WebP ou SVG · máx. 2 MB",
+    "accentColor": "Cor de destaque",
+    "accentHint": "Usada no cabeçalho, botões e elementos ativos",
+    "customColorTitle": "Cor personalizada",
+    "darkVariant": "Variante escura",
+    "saveButton": "Salvar identidade visual",
+    "saveError": "Erro ao salvar marca: {{error}}",
+    "saveSuccess": "Identidade visual atualizada!"
+  },
+  "typography": {
+    "title": "Tipografia",
+    "subtitle": "Escolha as fontes do seu escritório. Alterações aplicadas em tempo real.",
+    "customFontTitle": "Sua fonte personalizada",
+    "applyTo": "Aplicar em",
+    "applyToSub": "Todo o sistema ou somente em documentos PDF",
+    "applyToAll": "Todo o sistema",
+    "applyToPdfOnly": "Só em PDF",
+    "headingFont": "Fonte principal (títulos)",
+    "bodyFont": "Fonte secundária (texto)",
+    "monoFont": "Fonte terciária (números, processos)",
+    "previewTitle": "Assessoria Jurídica Especializada",
+    "previewBody": "Atendemos famílias e empresas com comprometimento, ética e excelência jurídica.",
+    "previewMono": "Proc. nº 1234.567.2024.8.00",
+    "saveButton": "Salvar tipografia",
+    "saving": "Salvando…",
+    "saveError": "Erro ao salvar tipografia: {{error}}",
+    "saveSuccess": "Tipografia salva!"
+  },
+  "display": {
+    "title": "Preferências de Exibição",
+    "subtitle": "Personalize como o conteúdo é apresentado. Salvo localmente neste dispositivo.",
+    "density": {
+      "label": "Densidade das listas",
+      "sub": "Controla o espaçamento em tabelas e listas",
+      "compact": "Compacto",
+      "normal": "Normal",
+      "spacious": "Espaçoso"
+    },
+    "taskSort": {
+      "label": "Ordenação padrão de tarefas",
+      "sub": "Aplicado ao abrir a página de Tarefas",
+      "dueDate": "Por vencimento",
+      "priority": "Por prioridade"
+    },
+    "dashboardCards": {
+      "label": "Cards do Painel",
+      "sub": "Escolha quais cards aparecem no dashboard",
+      "cases": "Casos",
+      "tasks": "Tarefas",
+      "financial": "Financeiro",
+      "overdue": "Atrasadas"
+    },
+    "resetButton": "Redefinir preferências",
+    "resetNote": "Preferências salvas localmente neste dispositivo",
+    "resetSuccess": "Preferências redefinidas para o padrão!"
+  },
+  "lists": {
+    "title": "Listas Personalizáveis",
+    "subtitle": "Configure as opções disponíveis em Propostas e Honorários. Alterações salvas instantaneamente na nuvem.",
+    "loading": "Carregando listas…",
+    "loadDefaults": "Carregar padrões",
+    "removeTitle": "Remover",
+    "addError": "Erro ao adicionar: {{error}}",
+    "serviceTypes": {
+      "title": "Tipos de serviço (Propostas)",
+      "empty": "Nenhum tipo cadastrado ainda.",
+      "placeholder": "Novo tipo de serviço…"
+    },
+    "quotaLitis": {
+      "title": "Percentuais de Quota-Litis",
+      "empty": "Nenhum percentual cadastrado ainda.",
+      "placeholder": "Ex: 40%",
+      "invalidPercent": "Percentual inválido. Digite um número entre 0 e 100 (ex: 30)."
+    },
+    "tribunals": {
+      "title": "Tribunais e Varas (Processos)",
+      "empty": "Nenhum tribunal cadastrado ainda.",
+      "placeholder": "Ex: Vara de Execuções Penais"
+    },
+    "responsibles": {
+      "title": "Responsáveis (Advogados / Estagiários)",
+      "empty": "Nenhum cadastrado ainda.",
+      "placeholder": "Ex: Dr. Elcimar Reis"
+    }
+  },
+  "team": {
+    "title": "Equipe",
+    "subtitle": "Membros do escritório — sócios, advogados, estagiários e assistentes",
+    "empty": "Nenhum membro cadastrado ainda.",
+    "addButton": "Adicionar membro",
+    "editButton": "Editar",
+    "removeConfirm": "Remover {{name}}?",
+    "role": {
+      "parceiro": "Sócio",
+      "advogado": "Advogado(a)",
+      "estagiario": "Estagiário(a)",
+      "assistente": "Assistente"
+    },
+    "modal": {
+      "addTitle": "Adicionar membro à equipe",
+      "editTitle": "Editar membro"
+    },
+    "form": {
+      "fullName": "Nome completo *",
+      "fullNamePlaceholder": "Dr. João Silva",
+      "role": "Função",
+      "roles": {
+        "parceiro": "Sócio / Parceiro",
+        "advogado": "Advogado(a)",
+        "estagiario": "Estagiário(a)",
+        "assistente": "Assistente / Secretaria"
+      },
+      "email": "E-mail",
+      "emailPlaceholder": "joao@escritorio.com",
+      "phone": "Telefone",
+      "phonePlaceholder": "(11) 91234-5678",
+      "oab": "OAB (opcional)",
+      "oabPlaceholder": "SP 123456",
+      "nameRequired": "Nome é obrigatório.",
+      "update": "Atualizar"
+    }
+  },
+  "account": {
+    "title": "Conta",
+    "subtitle": "Informações da sua conta no Atlas Adv",
+    "authProvider": "Provedor de autenticação",
+    "userId": "ID do usuário",
+    "lastAccess": "Último acesso",
+    "importButton": "Importar dados do sistema anterior",
+    "signOutButton": "Encerrar sessão"
+  },
+  "support": {
+    "title": "Suporte",
+    "subtitle": "Abra chamados, acompanhe respostas e obtenha ajuda da nossa equipe."
+  },
+  "dev": {
+    "title": "Desenvolvimento",
+    "subtitle": "Ferramentas para teste — não aparecem em produção para outros usuários",
+    "simulateNewUser": "Simular novo usuário",
+    "simulateDescPre": "Redefine o flag de onboarding para",
+    "simulateDescPost": "no banco de dados. Na próxima renderização, o wizard de boas-vindas será exibido novamente.",
+    "resetButton": "Reiniciar onboarding",
+    "resetConfirm": "Redefinir onboarding? O wizard vai aparecer agora.",
+    "resetError": "Erro: {{error}}"
+  }
+}

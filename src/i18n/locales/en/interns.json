@@ -1,0 +1,56 @@
+{
+  "priority": {
+    "urgente": "Urgent",
+    "alta": "High",
+    "media": "Medium",
+    "baixa": "Low"
+  },
+  "status": {
+    "pendente": "Pending",
+    "em_andamento": "In progress",
+    "concluida": "Completed",
+    "cancelada": "Cancelled"
+  },
+  "overdueBadge_one": "{{count}} overdue",
+  "overdueBadge_other": "{{count}} overdue",
+  "overdueTag": "Overdue",
+  "tasksCount_one": "{{count}} task",
+  "tasksCount_other": "{{count}} tasks",
+  "activeCount": "active",
+  "donePercent": "{{pct}}% completed",
+  "addMember": "+ Add member",
+  "editMember": "Edit member",
+  "addMemberModal": "Add team member",
+  "emptySetup": {
+    "title": "No members registered",
+    "text": "Add team members to assign tasks and track each person's productivity.",
+    "button": "+ Add first member"
+  },
+  "page": {
+    "title": "Team",
+    "subtitle": "Task management by assignee",
+    "loading": "Loading…",
+    "countSubtitle": "{{taskCount}} tasks · {{memberCount}} members"
+  },
+  "all": "All",
+  "unassigned": "Unassigned",
+  "sectionTitle": {
+    "all": "All tasks",
+    "unassigned": "Unassigned",
+    "member": "Tasks — {{member}}"
+  },
+  "filters": {
+    "all": "All",
+    "pendente": "Pending",
+    "em_andamento": "In progress",
+    "concluida": "Completed"
+  },
+  "stats": {
+    "total": "Total",
+    "pendente": "Pending",
+    "em_andamento": "In progress",
+    "concluida": "Completed",
+    "atrasada": "Overdue"
+  },
+  "emptyTasks": "No tasks found"
+}

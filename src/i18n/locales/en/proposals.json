@@ -1,0 +1,62 @@
+{
+  "newProposal": "New proposal",
+  "newProposalModal": "New proposal",
+  "editProposal": "Edit proposal",
+  "searchPlaceholder": "Search proposal or client...",
+  "all": "All",
+  "loading": "Loading…",
+  "countSubtitle_one": "{{count}} proposal · {{approved}} approved · {{pending}} under review",
+  "countSubtitle_other": "{{count}} proposals · {{approved}} approved · {{pending}} under review",
+  "errorLoading": "Error loading proposals.",
+  "emptyPipeline": "No proposals",
+  "emptyList": "No proposals found",
+  "generatePdf": "Generate PDF",
+  "pdfOpened": "PDF opened in a new tab.",
+  "pdfPopupBlocked": "Please allow pop-ups in your browser to generate the PDF.",
+  "toastCreated": "Proposal created.",
+  "toastUpdated": "Proposal updated.",
+  "validUntil": "Valid until {{date}}",
+  "view": {
+    "pipeline": "Pipeline",
+    "list": "List"
+  },
+  "pipeline": {
+    "pendente": "Under Review",
+    "aprovado": "Approved",
+    "recusado": "Rejected"
+  },
+  "status": {
+    "pendente": "Pending",
+    "aprovado": "Approved",
+    "recusado": "Rejected",
+    "rascunho": "Draft",
+    "enviada": "Sent",
+    "aceita": "Accepted",
+    "recusada": "Declined",
+    "expirada": "Expired"
+  },
+  "feeType": {
+    "fixo": "Fixed",
+    "por_hora": "Hourly",
+    "percentual_exito": "Success Fee",
+    "misto": "Mixed"
+  },
+  "table": {
+    "proposal": "Proposal",
+    "client": "Client",
+    "fee": "Fee",
+    "value": "Value",
+    "status": "Status",
+    "created": "Created",
+    "validUntil": "Valid Until"
+  },
+  "form": {
+    "titleLabel": "Proposal title",
+    "titlePlaceholder": "E.g.: Fee proposal — Labor lawsuit",
+    "feeTypeLabel": "Fee type",
+    "amountLabel": "Amount (R$)",
+    "hourlyAmountLabel": "Hourly rate (R$)",
+    "percentageLabel": "Contingency percentage (%)",
+    "createButton": "Create proposal"
+  }
+}
