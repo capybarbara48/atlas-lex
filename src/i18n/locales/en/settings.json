@@ -54,7 +54,10 @@
     "saveButton": "Save typography",
     "saving": "Saving…",
     "saveError": "Error saving typography: {{error}}",
-    "saveSuccess": "Typography saved!"
+    "saveSuccess": "Typography saved!",
+    "headingDefault": "Atlas Default",
+    "bodyDefault": "Default (system)",
+    "monoDefault": "Default (mono)"
   },
   "nav": {
     "title": "Navigation Menu",

@@ -26,7 +26,7 @@ const DEFAULT_QUOTA_LITIS = ['5%','10%','15%','20%','25%','30%','35%']
 
 
 const HEADING_FONTS = [
-  { family: null,                label: 'Padrão Atlas' },
+  { family: null,                labelKey: 'settings.typography.headingDefault' },
   { family: 'Playfair Display',  label: 'Playfair Display' },
   { family: 'Merriweather',      label: 'Merriweather' },
   { family: 'EB Garamond',       label: 'EB Garamond' },
@@ -34,17 +34,21 @@ const HEADING_FONTS = [
   { family: 'Raleway',           label: 'Raleway' },
 ]
 const BODY_FONTS = [
-  { family: null,            label: 'Padrão (sistema)' },
+  { family: null,            labelKey: 'settings.typography.bodyDefault' },
   { family: 'Inter',         label: 'Inter' },
   { family: 'Poppins',       label: 'Poppins' },
   { family: 'Lato',          label: 'Lato' },
   { family: 'Source Sans 3', label: 'Source Sans 3' },
 ]
 const MONO_FONTS = [
-  { family: null,             label: 'Padrão (mono)'  },
+  { family: null,             labelKey: 'settings.typography.monoDefault' },
   { family: 'IBM Plex Mono',  label: 'IBM Plex Mono'  },
   { family: 'JetBrains Mono', label: 'JetBrains Mono' },
 ]
+
+function fontLabel(t, f) {
+  return f.labelKey ? t(f.labelKey) : f.label
+}
 
 const PRESET_COLORS = [
   { hex: '#043b61', name: 'Navy (padrão)' },
@@ -888,11 +892,11 @@ export default function Settings() {
               <span className={styles.prefLabel}>{t('settings.typography.headingFont', 'Fonte principal (títulos)')}</span>
               <div className={styles.prefOptions} style={{ flexWrap: 'wrap' }}>
                 {[...HEADING_FONTS, ...(customFont ? [{ family: 'CustomFont', label: customFont.displayName }] : [])].map(f => (
-                  <button key={f.label} type="button"
+                  <button key={f.family ?? 'default'} type="button"
                     className={`${styles.prefBtn} ${fontHeading === f.family ? styles.prefBtnActive : ''}`}
                     style={{ fontFamily: f.family && f.family !== 'CustomFont' ? `'${f.family}', serif` : f.family === 'CustomFont' ? "'CustomFont', serif" : 'inherit' }}
                     onClick={() => setFontHeading(f.family)}
-                  >{f.label}</button>
+                  >{fontLabel(t, f)}</button>
                 ))}
               </div>
             </div>
@@ -902,11 +906,11 @@ export default function Settings() {
               <span className={styles.prefLabel}>{t('settings.typography.bodyFont', 'Fonte secundária (texto)')}</span>
               <div className={styles.prefOptions} style={{ flexWrap: 'wrap' }}>
                 {[...BODY_FONTS, ...(customFont ? [{ family: 'CustomFont', label: customFont.displayName }] : [])].map(f => (
-                  <button key={f.label} type="button"
+                  <button key={f.family ?? 'default'} type="button"
                     className={`${styles.prefBtn} ${fontBody === f.family ? styles.prefBtnActive : ''}`}
                     style={{ fontFamily: f.family && f.family !== 'CustomFont' ? `'${f.family}', sans-serif` : f.family === 'CustomFont' ? "'CustomFont', sans-serif" : 'inherit' }}
                     onClick={() => setFontBody(f.family)}
-                  >{f.label}</button>
+                  >{fontLabel(t, f)}</button>
                 ))}
               </div>
             </div>
@@ -916,11 +920,11 @@ export default function Settings() {
               <span className={styles.prefLabel}>{t('settings.typography.monoFont', 'Fonte terciária (números, processos)')}</span>
               <div className={styles.prefOptions} style={{ flexWrap: 'wrap' }}>
                 {[...MONO_FONTS, ...(customFont ? [{ family: 'CustomFont', label: customFont.displayName }] : [])].map(f => (
-                  <button key={f.label} type="button"
+                  <button key={f.family ?? 'default'} type="button"
                     className={`${styles.prefBtn} ${fontMono === f.family ? styles.prefBtnActive : ''}`}
                     style={{ fontFamily: f.family && f.family !== 'CustomFont' ? `'${f.family}', monospace` : f.family === 'CustomFont' ? "'CustomFont', monospace" : 'monospace' }}
                     onClick={() => setFontMono(f.family)}
-                  >{f.label}</button>
+                  >{fontLabel(t, f)}</button>
                 ))}
               </div>
             </div>

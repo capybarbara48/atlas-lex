@@ -54,7 +54,10 @@
     "saveButton": "Salvar tipografia",
     "saving": "Salvando…",
     "saveError": "Erro ao salvar tipografia: {{error}}",
-    "saveSuccess": "Tipografia salva!"
+    "saveSuccess": "Tipografia salva!",
+    "headingDefault": "Padrão Atlas",
+    "bodyDefault": "Padrão (sistema)",
+    "monoDefault": "Padrão (mono)"
   },
   "nav": {
     "title": "Menu de Navegação",
