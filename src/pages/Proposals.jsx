@@ -65,21 +65,66 @@ function rgbStr(hex) {
   return `${(n >> 16) & 0xff},${(n >> 8) & 0xff},${n & 0xff}`
 }
 
-function pdfBRL(v) {
-  return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+const PDF_STRINGS = {
+  pt: {
+    htmlLang: 'pt-BR', locale: 'pt-BR', currency: 'BRL',
+    docTitle: name => `Proposta — ${name}`,
+    printButton: 'Imprimir / Salvar como PDF',
+    proposalDate: 'Data da Proposta',
+    badge: 'Proposta de Honorários',
+    title: 'Contrato de<br>Prestação de Serviços',
+    preparedFor: name => `Preparada para: <strong>${name}</strong>`,
+    client: 'Cliente',
+    service: 'Serviço',
+    totalFees: 'Valor Total dos Honorários',
+    paymentConditions: 'Condições de Pagamento',
+    contingencySection: 'Participação Final de Êxito',
+    contingencyLabel: pct => `Participação Final — ${pct}`,
+    contingencyDesc: 'O percentual indicado incide sobre os <strong>ganhos obtidos ao final do procedimento</strong>, somente no caso de <strong>êxito</strong>, pagos no momento em que o cliente receber o valor.',
+    contingencyPctLabel: 'Percentual de êxito',
+    notesLabel: 'Observações',
+    footerNote: 'Proposta válida por 30 dias · Esta proposta não constitui vínculo contratual',
+    barFallback: 'Advocacia',
+  },
+  en: {
+    htmlLang: 'en-US', locale: 'en-US', currency: 'USD',
+    docTitle: name => `Proposal — ${name}`,
+    printButton: 'Print / Save as PDF',
+    proposalDate: 'Proposal Date',
+    badge: 'Fee Proposal',
+    title: 'Legal Services<br>Agreement',
+    preparedFor: name => `Prepared for: <strong>${name}</strong>`,
+    client: 'Client',
+    service: 'Matter Type',
+    totalFees: 'Total Fee',
+    paymentConditions: 'Payment Terms',
+    paymentTermsDesc: 'Payment is due within 30 days of invoice unless otherwise agreed to in writing.',
+    contingencySection: 'Contingency Fee',
+    contingencyLabel: pct => `Contingency Fee — ${pct}`,
+    contingencyDesc: 'The stated percentage applies to the <strong>amount recovered at the conclusion of the matter</strong>, payable only in the event of a <strong>successful outcome</strong>, at the time the client receives payment.',
+    contingencyPctLabel: 'Contingency percentage',
+    notesLabel: 'Notes',
+    footerNote: 'This proposal is valid for 30 days · This document does not constitute a binding contract',
+    barFallback: 'Attorney at Law',
+  },
 }
 
-function generatePDF({ clientName, serviceType, valor, participacaoPct, notes, propFees, lawyer }) {
+function generatePDF({ clientName, serviceType, valor, participacaoPct, notes, propFees, lawyer, lang = 'pt' }) {
+  const L = PDF_STRINGS[lang] ?? PDF_STRINGS.pt
+  const pdfMoney = v => new Intl.NumberFormat(L.locale, { style: 'currency', currency: L.currency }).format(Number(v) || 0)
+
   const accent      = lawyer?.theme_accent ?? '#043b61'
   const accentDark  = darken(accent)
   const accentLight = lighten(accent, 0.10)
   const accentBorder = lighten(accent, 0.22)
   const accentRGB   = rgbStr(accent)
   const firmName    = lawyer?.firm_name ?? lawyer?.full_name ?? 'Atlas Adv'
-  const oabLabel    = lawyer?.oab_number ? `OAB ${lawyer.oab_number}` : 'Advocacia'
+  const oabLabel    = lawyer?.oab_number
+    ? (lang === 'en' ? `Bar No. ${lawyer.oab_number}` : `OAB ${lawyer.oab_number}`)
+    : L.barFallback
 
   const pixValue = valor * 0.9
-  const dateStr  = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+  const dateStr  = new Date().toLocaleDateString(L.locale, { day: '2-digit', month: 'long', year: 'numeric' })
 
   const gradLight = (() => {
     const n = parseInt(accent.replace('#', ''), 16)
@@ -89,20 +134,22 @@ function generatePDF({ clientName, serviceType, valor, participacaoPct, notes, p
 
   const fees = propFees ?? {}
   let installRows = ''
-  for (let i = 2; i <= 12; i++) {
-    const fee = fees[i] ?? fees[String(i)] ?? 0
-    const parcVal = (valor * (1 + fee / 100)) / i
-    const total   = parcVal * i
-    const feeStr  = Number(fee).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '%'
-    installRows += `<tr><td>${i}x no cartão</td><td>${feeStr}</td><td>${pdfBRL(parcVal)}</td><td>${pdfBRL(total)}</td></tr>`
+  if (lang === 'pt') {
+    for (let i = 2; i <= 12; i++) {
+      const fee = fees[i] ?? fees[String(i)] ?? 0
+      const parcVal = (valor * (1 + fee / 100)) / i
+      const total   = parcVal * i
+      const feeStr  = Number(fee).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) + '%'
+      installRows += `<tr><td>${i}x no cartão</td><td>${feeStr}</td><td>${pdfMoney(parcVal)}</td><td>${pdfMoney(total)}</td></tr>`
+    }
   }
 
   const html = `<!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="${L.htmlLang}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Proposta — ${clientName}</title>
+<title>${L.docTitle(clientName)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -197,7 +244,7 @@ tbody td:last-child{padding-right:1.5rem}
 <div class="no-print" style="text-align:center;margin-bottom:1.5rem">
   <button onclick="window.print()" style="background:${accent};color:#fff;border:none;border-radius:10px;padding:0.75rem 2rem;font-size:0.9rem;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:0.6rem;box-shadow:0 4px 20px rgba(${accentRGB},0.3)">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-    Imprimir / Salvar como PDF
+    ${L.printButton}
   </button>
 </div>
 <div class="page">
@@ -218,14 +265,14 @@ tbody td:last-child{padding-right:1.5rem}
         </div>
       </div>
       <div class="header-doc-info">
-        <div class="doc-label">Data da Proposta</div>
+        <div class="doc-label">${L.proposalDate}</div>
         <div class="doc-date">${dateStr}</div>
       </div>
     </div>
     <div class="header-body">
-      <div class="prop-badge">Proposta de Honorários</div>
-      <div class="prop-title">Contrato de<br>Prestação de Serviços</div>
-      <div class="prop-client-name">Preparada para: <strong>${clientName}</strong></div>
+      <div class="prop-badge">${L.badge}</div>
+      <div class="prop-title">${L.title}</div>
+      <div class="prop-client-name">${L.preparedFor(clientName)}</div>
     </div>
   </div>
 
@@ -236,7 +283,7 @@ tbody td:last-child{padding-right:1.5rem}
           <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
         <div>
-          <div class="info-card-label">Cliente</div>
+          <div class="info-card-label">${L.client}</div>
           <div class="info-card-value">${clientName}</div>
         </div>
       </div>
@@ -245,7 +292,7 @@ tbody td:last-child{padding-right:1.5rem}
           <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         </div>
         <div>
-          <div class="info-card-label">Serviço</div>
+          <div class="info-card-label">${L.service}</div>
           <div class="info-card-value">${serviceType || '—'}</div>
         </div>
       </div>
@@ -258,18 +305,22 @@ tbody td:last-child{padding-right:1.5rem}
           <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         </div>
         <div>
-          <div class="info-card-label">Valor Total dos Honorários</div>
-          <div class="info-card-value big">${pdfBRL(valor)}</div>
+          <div class="info-card-label">${L.totalFees}</div>
+          <div class="info-card-value big">${pdfMoney(valor)}</div>
         </div>
       </div>
     </div>
 
     <div class="section-divider">
       <div class="section-divider-line"></div>
-      <div class="section-divider-label">Condições de Pagamento</div>
+      <div class="section-divider-label">${L.paymentConditions}</div>
       <div class="section-divider-line"></div>
     </div>
 
+    ${lang === 'en' ? `
+    <div class="notes-box">
+      <div class="notes-text">${L.paymentTermsDesc}</div>
+    </div>` : `
     <div class="pix-box">
       <div class="pix-icon">
         <svg viewBox="0 0 24 24"><path d="M5.64 5.64 2 12l3.64 6.36M18.36 5.64 22 12l-3.64 6.36"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
@@ -280,7 +331,7 @@ tbody td:last-child{padding-right:1.5rem}
       </div>
       <div class="pix-value-col">
         <div class="pix-value-label">Valor com desconto</div>
-        <div class="pix-value-num">${pdfBRL(pixValue)}</div>
+        <div class="pix-value-num">${pdfMoney(pixValue)}</div>
       </div>
     </div>
 
@@ -304,12 +355,12 @@ tbody td:last-child{padding-right:1.5rem}
         <thead><tr><th>Parcelas</th><th>Taxa do Cartão</th><th>Valor da Parcela</th><th>Total a Pagar</th></tr></thead>
         <tbody>${installRows}</tbody>
       </table>
-    </div>` : ''}
+    </div>`}` : ''}
 
     ${participacaoPct ? `
     <div class="section-divider">
       <div class="section-divider-line"></div>
-      <div class="section-divider-label">Participação Final de Êxito</div>
+      <div class="section-divider-label">${L.contingencySection}</div>
       <div class="section-divider-line"></div>
     </div>
     <div class="participacao-box">
@@ -317,11 +368,11 @@ tbody td:last-child{padding-right:1.5rem}
         <svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
       </div>
       <div class="participacao-info">
-        <div class="participacao-label">Participação Final — ${participacaoPct}</div>
-        <div class="participacao-desc">O percentual indicado incide sobre os <strong>ganhos obtidos ao final do procedimento</strong>, somente no caso de <strong>êxito</strong>, pagos no momento em que o cliente receber o valor.</div>
+        <div class="participacao-label">${L.contingencyLabel(participacaoPct)}</div>
+        <div class="participacao-desc">${L.contingencyDesc}</div>
       </div>
       <div class="participacao-value-col">
-        <div class="participacao-value-label">Percentual de êxito</div>
+        <div class="participacao-value-label">${L.contingencyPctLabel}</div>
         <div class="participacao-value-num">${participacaoPct}</div>
       </div>
     </div>` : ''}
@@ -329,18 +380,18 @@ tbody td:last-child{padding-right:1.5rem}
     ${notes ? `
     <div class="section-divider">
       <div class="section-divider-line"></div>
-      <div class="section-divider-label">Observações</div>
+      <div class="section-divider-label">${L.notesLabel}</div>
       <div class="section-divider-line"></div>
     </div>
     <div class="notes-box">
-      <div class="notes-label">Observações</div>
+      <div class="notes-label">${L.notesLabel}</div>
       <div class="notes-text">${notes.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
     </div>` : ''}
   </div>
 
   <div class="pdf-footer">
     <div class="pdf-footer-brand">${firmName}</div>
-    <div class="pdf-footer-note">Proposta válida por 30 dias · Esta proposta não constitui vínculo contratual</div>
+    <div class="pdf-footer-note">${L.footerNote}</div>
   </div>
 </div>
 </body>
@@ -930,6 +981,7 @@ export default function Proposals() {
       notes: notes || null,
       propFees,
       lawyer,
+      lang: i18n.language,
     })
 
     if (!ok) toast.error(t('proposals.pdfPopupBlocked'))
@@ -950,6 +1002,7 @@ export default function Proposals() {
       notes: proposal.body || null,
       propFees,
       lawyer,
+      lang: i18n.language,
     })
     if (!ok) toast.error(t('proposals.pdfPopupBlocked'))
   }
