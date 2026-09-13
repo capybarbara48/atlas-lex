@@ -1,0 +1,17 @@
+{
+  "title": "Métricas",
+  "subtitle": "Visão analítica do escritório com base nos dados cadastrados",
+  "loading": "Carregando…",
+  "noData": "Nenhum dado disponível",
+  "total": "total",
+  "casesTotal_one": "{{count}} caso no total",
+  "casesTotal_other": "{{count}} casos no total",
+  "proposalsTotal_one": "{{count}} proposta no total",
+  "proposalsTotal_other": "{{count}} propostas no total",
+  "charts": {
+    "byPartner": { "title": "Casos por Parceria", "emptyLabel": "Próprios" },
+    "byArea": { "title": "Áreas de Atuação", "emptyLabel": "Não especificada" },
+    "byCourt": { "title": "Casos por Tribunal", "emptyLabel": "Não especificado" },
+    "byService": { "title": "Tipos de Serviço", "emptyLabel": "Não especificado" }
+  }
+}

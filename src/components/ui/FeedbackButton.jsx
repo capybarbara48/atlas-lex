@@ -1,24 +1,26 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/context/ToastContext'
 import styles from './FeedbackButton.module.css'
 
-const TIPOS = [
-  { value: 'sugestão', label: 'Sugestão', color: 'var(--accent)' },
-  { value: 'bug', label: 'Bug', color: '#e03c3c' },
-  { value: 'elogio', label: 'Elogio', color: '#22a84a' },
-]
-
 const EMPTY = { tipo: 'sugestão', titulo: '', mensagem: '' }
 
 export default function FeedbackButton() {
+  const { t } = useTranslation()
   const { lawyer } = useAuth()
   const toast = useToast()
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState(EMPTY)
   const [saving, setSaving] = useState(false)
+
+  const TIPOS = [
+    { value: 'sugestão', label: t('ui.feedbackButton.typeSuggestion', 'Sugestão'), color: 'var(--accent)' },
+    { value: 'bug', label: t('ui.feedbackButton.typeBug', 'Bug'), color: '#e03c3c' },
+    { value: 'elogio', label: t('ui.feedbackButton.typePraise', 'Elogio'), color: '#22a84a' },
+  ]
 
   function close() {
     setOpen(false)
@@ -37,9 +39,9 @@ export default function FeedbackButton() {
     })
     setSaving(false)
     if (error) {
-      toast.error('Erro ao enviar feedback.')
+      toast.error(t('ui.feedbackButton.errorToast', 'Erro ao enviar feedback.'))
     } else {
-      toast.success('Feedback enviado. Obrigado!')
+      toast.success(t('ui.feedbackButton.successToast', 'Feedback enviado. Obrigado!'))
       close()
     }
   }
@@ -49,8 +51,8 @@ export default function FeedbackButton() {
       <button
         className={styles.fab}
         onClick={() => setOpen(true)}
-        title="Enviar feedback"
-        aria-label="Enviar feedback"
+        title={t('ui.feedbackButton.trigger', 'Enviar feedback')}
+        aria-label={t('ui.feedbackButton.trigger', 'Enviar feedback')}
       >
         <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18">
           <path fillRule="evenodd" d="M10 2c-2.236 0-4.43.18-6.57.524C1.993 2.755 1 4.014 1 5.426v5.148c0 1.413.993 2.67 2.43 2.902.848.137 1.705.248 2.57.331v3.443a.75.75 0 0 0 1.28.53l3.58-3.579a.78.78 0 0 1 .527-.224 41.202 41.202 0 0 0 5.183-.5c1.437-.232 2.43-1.49 2.43-2.903V5.426c0-1.413-.993-2.67-2.43-2.902A41.289 41.289 0 0 0 10 2Zm0 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2ZM8 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm5 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clipRule="evenodd"/>
@@ -62,8 +64,8 @@ export default function FeedbackButton() {
         <div className={styles.overlay} onClick={e => e.target === e.currentTarget && close()}>
           <div className={styles.modal}>
             <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle}>Enviar feedback</h2>
-              <button className={styles.closeBtn} onClick={close} aria-label="Fechar">
+              <h2 className={styles.modalTitle}>{t('ui.feedbackButton.modalTitle', 'Enviar feedback')}</h2>
+              <button className={styles.closeBtn} onClick={close} aria-label={t('common.close', 'Fechar')}>
                 <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18">
                   <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"/>
                 </svg>
@@ -86,10 +88,10 @@ export default function FeedbackButton() {
               </div>
 
               <div className={styles.field}>
-                <label className={styles.label}>Título</label>
+                <label className={styles.label}>{t('ui.feedbackButton.titleLabel', 'Título')}</label>
                 <input
                   className={styles.input}
-                  placeholder="Resumo em uma linha…"
+                  placeholder={t('ui.feedbackButton.titlePlaceholder', 'Resumo em uma linha…')}
                   value={form.titulo}
                   onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))}
                   required
@@ -98,10 +100,10 @@ export default function FeedbackButton() {
               </div>
 
               <div className={styles.field}>
-                <label className={styles.label}>Mensagem</label>
+                <label className={styles.label}>{t('ui.feedbackButton.messageLabel', 'Mensagem')}</label>
                 <textarea
                   className={styles.textarea}
-                  placeholder="Descreva com detalhes…"
+                  placeholder={t('ui.feedbackButton.messagePlaceholder', 'Descreva com detalhes…')}
                   value={form.mensagem}
                   onChange={e => setForm(f => ({ ...f, mensagem: e.target.value }))}
                   required
@@ -111,14 +113,14 @@ export default function FeedbackButton() {
 
               <div className={styles.footer}>
                 <button type="button" className={styles.btnCancel} onClick={close}>
-                  Cancelar
+                  {t('common.cancel', 'Cancelar')}
                 </button>
                 <button
                   type="submit"
                   className={styles.btnSend}
                   disabled={saving || !form.titulo.trim() || !form.mensagem.trim()}
                 >
-                  {saving ? 'Enviando…' : 'Enviar feedback'}
+                  {saving ? t('ui.feedbackButton.sending', 'Enviando…') : t('ui.feedbackButton.sendButton', 'Enviar feedback')}
                 </button>
               </div>
             </form>

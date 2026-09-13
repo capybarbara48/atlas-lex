@@ -1,51 +1,19 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import Modal from '@/components/ui/Modal'
 import ClientForm from '@/components/forms/ClientForm'
 import CaseForm from '@/components/forms/CaseForm'
 import { Skeleton, SkeletonListItem } from '@/components/ui/Skeleton'
+import { STATUS_CASE_CSS, STATUS_TASK_CSS, STATUS_FIN_CSS, PRIORITY_CSS, caseStatusLabel, taskStatusLabel, finStatusLabel, priorityLabel } from '@/lib/statusLabels'
+import { formatDate, formatCurrency } from '@/lib/formatters'
 import styles from './ClientDetail.module.css'
-
-function brl(v) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v ?? 0)
-}
-
-function fmt(iso) {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('pt-BR')
-}
 
 function initials(name) {
   if (!name) return '?'
   return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
-}
-
-const STATUS_CASE = {
-  ativo:      { label: 'Ativo',      cls: 'st-teal'   },
-  encerrado:  { label: 'Encerrado',  cls: 'st-gray'   },
-  arquivado:  { label: 'Arquivado',  cls: 'st-gray'   },
-  suspenso:   { label: 'Suspenso',   cls: 'st-orange'  },
-}
-
-const STATUS_TASK = {
-  pendente:     { label: 'Pendente',     cls: 'st-orange' },
-  em_andamento: { label: 'Em andamento', cls: 'st-blue'   },
-  concluida:    { label: 'Concluída',    cls: 'st-teal'   },
-  cancelada:    { label: 'Cancelada',    cls: 'st-gray'   },
-}
-
-const PRIORITY = {
-  alta:  { label: 'Alta',  cls: 'st-red'    },
-  media: { label: 'Média', cls: 'st-orange' },
-  baixa: { label: 'Baixa', cls: 'st-gray'  },
-}
-
-const STATUS_FIN = {
-  pago:      { label: 'Pago',      cls: 'st-teal'   },
-  pendente:  { label: 'Pendente',  cls: 'st-orange' },
-  cancelado: { label: 'Cancelado', cls: 'st-gray'   },
 }
 
 /* ── PDF generation ─────────────────────────────────────────────────── */
@@ -266,6 +234,7 @@ function generateClientPDF(client, cases, tasks, entries, lawyer) {
 }
 
 export default function ClientDetail() {
+  const { t, i18n } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
   const { lawyer } = useAuth()
@@ -363,7 +332,7 @@ export default function ClientDetail() {
 
   if (error) return (
     <div className={styles.loadWrap}>
-      <p style={{ color: 'var(--text-2)' }}>Erro ao carregar: {error}</p>
+      <p style={{ color: 'var(--text-2)' }}>{t('clients.detail.errorLoading', { error })}</p>
     </div>
   )
 
@@ -379,7 +348,7 @@ export default function ClientDetail() {
       {/* ── Header ── */}
       <div className={styles.header}>
         <button className={styles.backBtn} onClick={() => navigate('/painel/clientes')}>
-          ← Clientes
+          ← {t('clients.detail.backToClients')}
         </button>
 
         <div className={styles.headerMain}>
@@ -405,33 +374,33 @@ export default function ClientDetail() {
             PDF
           </button>
           <button className={styles.newCaseBtn} onClick={() => setNewCase(true)}>
-            + Novo caso
+            {t('clients.detail.newCase')}
           </button>
           <button className={styles.editBtn} onClick={() => setEditing(true)}>
-            Editar
+            {t('common.edit')}
           </button>
         </div>
       </div>
 
       {/* ── Info card ── */}
       <div className={styles.infoCard}>
-        <InfoRow label="CPF/CNPJ"   value={client.cpf_cnpj} />
-        <InfoRow label="Telefone"   value={client.phone} />
-        <InfoRow label="E-mail"     value={client.email} />
-        <InfoRow label="Cidade"     value={
+        <InfoRow label={t('clients.detail.cpfCnpj')}   value={client.cpf_cnpj} />
+        <InfoRow label={t('clients.detail.phone')}   value={client.phone} />
+        <InfoRow label={t('clients.detail.email')}     value={client.email} />
+        <InfoRow label={t('clients.detail.city')}     value={
           client.cidade && client.estado
             ? `${client.cidade} / ${client.estado}`
             : client.cidade ?? client.estado
         } />
-        <InfoRow label="Cadastrado" value={fmt(client.created_at)} />
+        <InfoRow label={t('clients.detail.registered')} value={formatDate(client.created_at, i18n.language)} />
       </div>
 
       {/* ── Casos ── */}
-      <Section title="Casos" count={cases.length}>
+      <Section title={t('clients.detail.cases')} count={cases.length}>
         {cases.length === 0
-          ? <Empty text="Nenhum processo vinculado" />
+          ? <Empty text={t('clients.detail.noCases')} />
           : cases.map(c => {
-              const st = STATUS_CASE[c.status] ?? { label: c.status, cls: 'st-gray' }
+              const stCls = STATUS_CASE_CSS[c.status] ?? 'st-gray'
               return (
                 <Link key={c.id} to={`/painel/casos/${c.id}`} className={styles.listItem} style={{ textDecoration: 'none' }}>
                   <div className={styles.listMain}>
@@ -441,9 +410,9 @@ export default function ClientDetail() {
                   <div className={styles.listMeta}>
                     {c.area   && <span className={styles.listTag}>{c.area}</span>}
                     {c.court  && <span className={styles.listTag}>{c.court}</span>}
-                    <span className={`badge ${st.cls}`}>{st.label}</span>
-                    {c.valor > 0 && <span className={styles.listAmt}>{brl(c.valor)}</span>}
-                    <span className={styles.listDate}>{fmt(c.opened_at)}</span>
+                    <span className={`badge ${stCls}`}>{caseStatusLabel(t, c.status)}</span>
+                    {c.valor > 0 && <span className={styles.listAmt}>{formatCurrency(c.valor, i18n.language)}</span>}
+                    <span className={styles.listDate}>{formatDate(c.opened_at, i18n.language)}</span>
                   </div>
                 </Link>
               )
@@ -452,22 +421,22 @@ export default function ClientDetail() {
       </Section>
 
       {/* ── Tarefas ── */}
-      <Section title="Tarefas" count={tasks.length}>
+      <Section title={t('clients.detail.tasks')} count={tasks.length}>
         {tasks.length === 0
-          ? <Empty text="Nenhuma tarefa vinculada" />
-          : tasks.map(t => {
-              const st = STATUS_TASK[t.status]  ?? { label: t.status,   cls: 'st-gray' }
-              const pr = PRIORITY[t.priority]   ?? { label: t.priority,  cls: 'st-gray' }
+          ? <Empty text={t('clients.detail.noTasks')} />
+          : tasks.map(task => {
+              const stCls = STATUS_TASK_CSS[task.status] ?? 'st-gray'
+              const prCls = PRIORITY_CSS[task.priority]  ?? 'st-gray'
               return (
-                <div key={t.id} className={styles.listItem}>
+                <div key={task.id} className={styles.listItem}>
                   <div className={styles.listMain}>
-                    <span className={styles.listTitle}>{t.title}</span>
-                    {t.cases?.title && <span className={styles.listSub}>{t.cases.title}</span>}
+                    <span className={styles.listTitle}>{task.title}</span>
+                    {task.cases?.title && <span className={styles.listSub}>{task.cases.title}</span>}
                   </div>
                   <div className={styles.listMeta}>
-                    <span className={`badge ${pr.cls}`}>{pr.label}</span>
-                    <span className={`badge ${st.cls}`}>{st.label}</span>
-                    {t.due_date && <span className={styles.listDate}>{fmt(t.due_date)}</span>}
+                    <span className={`badge ${prCls}`}>{priorityLabel(t, task.priority)}</span>
+                    <span className={`badge ${stCls}`}>{taskStatusLabel(t, task.status)}</span>
+                    {task.due_date && <span className={styles.listDate}>{formatDate(task.due_date, i18n.language)}</span>}
                   </div>
                 </div>
               )
@@ -477,19 +446,19 @@ export default function ClientDetail() {
 
       {/* ── Financeiro ── */}
       <Section
-        title="Financeiro"
+        title={t('clients.detail.financial')}
         count={entries.length}
         badge={entries.length > 0
           ? <span className={styles.saldoBadge} style={{ color: saldo >= 0 ? 'var(--green)' : 'var(--red)' }}>
-              {brl(saldo)}
+              {formatCurrency(saldo, i18n.language)}
             </span>
           : null
         }
       >
         {entries.length === 0
-          ? <Empty text="Nenhum lançamento vinculado" />
+          ? <Empty text={t('clients.detail.noEntries')} />
           : entries.map(e => {
-              const st = STATUS_FIN[e.status] ?? { label: e.status, cls: 'st-gray' }
+              const stCls = STATUS_FIN_CSS[e.status] ?? 'st-gray'
               return (
                 <div key={e.id} className={styles.listItem}>
                   <div className={styles.listMain}>
@@ -498,12 +467,12 @@ export default function ClientDetail() {
                   </div>
                   <div className={styles.listMeta}>
                     <span className={`badge ${e.type === 'receita' ? 'st-teal' : 'st-red'}`}>
-                      {e.type === 'receita' ? 'Receita' : 'Despesa'}
+                      {e.type === 'receita' ? t('clients.detail.income') : t('clients.detail.expense')}
                     </span>
-                    <span className={`badge ${st.cls}`}>{st.label}</span>
-                    {e.due_date && <span className={styles.listDate}>{fmt(e.due_date)}</span>}
+                    <span className={`badge ${stCls}`}>{finStatusLabel(t, e.status)}</span>
+                    {e.due_date && <span className={styles.listDate}>{formatDate(e.due_date, i18n.language)}</span>}
                     <span className={styles.listAmt} style={{ color: e.type === 'receita' ? 'var(--green)' : 'var(--red)' }}>
-                      {e.type === 'receita' ? '+' : '−'}{brl(e.amount)}
+                      {e.type === 'receita' ? '+' : '−'}{formatCurrency(e.amount, i18n.language)}
                     </span>
                   </div>
                 </div>
@@ -513,13 +482,13 @@ export default function ClientDetail() {
       </Section>
 
       {editing && (
-        <Modal title="Editar cliente" onClose={() => setEditing(false)}>
+        <Modal title={t('clients.editClient')} onClose={() => setEditing(false)}>
           <ClientForm initial={client} onSave={handleSave} onClose={() => setEditing(false)} />
         </Modal>
       )}
 
       {newCase && (
-        <Modal title="Novo caso" onClose={() => setNewCase(false)}>
+        <Modal title={t('clients.detail.newCaseModal')} onClose={() => setNewCase(false)}>
           <CaseForm
             initial={{ client_id: client.id }}
             onSave={() => { setNewCase(false); load() }}

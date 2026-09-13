@@ -53,6 +53,7 @@
     "alt": "logo"
   },
   "viewToggle": {
+    "agenda": "Agenda view",
     "kanban": "Kanban view",
     "list": "List view",
     "calendar": "Calendar view"

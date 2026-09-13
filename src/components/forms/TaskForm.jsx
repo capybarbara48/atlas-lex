@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { toTitleCase } from '@/lib/text'
 import s from './Form.module.css'
 
 export default function TaskForm({ initial, onSave, onClose }) {
+  const { t } = useTranslation()
   const { session, lawyer } = useAuth()
   const responsaveis = lawyer?.preferences?.responsaveis ?? []
   const [f, setF] = useState({
@@ -49,7 +51,7 @@ export default function TaskForm({ initial, onSave, onClose }) {
   }
 
   async function handleDelete() {
-    if (!window.confirm('Excluir esta tarefa? Esta ação não pode ser desfeita.')) return
+    if (!window.confirm(t('common.confirmDelete'))) return
     const { error } = await supabase.from('tasks').delete().eq('id', initial.id)
     if (error) { setError(error.message); return }
     onSave()
@@ -60,66 +62,66 @@ export default function TaskForm({ initial, onSave, onClose }) {
       <div className={s.grid}>
 
         <div className={`${s.field} ${s.span2}`}>
-          <label className={`${s.label} ${s.req}`}>Título da tarefa</label>
+          <label className={`${s.label} ${s.req}`}>{t('tasks.form.titleLabel')}</label>
           <input className={s.input} value={f.title} onChange={e => set('title', e.target.value)}
-            required placeholder="Ex: Protocolar recurso no TJSP" />
+            required placeholder={t('tasks.form.titlePlaceholder')} />
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Caso vinculado</label>
+          <label className={s.label}>{t('cases.linkedCaseLabel')}</label>
           <select className={s.select} value={f.case_id} onChange={e => set('case_id', e.target.value)}>
-            <option value="">— Sem caso —</option>
+            <option value="">{t('cases.noCaseOption')}</option>
             {cases.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
           </select>
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Responsável</label>
+          <label className={s.label}>{t('tasks.form.assigneeLabel')}</label>
           {responsaveis.length > 0 ? (
             <select className={s.select} value={f.assigned_to} onChange={e => set('assigned_to', e.target.value)}>
-              <option value="">— Não atribuído —</option>
+              <option value="">{t('tasks.form.unassignedOption')}</option>
               {responsaveis.map(r => <option key={r} value={r}>{r}</option>)}
             </select>
           ) : (
             <input className={s.input} value={f.assigned_to}
               onChange={e => set('assigned_to', e.target.value)}
-              placeholder="Nome do responsável" />
+              placeholder={t('tasks.form.assigneePlaceholder')} />
           )}
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Vencimento</label>
+          <label className={s.label}>{t('tasks.table.dueDate')}</label>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <input className={s.input} type="date" style={{ flex: '2 1 0' }} value={f.due_date} onChange={e => set('due_date', e.target.value)} />
-            <input className={s.input} type="time" style={{ flex: '1 1 0' }} value={f.due_time} onChange={e => set('due_time', e.target.value)} placeholder="Hora" />
+            <input className={s.input} type="time" style={{ flex: '1 1 0' }} value={f.due_time} onChange={e => set('due_time', e.target.value)} placeholder={t('tasks.form.timePlaceholder')} />
           </div>
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Prioridade</label>
+          <label className={s.label}>{t('tasks.table.priority')}</label>
           <select className={s.select} value={f.priority} onChange={e => set('priority', e.target.value)}>
-            <option value="baixa">Baixa</option>
-            <option value="media">Média</option>
-            <option value="alta">Alta</option>
-            <option value="urgente">Urgente</option>
+            <option value="baixa">{t('status.priority.baixa')}</option>
+            <option value="media">{t('status.priority.media')}</option>
+            <option value="alta">{t('status.priority.alta')}</option>
+            <option value="urgente">{t('status.priority.urgente')}</option>
           </select>
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Status</label>
+          <label className={s.label}>{t('tasks.table.status')}</label>
           <select className={s.select} value={f.status} onChange={e => set('status', e.target.value)}>
-            <option value="pendente">Pendente</option>
-            <option value="em_andamento">Em andamento</option>
-            <option value="concluida">Concluída</option>
-            <option value="cancelada">Cancelada</option>
+            <option value="pendente">{t('status.task.pendente')}</option>
+            <option value="em_andamento">{t('status.task.em_andamento')}</option>
+            <option value="concluida">{t('status.task.concluida')}</option>
+            <option value="cancelada">{t('status.task.cancelada')}</option>
           </select>
         </div>
 
         <div className={`${s.field} ${s.span2}`}>
-          <label className={s.label}>Descrição</label>
+          <label className={s.label}>{t('tasks.form.descriptionLabel')}</label>
           <textarea className={s.textarea} value={f.description}
             onChange={e => set('description', e.target.value)}
-            placeholder="Detalhes sobre o que precisa ser feito…" />
+            placeholder={t('tasks.form.descriptionPlaceholder')} />
         </div>
 
       </div>
@@ -127,11 +129,11 @@ export default function TaskForm({ initial, onSave, onClose }) {
       {error && <div className={s.error}>{error}</div>}
 
       <div className={s.footer}>
-        {initial?.id && <button type="button" className={s.btnDelete} onClick={handleDelete}>Excluir</button>}
+        {initial?.id && <button type="button" className={s.btnDelete} onClick={handleDelete}>{t('common.delete')}</button>}
         <div className={s.spacer} />
-        <button type="button" className={s.btnCancel} onClick={onClose}>Cancelar</button>
+        <button type="button" className={s.btnCancel} onClick={onClose}>{t('common.cancel')}</button>
         <button type="submit" className={s.btnSave} disabled={saving}>
-          {saving ? 'Salvando…' : initial ? 'Salvar alterações' : 'Criar tarefa'}
+          {saving ? t('common.saving') : initial ? t('common.saveChanges') : t('tasks.form.createButton')}
         </button>
       </div>
     </form>

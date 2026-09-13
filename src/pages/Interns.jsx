@@ -1,21 +1,22 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
+import { useTranslation, Trans } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { useAllTasks, updateTaskStatus, updateTaskAssignee } from '@/hooks/useTasks'
 import { supabase } from '@/lib/supabase'
 import { generateTeamTasksReportPDF } from '@/lib/teamTasksPDF'
 import { useToast } from '@/context/ToastContext'
 import PageShell from '@/components/ui/PageShell'
+import { formatDate } from '@/lib/formatters'
+import { taskStatusLabel, priorityLabel } from '@/lib/statusLabels'
 import styles from './Interns.module.css'
 
-const PRI_CSS    = { urgente: 'badge-alta', alta: 'badge-alta', media: 'badge-media', baixa: 'badge-baixa' }
-const PRI_LABELS = { urgente: 'Urgente', alta: 'Alta', media: 'Média', baixa: 'Baixa' }
-
-const ST_LABELS = { pendente: 'Pendente', em_andamento: 'Em andamento', concluida: 'Concluída', cancelada: 'Cancelada' }
+const PRI_CSS   = { urgente: 'badge-alta', alta: 'badge-alta', media: 'badge-media', baixa: 'badge-baixa' }
+const ST_ORDER  = ['pendente', 'em_andamento', 'concluida', 'cancelada']
 const ST_CSS    = { pendente: 'badge-pendente', em_andamento: 'badge-pendente', concluida: 'badge-concluida', cancelada: 'badge-cancelada' }
 
-function fmtDate(d) {
+function fmtDate(d, lang) {
   if (!d) return '—'
-  return new Date(d.split('T')[0] + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+  return formatDate(d.split('T')[0], lang, { day: '2-digit', month: 'short' })
 }
 
 function initials(name) {
@@ -30,6 +31,7 @@ function isOverdue(task) {
 
 /* ── Member overview card ───────────────────────────────────────────── */
 function MemberCard({ name, tasks, onClick }) {
+  const { t } = useTranslation()
   const total    = tasks.length
   const done     = tasks.filter(t => t.status === 'concluida').length
   const active   = tasks.filter(t => t.status === 'pendente' || t.status === 'em_andamento').length
@@ -41,15 +43,15 @@ function MemberCard({ name, tasks, onClick }) {
       <div className={styles.memberCardAvatar}>{initials(name)}</div>
       <div className={styles.memberCardName}>{name}</div>
       <div className={styles.memberCardStats}>
-        <span>{total} tarefas</span>
-        {overdue > 0 && <span className={`badge badge-alta`}>{overdue} atrasada{overdue > 1 ? 's' : ''}</span>}
+        <span>{t('interns.tasksCount', { count: total })}</span>
+        {overdue > 0 && <span className={`badge badge-alta`}>{t('interns.overdueBadge', { count: overdue })}</span>}
       </div>
       <div className={styles.progressWrap}>
         <div className={styles.progressBar} style={{ width: `${pct}%` }} />
       </div>
       <div className={styles.progressLabels}>
-        <span>{active} ativas</span>
-        <span className={styles.progressPct}>{pct}% concluídas</span>
+        <span>{active} {t('interns.activeCount')}</span>
+        <span className={styles.progressPct}>{t('interns.donePercent', { pct })}</span>
       </div>
     </div>
   )
@@ -57,6 +59,7 @@ function MemberCard({ name, tasks, onClick }) {
 
 /* ── Task row ───────────────────────────────────────────────────────── */
 function TaskRow({ task, showMember, onStatusChange, responsaveis, onCycleAssignee }) {
+  const { t, i18n } = useTranslation()
   const overdue = isOverdue(task)
   return (
     <div className={`${styles.taskRow} ${overdue ? styles.taskRowOverdue : ''}`}>
@@ -73,24 +76,24 @@ function TaskRow({ task, showMember, onStatusChange, responsaveis, onCycleAssign
           <span
             className="badge st-teal"
             style={{ cursor: responsaveis?.length > 0 ? 'pointer' : 'default' }}
-            title={responsaveis?.length > 0 ? 'Clique para mudar responsável' : task.assigned_to}
+            title={responsaveis?.length > 0 ? t('interns.changeAssigneeTooltip') : task.assigned_to}
             onClick={e => { e.stopPropagation(); onCycleAssignee?.(task.id, task.assigned_to) }}
           >{task.assigned_to}</span>
         )}
-        <span className={`badge ${PRI_CSS[task.priority]}`}>{PRI_LABELS[task.priority]}</span>
+        <span className={`badge ${PRI_CSS[task.priority]}`}>{priorityLabel(t, task.priority)}</span>
         <select
           className={styles.statusSelect}
           value={task.status}
           onChange={e => onStatusChange(task.id, e.target.value)}
           onClick={e => e.stopPropagation()}
         >
-          {Object.entries(ST_LABELS).map(([v, l]) => (
-            <option key={v} value={v}>{l}</option>
+          {ST_ORDER.map(v => (
+            <option key={v} value={v}>{taskStatusLabel(t, v)}</option>
           ))}
         </select>
         <span className={`${styles.taskRowDate} ${overdue ? styles.taskRowDateOverdue : ''}`}>
-          {fmtDate(task.due_date)}
-          {overdue && <span className={styles.overdueTag}>Atrasada</span>}
+          {fmtDate(task.due_date, i18n.language)}
+          {overdue && <span className={styles.overdueTag}>{t('interns.overdueTag')}</span>}
         </span>
       </div>
     </div>
@@ -99,6 +102,7 @@ function TaskRow({ task, showMember, onStatusChange, responsaveis, onCycleAssign
 
 /* ── Monthly history section ────────────────────────────────────────── */
 function HistorySection({ lawyerId, responsaveis, selectedMember }) {
+  const { t, i18n } = useTranslation()
   const [month,        setMonth]        = useState(() => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), 1) })
   const [tasks,        setTasks]        = useState([])
   const [desps,        setDesps]        = useState([])
@@ -144,15 +148,15 @@ function HistorySection({ lawyerId, responsaveis, selectedMember }) {
     return all.filter(item => item.assignedTo === personFilter)
   }, [tasks, desps, personFilter])
 
-  const monthLabel = month.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+  const monthLabel = formatDate(month, i18n.language, { month: 'long', year: 'numeric' })
   const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - 23); cutoff.setDate(1); cutoff.setHours(0,0,0,0)
   const atLimit = month <= cutoff
-  function fmtD(d) { if (!d) return '—'; return new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) }
+  function fmtD(d) { if (!d) return '—'; return formatDate(d, i18n.language, { day: '2-digit', month: 'short' }) }
 
   return (
     <div className={styles.histSection}>
       <div className={styles.histSectionHead}>
-        <span className={styles.histSectionTitle}>Histórico de Atividade</span>
+        <span className={styles.histSectionTitle}>{t('interns.history.title')}</span>
         <div className={styles.histNav}>
           <button className={styles.histNavBtn} onClick={() => setMonth(m => new Date(m.getFullYear(), m.getMonth()-1, 1))} disabled={atLimit}>‹</button>
           <span className={styles.histNavLabel} style={{ textTransform: 'capitalize' }}>{monthLabel}</span>
@@ -162,16 +166,16 @@ function HistorySection({ lawyerId, responsaveis, selectedMember }) {
       </div>
       {selectedMember === 'todos' && responsaveis.length > 0 && (
         <div className={styles.histFilter}>
-          <button className={`${styles.histFilterBtn} ${!personFilter ? styles.histFilterActive : ''}`} onClick={() => setPersonFilter(null)}>Todos</button>
+          <button className={`${styles.histFilterBtn} ${!personFilter ? styles.histFilterActive : ''}`} onClick={() => setPersonFilter(null)}>{t('interns.all')}</button>
           {responsaveis.map(p => (
             <button key={p} className={`${styles.histFilterBtn} ${personFilter === p ? styles.histFilterActive : ''}`} onClick={() => setPersonFilter(prev => prev === p ? null : p)}>{p}</button>
           ))}
         </div>
       )}
       {loading ? (
-        <div className={styles.histEmpty}>Carregando…</div>
+        <div className={styles.histEmpty}>{t('interns.page.loading')}</div>
       ) : combined.length === 0 ? (
-        <div className={styles.histEmpty}>Nenhuma atividade registrada neste mês.</div>
+        <div className={styles.histEmpty}>{t('interns.history.empty')}</div>
       ) : (
         <div className={styles.histList}>
           {combined.map(item => (
@@ -186,7 +190,7 @@ function HistorySection({ lawyerId, responsaveis, selectedMember }) {
                   <span className="badge st-teal" style={{ fontSize: '0.6rem' }}>{item.assignedTo}</span>
                 )}
                 <span className={`badge ${item.type === 'task' ? 'st-blue' : 'badge-media'}`} style={{ fontSize: '0.6rem' }}>
-                  {item.type === 'task' ? 'Tarefa' : 'Despacho'}
+                  {item.type === 'task' ? t('interns.history.task') : t('interns.history.despacho')}
                 </span>
                 <span className={styles.histDate}>{fmtD(item.date)}</span>
               </div>
@@ -200,6 +204,7 @@ function HistorySection({ lawyerId, responsaveis, selectedMember }) {
 
 /* ── Page ───────────────────────────────────────────────────────────── */
 export default function Interns() {
+  const { t } = useTranslation()
   const { lawyer } = useAuth()
   const toast = useToast()
   const responsaveis = lawyer?.preferences?.responsaveis ?? []
@@ -275,7 +280,7 @@ export default function Interns() {
   const unassigned = tasks.filter(t => !t.assigned_to).length
 
   function handleGeneratePDF() {
-    if (pdfMembers.length === 0) { toast.error('Selecione ao menos um membro da equipe.'); return }
+    if (pdfMembers.length === 0) { toast.error(t('interns.pdf.selectMemberError')); return }
     const [y, m] = pdfMonth.split('-').map(Number)
     generateTeamTasksReportPDF({
       lawyer,
@@ -289,13 +294,14 @@ export default function Interns() {
   /* ── Empty setup state ── */
   if (responsaveis.length === 0) {
     return (
-      <PageShell title="Equipe" subtitle="Gestão de tarefas por responsável">
+      <PageShell title={t('interns.page.title')} subtitle={t('interns.page.subtitle')}>
         <div className={styles.emptySetup}>
           <div className={styles.emptySetupIcon}>👥</div>
-          <h3 className={styles.emptySetupTitle}>Nenhum membro cadastrado</h3>
+          <h3 className={styles.emptySetupTitle}>{t('interns.emptySetup.title')}</h3>
           <p className={styles.emptySetupText}>
-            Adicione os nomes da sua equipe em{' '}
-            <strong>Configurações → Responsáveis</strong> para começar a atribuir tarefas e visualizar a produtividade de cada membro.
+            <Trans i18nKey="interns.emptySetup.textWithPath">
+              Adicione os nomes da sua equipe em <strong>Configurações → Responsáveis</strong> para começar a atribuir tarefas e visualizar a produtividade de cada membro.
+            </Trans>
           </p>
         </div>
       </PageShell>
@@ -304,8 +310,8 @@ export default function Interns() {
 
   return (
     <PageShell
-      title="Equipe"
-      subtitle={loading ? 'Carregando…' : `${tasks.length} tarefas · ${responsaveis.length} membros`}
+      title={t('interns.page.title')}
+      subtitle={loading ? t('interns.page.loading') : t('interns.page.countSubtitle', { taskCount: tasks.length, memberCount: responsaveis.length })}
       action={
         <div className={styles.pdfToolbar}>
           <input
@@ -313,18 +319,18 @@ export default function Interns() {
             className={styles.monthInput}
             value={pdfMonth}
             onChange={e => setPdfMonth(e.target.value)}
-            title="Mês de referência do relatório"
+            title={t('interns.pdf.monthTooltip')}
           />
           <div className={styles.pdfPickerWrap} ref={pdfPickerRef}>
             <button className={styles.pdfPickerBtn} onClick={() => setPdfPickerOpen(v => !v)}>
-              {pdfMembers.length === responsaveis.length ? 'Todos os membros' : `${pdfMembers.length} membro${pdfMembers.length === 1 ? '' : 's'}`}
+              {pdfMembers.length === responsaveis.length ? t('interns.pdf.allMembers') : t('interns.pdf.memberCount', { count: pdfMembers.length })}
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="11" height="11"><path d="M4 6l4 4 4-4"/></svg>
             </button>
             {pdfPickerOpen && (
               <div className={styles.pdfPickerPanel}>
                 <div className={styles.pdfPickerActions}>
-                  <button onClick={() => setPdfMembers(responsaveis)}>Selecionar todos</button>
-                  <button onClick={() => setPdfMembers([])}>Limpar</button>
+                  <button onClick={() => setPdfMembers(responsaveis)}>{t('interns.pdf.selectAll')}</button>
+                  <button onClick={() => setPdfMembers([])}>{t('interns.pdf.clear')}</button>
                 </div>
                 {responsaveis.map(r => (
                   <label key={r} className={styles.pdfPickerItem}>
@@ -337,7 +343,7 @@ export default function Interns() {
           </div>
           <button className={styles.pdfBtn} onClick={handleGeneratePDF}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-            Gerar PDF
+            {t('interns.pdf.generate')}
           </button>
         </div>
       }
@@ -348,7 +354,7 @@ export default function Interns() {
           className={`${styles.memberPill} ${member === 'todos' ? styles.memberPillActive : ''}`}
           onClick={() => setMember('todos')}
         >
-          Todos
+          {t('interns.all')}
         </button>
         {responsaveis.map(r => (
           <button
@@ -365,7 +371,7 @@ export default function Interns() {
             className={`${styles.memberPill} ${member === 'sem_atribuicao' ? styles.memberPillActive : ''}`}
             onClick={() => setMember('sem_atribuicao')}
           >
-            Sem atribuição
+            {t('interns.unassigned')}
             <span className={styles.pillCount}>{unassigned}</span>
           </button>
         )}
@@ -386,11 +392,11 @@ export default function Interns() {
       ) : (
         <div className={styles.statsRow}>
           {[
-            { label: 'Total',         value: stats.total,        accent: false },
-            { label: 'Pendente',      value: stats.pendente,     accent: false },
-            { label: 'Em andamento',  value: stats.em_andamento, accent: false },
-            { label: 'Concluída',     value: stats.concluida,    accent: false },
-            { label: 'Atrasada',      value: stats.atrasada,     accent: stats.atrasada > 0 },
+            { label: t('interns.stats.total'),        value: stats.total,        accent: false },
+            { label: t('interns.stats.pendente'),     value: stats.pendente,     accent: false },
+            { label: t('interns.stats.em_andamento'), value: stats.em_andamento, accent: false },
+            { label: t('interns.stats.concluida'),    value: stats.concluida,    accent: false },
+            { label: t('interns.stats.atrasada'),     value: stats.atrasada,     accent: stats.atrasada > 0 },
           ].map(s => (
             <div key={s.label} className={`${styles.statCard} ${s.accent ? styles.statCardDanger : ''}`}>
               <div className={styles.statValue}>{s.value}</div>
@@ -405,17 +411,17 @@ export default function Interns() {
         <div className={styles.sectionHeader}>
           <span className={styles.sectionTitle}>
             {member === 'todos'
-              ? 'Todas as tarefas'
+              ? t('interns.sectionTitle.all')
               : member === 'sem_atribuicao'
-                ? 'Sem atribuição'
-                : `Tarefas — ${member}`}
+                ? t('interns.sectionTitle.unassigned')
+                : t('interns.sectionTitle.member', { member })}
           </span>
           <div className={styles.filterGroup}>
             {[
-              { v: 'todos',        l: 'Todas' },
-              { v: 'pendente',     l: 'Pendente' },
-              { v: 'em_andamento', l: 'Em andamento' },
-              { v: 'concluida',    l: 'Concluída' },
+              { v: 'todos',        l: t('interns.filters.all') },
+              { v: 'pendente',     l: t('interns.filters.pendente') },
+              { v: 'em_andamento', l: t('interns.filters.em_andamento') },
+              { v: 'concluida',    l: t('interns.filters.concluida') },
             ].map(({ v, l }) => (
               <button
                 key={v}
@@ -428,7 +434,7 @@ export default function Interns() {
 
         {filtered.length === 0 ? (
           <div className={styles.emptyState}>
-            <p>Nenhuma tarefa encontrada</p>
+            <p>{t('interns.emptyTasks')}</p>
           </div>
         ) : (
           <div className={styles.taskList}>

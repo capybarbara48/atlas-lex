@@ -10,13 +10,19 @@
   "overdue": "Overdue",
   "toastCreated": "Task created.",
   "toastUpdated": "Task updated.",
+  "toastMoveError": "Error moving task.",
+  "hideCompleted": "Hide completed",
   "countTasks_one": "{{count}} task",
   "countTasks_other": "{{count}} tasks",
   "countPending_one": "{{count}} pending",
   "countPending_other": "{{count}} pending",
+  "weekdaysShort": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+  "monthsShort": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+  "monthsLong": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
   "table": {
     "task": "Task",
     "case": "Case",
+    "assignee": "Assignee",
     "priority": "Priority",
     "status": "Status",
     "dueDate": "Due date"
@@ -29,6 +35,75 @@
     "more": "+{{count}} more",
     "emptyDay": "No tasks on this day."
   },
+  "filters": {
+    "allAssignees": "All"
+  },
+  "pomodoro": {
+    "modeFocus": "Focus",
+    "modeBreak": "Break",
+    "modeStopped": "Stopped",
+    "cycles_one": "{{count}} cycle",
+    "cycles_other": "{{count}} cycles",
+    "hintFocus": "30 min focus · 5 min break",
+    "hintBreak": "☕ break",
+    "start": "Start",
+    "resume": "Resume",
+    "pause": "Pause",
+    "reset": "Reset"
+  },
+  "modeToggle": {
+    "tooltip": "Click to switch the day's mode",
+    "presencial": "In-person",
+    "virtual": "Virtual"
+  },
+  "despachos": {
+    "title": "Filings",
+    "queue": "Queue",
+    "history": "History",
+    "selectCase": "Select case…",
+    "selectAssignee": "Assignee…",
+    "noAssignee": "No assignee",
+    "queueEmpty": "Queue is empty.",
+    "historyEmpty": "No filings completed yet.",
+    "notesPlaceholder": "Notes…",
+    "markDone": "Filing Completed",
+    "loc": {
+      "secretaria": "Clerk's Office",
+      "gabinete": "Chambers"
+    },
+    "tipo": {
+      "conclusaoDecisao": "Referred for Decision",
+      "conclusaoJulgamento": "Referred for Judgment",
+      "conclusaoSentenca": "Referred for Ruling",
+      "vistaMP": "Referred to Public Prosecutor",
+      "cumprimentoDiligencia": "Compliance with Order",
+      "juntadaPeticao": "Filing Attached",
+      "outros": "Other"
+    }
+  },
+  "agenda": {
+    "todayCardTitle": "Tasks and Appointments",
+    "emptyToday": "No tasks on this day",
+    "noDateTitle": "Tasks Without a Due Date",
+    "noDateQuickPlaceholder": "New task without a due date…",
+    "noDateEmpty": "No tasks without a due date",
+    "tomorrowTitle": "Tomorrow",
+    "yesterday": "Yesterday",
+    "newForTomorrow": "New task for tomorrow",
+    "tomorrowEmpty": "No tasks for tomorrow",
+    "monthlyViewTitle": "Monthly View",
+    "startFromToday": "Start from today",
+    "startAfterTomorrow": "Start after tomorrow",
+    "hearingsTitle": "Hearings",
+    "hearingsUpcoming_one": "{{count}} upcoming",
+    "hearingsUpcoming_other": "{{count}} upcoming",
+    "hearingsNone": "None scheduled",
+    "hearingsEmpty": "No hearings scheduled — add one under Cases › edit case",
+    "orderTooltip": "Order (1 = first)",
+    "markComplete": "Mark as complete",
+    "markIncomplete": "Unmark",
+    "cycleAssigneeTooltip": "Click to change assignee"
+  },
   "form": {
     "titleLabel": "Task title",
     "titlePlaceholder": "E.g.: File appeal with TJSP",
@@ -37,6 +112,7 @@
     "assigneePlaceholder": "Assignee name",
     "descriptionLabel": "Description",
     "descriptionPlaceholder": "Details about what needs to be done…",
+    "timePlaceholder": "Time",
     "createButton": "Create task"
   }
 }

@@ -7,16 +7,41 @@
   "activeCases": "Casos ativos",
   "activeCasesSummary": "{{total}} no total · {{clients}} clientes",
   "statTasksToday": "Tarefas hoje",
+  "overdueLabel": "Vencidas",
   "statIncomeMonth": "Receitas / mês",
   "statBalanceMonth": "Saldo / mês",
   "newCaseButton": "Novo caso",
+  "newTaskButton": "Nova tarefa",
+  "newProposalButton": "Nova proposta",
+  "newEntryButton": "Novo lançamento",
   "newCaseModalTitle": "Novo Caso",
+  "newTaskModalTitle": "Nova Tarefa",
+  "newProposalModalTitle": "Nova Proposta",
+  "newEntryModalTitle": "Novo Lançamento",
   "casesBoard": {
     "title": "Quadro de Casos",
-    "subtitle": "{{total}} processos · {{active}} ativos"
+    "subtitle": "{{total}} processos · {{active}} ativos",
+    "link": "Ver todos →"
   },
   "kanbanEmpty": "Vazio",
-  "seeAllTasks": "Ver todas",
+  "kanban": {
+    "uncategorized": "Não categorizado",
+    "despachoLabel": "DESP.",
+    "despachoOrdinals": ["1º", "2º", "3º"],
+    "despachoTooltipRecorded": "{{ordinal}} despacho: {{date}}",
+    "despachoTooltipRegister": "Registrar {{ordinal}} despacho"
+  },
+  "weekdaysShort": ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"],
+  "today": "Hoje",
+  "hearingsCard": {
+    "title": "Audiências",
+    "subtitle_one": "{{count}} próxima",
+    "subtitle_other": "{{count}} próximas",
+    "none": "Nenhuma agendada",
+    "link": "Ver agenda →",
+    "empty": "Nenhuma audiência agendada"
+  },
+  "seeAllTasks": "Ver todas →",
   "overdueCard": {
     "title": "Atrasadas & Urgentes"
   },
@@ -25,7 +50,10 @@
   "noOverdueTasks": "Nenhuma tarefa atrasada",
   "allCaughtUp": "Tudo em dia!",
   "todayTasksCard": {
-    "title": "Tarefas de Hoje"
+    "title": "Tarefas de Hoje",
+    "overdueCount_one": "{{count}} vencida",
+    "overdueCount_other": "{{count}} vencidas",
+    "todayCount": "{{count}} para hoje"
   },
   "todayTasksCount_one": "{{count}} tarefa para hoje",
   "todayTasksCount_other": "{{count}} tarefas para hoje",
@@ -33,16 +61,40 @@
   "noTasksScheduledToday": "Nenhuma tarefa agendada para hoje",
   "markAsDone": "Marcar como concluída",
   "financeCard": {
-    "title": "Financeiro — mês corrente",
-    "subtitle": "Resumo do mês"
+    "title": "Financeiro do Mês",
+    "subtitle": "Receitas, despesas e pendências",
+    "link": "Ver financeiro →"
   },
   "finance": {
-    "incomeLabel": "Receitas",
-    "expenseLabel": "Despesas",
+    "incomeLabel": "Receita",
+    "expenseLabel": "Despesa",
     "balanceLabel": "Saldo",
+    "pendingLabel": "Pendente",
     "incomeType": "Receita",
     "expenseType": "Despesa",
     "recentEntries": "Lançamentos recentes",
     "noEntries": "Nenhum lançamento registrado"
+  },
+  "areaCard": {
+    "title": "Distribuição por Área",
+    "subtitle_one": "{{count}} caso ativo",
+    "subtitle_other": "{{count}} casos ativos",
+    "link": "Ver métricas →",
+    "empty": "Nenhum caso ativo para exibir",
+    "noArea": "Sem área"
+  },
+  "proposalsCard": {
+    "title": "Propostas",
+    "pendingSubtitle_one": "{{count}} aguardando resposta",
+    "pendingSubtitle_other": "{{count}} aguardando resposta",
+    "noPending": "Nenhuma pendente",
+    "link": "Ver todas →",
+    "empty": "Nenhuma proposta cadastrada",
+    "status": {
+      "enviada": "Aguardando",
+      "aceita": "Aceita",
+      "recusada": "Recusada",
+      "rascunho": "Rascunho"
+    }
   }
 }

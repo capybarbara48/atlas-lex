@@ -1,10 +1,12 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import styles from './Login.module.css'
 
 export default function Login() {
+  const { t } = useTranslation()
   const { session } = useAuth()
   const navigate = useNavigate()
 
@@ -23,9 +25,9 @@ export default function Login() {
     <div className={styles.wrapper}>
       <div className={styles.card}>
         <h1 className={styles.title}>Atlas Adv</h1>
-        <p className={styles.subtitle}>Gestão jurídica inteligente</p>
+        <p className={styles.subtitle}>{t('login.tagline', 'Gestão jurídica inteligente')}</p>
         <button className="btn-primary" onClick={handleGoogleLogin}>
-          Entrar com Google
+          {t('login.signInWithGoogle', 'Entrar com Google')}
         </button>
       </div>
     </div>

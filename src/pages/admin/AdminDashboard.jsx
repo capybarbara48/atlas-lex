@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import styles from './AdminDashboard.module.css'
 
-const fmt = n => n?.toLocaleString('pt-BR') ?? '—'
+const fmt = (n, locale) => n?.toLocaleString(locale) ?? '—'
 
 function KpiCard({ label, value, sub, accent }) {
   return (
@@ -15,13 +16,15 @@ function KpiCard({ label, value, sub, accent }) {
   )
 }
 
-function roleLabel(role) {
-  if (role === 'admin') return 'Admin'
-  if (role === 'beta')  return 'Beta'
-  return 'Membro'
+function roleLabel(t, role) {
+  if (role === 'admin') return t('admin.role.admin')
+  if (role === 'beta')  return t('admin.role.beta')
+  return t('admin.role.member')
 }
 
 export default function AdminDashboard() {
+  const { t, i18n } = useTranslation()
+  const locale = i18n.language === 'en' ? 'en-US' : 'pt-BR'
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({ total: 0, newThisMonth: 0, onboarded: 0, feedbackTotal: 0 })
@@ -73,34 +76,34 @@ export default function AdminDashboard() {
     <>
       <div className={styles.pageHeader}>
         <div>
-          <h1 className={styles.title}>Dashboard</h1>
-          <p className={styles.sub}>Visão geral da plataforma Atlas Adv</p>
+          <h1 className={styles.title}>{t('admin.dashboard.title')}</h1>
+          <p className={styles.sub}>{t('admin.dashboard.subtitle')}</p>
         </div>
       </div>
 
       {/* KPIs */}
       <div className={styles.kpiGrid}>
         <KpiCard
-          label="Usuários totais"
-          value={fmt(stats.total)}
-          sub={`${fmt(stats.newThisMonth)} novos este mês`}
+          label={t('admin.dashboard.kpi.totalUsers')}
+          value={fmt(stats.total, locale)}
+          sub={t('admin.dashboard.kpi.newThisMonthSub', { count: stats.newThisMonth })}
           accent="var(--accent)"
         />
         <KpiCard
-          label="Onboarding completo"
-          value={fmt(stats.onboarded)}
-          sub={stats.total > 0 ? `${Math.round((stats.onboarded / stats.total) * 100)}% do total` : undefined}
+          label={t('admin.dashboard.kpi.onboardingComplete')}
+          value={fmt(stats.onboarded, locale)}
+          sub={stats.total > 0 ? t('admin.dashboard.kpi.percentOfTotal', { percent: Math.round((stats.onboarded / stats.total) * 100) }) : undefined}
           accent="#22a84a"
         />
         <KpiCard
-          label="Novos este mês"
-          value={fmt(stats.newThisMonth)}
+          label={t('admin.dashboard.kpi.newThisMonth')}
+          value={fmt(stats.newThisMonth, locale)}
           accent="#3b82f6"
         />
         <KpiCard
-          label="Feedbacks recebidos"
-          value={fmt(stats.feedbackTotal)}
-          sub="sugestões, bugs e elogios"
+          label={t('admin.dashboard.kpi.feedbackReceived')}
+          value={fmt(stats.feedbackTotal, locale)}
+          sub={t('admin.dashboard.kpi.feedbackSub')}
           accent="#f59e0b"
         />
       </div>
@@ -108,27 +111,27 @@ export default function AdminDashboard() {
       {/* Recent users */}
       <div className={styles.card}>
         <div className={styles.cardHeader}>
-          <h2 className={styles.cardTitle}>Usuários recentes</h2>
+          <h2 className={styles.cardTitle}>{t('admin.dashboard.recentUsers')}</h2>
           <button className={styles.seeAll} onClick={() => navigate('/admin/usuarios')}>
-            Ver todos →
+            {t('admin.dashboard.seeAll')}
           </button>
         </div>
         <div className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Nome</th>
-                <th>E-mail</th>
-                <th>Escritório</th>
-                <th>Perfil</th>
-                <th>Status</th>
-                <th>Cadastro</th>
+                <th>{t('admin.dashboard.table.name')}</th>
+                <th>{t('admin.dashboard.table.email')}</th>
+                <th>{t('admin.dashboard.table.firm')}</th>
+                <th>{t('admin.dashboard.table.role')}</th>
+                <th>{t('admin.dashboard.table.status')}</th>
+                <th>{t('admin.dashboard.table.signupDate')}</th>
               </tr>
             </thead>
             <tbody>
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={6} className={styles.empty}>Nenhum usuário encontrado.</td>
+                  <td colSpan={6} className={styles.empty}>{t('admin.dashboard.noUsers')}</td>
                 </tr>
               )}
               {users.map(u => (
@@ -138,17 +141,17 @@ export default function AdminDashboard() {
                   <td>{u.firm_name || '—'}</td>
                   <td>
                     <span className={u.role === 'admin' ? styles.badgeAdmin : u.role === 'beta' ? styles.badgeBeta : styles.badgeMember}>
-                      {roleLabel(u.role)}
+                      {roleLabel(t, u.role)}
                     </span>
                   </td>
                   <td>
                     <span className={u.onboarding_completed ? styles.badgeActive : styles.badgePending}>
-                      {u.onboarding_completed ? 'Ativo' : 'Pendente'}
+                      {u.onboarding_completed ? t('admin.status.active') : t('admin.status.pending')}
                     </span>
                   </td>
                   <td className={styles.dateCell}>
                     {u.created_at
-                      ? new Date(u.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+                      ? new Date(u.created_at).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' })
                       : '—'}
                   </td>
                 </tr>

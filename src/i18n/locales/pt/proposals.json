@@ -1,4 +1,6 @@
 {
+  "pageTitle": "Propostas",
+  "history": "Histórico",
   "newProposal": "Nova proposta",
   "newProposalModal": "Nova proposta",
   "editProposal": "Editar proposta",
@@ -7,15 +9,27 @@
   "loading": "Carregando…",
   "countSubtitle_one": "{{count}} proposta · {{approved}} aprovado · {{pending}} em avaliação",
   "countSubtitle_other": "{{count}} propostas · {{approved}} aprovado · {{pending}} em avaliação",
+  "proposalCount_one": "{{count}} proposta",
+  "proposalCount_other": "{{count}} propostas",
   "errorLoading": "Erro ao carregar propostas.",
   "emptyPipeline": "Nenhuma proposta",
   "emptyList": "Nenhuma proposta encontrada",
   "generatePdf": "Gerar PDF",
+  "generatePdfButton": "Gerar PDF da Proposta",
+  "generating": "Gerando…",
+  "pdf": "PDF",
   "pdfOpened": "PDF aberto em nova aba.",
   "pdfPopupBlocked": "Permita pop-ups no navegador para gerar o PDF.",
   "toastCreated": "Proposta criada.",
   "toastUpdated": "Proposta atualizada.",
+  "toastSavedAndPdf": "Proposta salva e PDF gerado.",
+  "toastDeleted": "Proposta excluída.",
   "validUntil": "Válida até {{date}}",
+  "confirmDeleteLabel": "Excluir?",
+  "linkedToRecord": "vinculado ao cadastro",
+  "autoPurgeNote": "Purge automático após 6 meses",
+  "autoPurgeToast_one": "{{count}} proposta recusada com mais de 6 meses foi removida automaticamente.",
+  "autoPurgeToast_other": "{{count}} propostas recusadas com mais de 6 meses foram removidas automaticamente.",
   "view": {
     "pipeline": "Pipeline",
     "list": "Lista"
@@ -24,6 +38,12 @@
     "pendente": "Em Avaliação",
     "aprovado": "Aprovadas",
     "recusado": "Recusadas"
+  },
+  "pipelineColumns": {
+    "enviada": "Enviadas",
+    "aceita": "Aceitas",
+    "recusada": "Recusadas",
+    "rascunho": "Rascunhos"
   },
   "status": {
     "pendente": "Pendente",
@@ -44,10 +64,12 @@
   "table": {
     "proposal": "Proposta",
     "client": "Cliente",
+    "service": "Serviço",
     "fee": "Honorário",
     "value": "Valor",
     "status": "Status",
     "created": "Criada",
+    "date": "Data",
     "validUntil": "Validade"
   },
   "form": {
@@ -57,6 +79,56 @@
     "amountLabel": "Valor (R$)",
     "hourlyAmountLabel": "Valor por hora (R$)",
     "percentageLabel": "Percentual de êxito (%)",
-    "createButton": "Criar proposta"
+    "createButton": "Criar proposta",
+    "percentageCustomPlaceholder": "Ex: 25",
+    "customOption": "Personalizado…"
+  },
+  "formTitle": "Dados da Proposta",
+  "fields": {
+    "client": "Cliente",
+    "fromList": "Da lista",
+    "typeIn": "Digitar",
+    "clientNamePlaceholder": "Nome do cliente",
+    "selectClientPlaceholder": "Selecionar cliente…",
+    "serviceType": "Tipo de Serviço",
+    "selectOption": "Selecionar…",
+    "serviceTypePlaceholder": "Ex.: Ação Trabalhista",
+    "feeAmount": "Valor dos Honorários",
+    "successFee": "Participação Final de Êxito",
+    "noSuccessFee": "Sem participação de êxito",
+    "partner": "Correspondente / Parceiro",
+    "partnerMarkupLabel": "Aplicar markup de parceiro (+30%)",
+    "partnerMarkupHint": "não aparece no PDF",
+    "notes": "Observações",
+    "notesPlaceholder": "Condições adicionais, prazos, informações relevantes…",
+    "notesPlaceholderShort": "Condições adicionais, prazos…"
+  },
+  "summary": {
+    "title": "Resumo",
+    "baseValue": "Valor base",
+    "partnerMarkup": "Markup parceiro (+30%)",
+    "finalValue": "Valor final",
+    "pixValue": "Valor à vista (10% off)"
+  },
+  "fees": {
+    "title": "Taxas do Cartão",
+    "hint": "Configure as taxas aplicadas a cada parcelamento. Estes valores são usados no PDF gerado.",
+    "saveButton": "Salvar taxas",
+    "saveSuccess": "Taxas do cartão salvas."
+  },
+  "expiry": {
+    "awaitingRemoval": "Aguardando remoção",
+    "expiringSoon": "Expira em breve",
+    "awaitingRemovalTitle": "Aguardando remoção automática",
+    "expiringSoonTitle": "Será removida em breve"
+  },
+  "errors": {
+    "clientNameRequired": "Informe o nome do cliente.",
+    "serviceTypeRequired": "Selecione o tipo de serviço.",
+    "feeAmountRequired": "Informe o valor dos honorários.",
+    "saveProposalFailed": "Erro ao salvar proposta.",
+    "saveFailed": "Erro ao salvar alterações.",
+    "deleteFailed": "Erro ao excluir proposta.",
+    "feesSaveFailed": "Erro ao salvar taxas."
   }
 }

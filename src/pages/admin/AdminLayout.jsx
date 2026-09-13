@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { Suspense } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
@@ -19,6 +20,7 @@ function PageLoader() {
 }
 
 export default function AdminLayout() {
+  const { t } = useTranslation()
   const { lawyer, session } = useAuth()
   const navigate = useNavigate()
 
@@ -42,31 +44,31 @@ export default function AdminLayout() {
               end
               className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navActive : ''}`}
             >
-              Dashboard
+              {t('admin.nav.dashboard')}
             </NavLink>
             <NavLink
               to="/admin/usuarios"
               className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navActive : ''}`}
             >
-              Usuários
+              {t('admin.nav.users')}
             </NavLink>
             <NavLink
               to="/admin/feedback"
               className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navActive : ''}`}
             >
-              Feedback
+              {t('admin.nav.feedback')}
             </NavLink>
             <NavLink
               to="/admin/suporte"
               className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navActive : ''}`}
             >
-              Suporte
+              {t('admin.nav.tickets')}
             </NavLink>
             <NavLink
               to="/admin/equipe"
               className={({ isActive }) => `${styles.navLink} ${isActive ? styles.navActive : ''}`}
             >
-              Equipe
+              {t('admin.nav.teamInvites')}
             </NavLink>
           </nav>
         </div>
@@ -76,14 +78,14 @@ export default function AdminLayout() {
             <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
               <path fillRule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10Z" clipRule="evenodd"/>
             </svg>
-            Voltar ao app
+            {t('admin.nav.backToApp')}
           </button>
           <div className={styles.userChip}>
             <div className={styles.userDot} />
             {name}
           </div>
           <button className={styles.signOut} onClick={() => supabase.auth.signOut()}>
-            Sair
+            {t('common.signOut')}
           </button>
         </div>
       </header>

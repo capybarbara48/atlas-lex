@@ -38,17 +38,24 @@
   "page": {
     "title": "Vitrine",
     "subtitle": "Card para compartilhar — seus dados reais, sem nenhum nome privado",
-    "fullscreen": "Tela cheia ↗"
+    "fullscreen": "↗ Tela cheia"
   },
   "mix": {
     "firmSub": "Advocacia",
     "focusActive": "foco ativo",
+    "breakActive": "☕ pausa",
     "pomodoro": "pomodoro",
     "cycle_one": "{{count}} ciclo",
     "cycle_other": "{{count}} ciclos",
     "reset": "Reiniciar",
     "pause": "⏸ Pausar",
     "start": "▶ Iniciar foco",
+    "resume": "▶ Retomar",
+    "timeLabel": "Horário",
+    "dateLabel": "Data",
+    "tasksLabel": "Tarefas",
+    "pendingTodayLabel": "pendentes hoje",
+    "pendingWeekLabel": "pendentes na semana",
     "taskPending_one": "tarefa pendente hoje",
     "taskPending_other": "tarefas pendentes hoje",
     "taskDone_one": "tarefa concluída esta semana",

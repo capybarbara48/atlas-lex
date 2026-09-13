@@ -4,6 +4,7 @@
     "users": "Users",
     "feedback": "Feedback",
     "tickets": "Support",
+    "teamInvites": "Team",
     "backToApp": "Back to app"
   },
   "role": {
@@ -108,5 +109,46 @@
     "replyHint": "⌘ + Enter to send",
     "sending": "Sending…",
     "reply": "Reply"
+  },
+  "teamInvites": {
+    "title": "Team Invites",
+    "pendingBadge_one": "{{count}} pending",
+    "pendingBadge_other": "{{count}} pending",
+    "subtitle_one": "{{count}} invite in total",
+    "subtitle_other": "{{count}} invites in total",
+    "empty": "No invites found.",
+    "loadError": "Error loading invites.",
+    "approveError": "Error approving invite.",
+    "approveSuccess": "Invite approved. The firm admin can now guide the member to sign up.",
+    "rejectConfirm": "Reject and delete this invite?",
+    "rejectError": "Error rejecting invite.",
+    "rejectSuccess": "Invite rejected and removed.",
+    "filter": {
+      "pendingAdmin": "Awaiting approval",
+      "pendingInvite": "Approved",
+      "active": "Active",
+      "disabled": "Disabled",
+      "all": "All"
+    },
+    "status": {
+      "pending_admin": "Awaiting approval",
+      "pending_invite": "Approved — awaiting sign-up",
+      "active": "Active",
+      "disabled": "Disabled"
+    },
+    "role": {
+      "advogado": "Lawyer",
+      "estagiario": "Intern"
+    },
+    "table": {
+      "member": "Member",
+      "firm": "Firm",
+      "role": "Role",
+      "status": "Status",
+      "date": "Date"
+    },
+    "approve": "Approve",
+    "reject": "Reject",
+    "remove": "Remove"
   }
 }

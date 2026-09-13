@@ -31,6 +31,8 @@
   "selectPlaceholder": "— Selecionar —",
   "nameRequired": "Nome é obrigatório.",
   "currencyPlaceholder": "0,00",
+  "otherManualOption": "Outro (digitar manualmente)…",
+  "unexpectedError": "Erro inesperado ao salvar.",
   "errorBoundary": {
     "page": {
       "title": "Algo deu errado",

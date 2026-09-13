@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import PageShell from '@/components/ui/PageShell'
 import s from './Metrics.module.css'
@@ -45,6 +46,7 @@ function groupBy(rows, key, emptyLabel) {
 const CX = 100, CY = 100, OR = 80, IR = 52
 
 function PieChart({ title, subtitle, data, loading }) {
+  const { t } = useTranslation()
   const [hov, setHov] = useState(null)
 
   const total  = data.reduce((acc, d) => acc + d.value, 0)
@@ -69,9 +71,9 @@ function PieChart({ title, subtitle, data, loading }) {
       </div>
 
       {loading ? (
-        <div className={s.state}>Carregando…</div>
+        <div className={s.state}>{t('metrics.loading')}</div>
       ) : total === 0 ? (
-        <div className={s.state}>Nenhum dado disponível</div>
+        <div className={s.state}>{t('metrics.noData')}</div>
       ) : (
         <div className={s.body}>
           {/* ── SVG donut (centered) ── */}
@@ -124,7 +126,7 @@ function PieChart({ title, subtitle, data, loading }) {
                   </text>
                   <text x={CX} y={CY + 11} textAnchor="middle"
                     style={{ fill: 'var(--text-3)', fontSize: '10px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                    total
+                    {t('metrics.total')}
                   </text>
                 </>
               )}
@@ -167,6 +169,7 @@ function PieChart({ title, subtitle, data, loading }) {
 
 /* ─── Page ───────────────────────────────────────────────────────── */
 export default function Metrics() {
+  const { t } = useTranslation()
   const [loading,   setLoading]   = useState(true)
   const [cases,     setCases]     = useState([])
   const [proposals, setProposals] = useState([])
@@ -184,38 +187,41 @@ export default function Metrics() {
     load()
   }, [])
 
-  const partnerData = groupBy(cases,     'partner',      'Próprios')
-  const areaData    = groupBy(cases,     'area',         'Não especificada')
-  const courtData   = groupBy(cases,     'court',        'Não especificado')
-  const serviceData = groupBy(proposals, 'service_type', 'Não especificado')
+  const partnerData = groupBy(cases,     'partner',      t('metrics.charts.byPartner.emptyLabel'))
+  const areaData    = groupBy(cases,     'area',         t('metrics.charts.byArea.emptyLabel'))
+  const courtData   = groupBy(cases,     'court',        t('metrics.charts.byCourt.emptyLabel'))
+  const serviceData = groupBy(proposals, 'service_type', t('metrics.charts.byService.emptyLabel'))
+
+  const casesTotal     = t('metrics.casesTotal', { count: cases.length })
+  const proposalsTotal = t('metrics.proposalsTotal', { count: proposals.length })
 
   return (
     <PageShell
-      title="Métricas"
-      subtitle="Visão analítica do escritório com base nos dados cadastrados"
+      title={t('metrics.title')}
+      subtitle={t('metrics.subtitle')}
     >
       <div className={s.grid}>
         <PieChart
-          title="Casos por Parceria"
-          subtitle={`${cases.length} caso${cases.length !== 1 ? 's' : ''} no total`}
+          title={t('metrics.charts.byPartner.title')}
+          subtitle={casesTotal}
           data={partnerData}
           loading={loading}
         />
         <PieChart
-          title="Áreas de Atuação"
-          subtitle={`${cases.length} caso${cases.length !== 1 ? 's' : ''} no total`}
+          title={t('metrics.charts.byArea.title')}
+          subtitle={casesTotal}
           data={areaData}
           loading={loading}
         />
         <PieChart
-          title="Casos por Tribunal"
-          subtitle={`${cases.length} caso${cases.length !== 1 ? 's' : ''} no total`}
+          title={t('metrics.charts.byCourt.title')}
+          subtitle={casesTotal}
           data={courtData}
           loading={loading}
         />
         <PieChart
-          title="Tipos de Serviço"
-          subtitle={`${proposals.length} proposta${proposals.length !== 1 ? 's' : ''} no total`}
+          title={t('metrics.charts.byService.title')}
+          subtitle={proposalsTotal}
           data={serviceData}
           loading={loading}
         />

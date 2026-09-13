@@ -10,13 +10,19 @@
   "overdue": "Vencida",
   "toastCreated": "Tarefa criada.",
   "toastUpdated": "Tarefa atualizada.",
+  "toastMoveError": "Erro ao mover tarefa.",
+  "hideCompleted": "Ocultar concluídas",
   "countTasks_one": "{{count}} tarefa",
   "countTasks_other": "{{count}} tarefas",
   "countPending_one": "{{count}} pendente",
   "countPending_other": "{{count}} pendentes",
+  "weekdaysShort": ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"],
+  "monthsShort": ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
+  "monthsLong": ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"],
   "table": {
     "task": "Tarefa",
     "case": "Caso",
+    "assignee": "Responsável",
     "priority": "Prioridade",
     "status": "Status",
     "dueDate": "Vencimento"
@@ -29,6 +35,75 @@
     "more": "+{{count}} mais",
     "emptyDay": "Nenhuma tarefa neste dia."
   },
+  "filters": {
+    "allAssignees": "Todos"
+  },
+  "pomodoro": {
+    "modeFocus": "Foco",
+    "modeBreak": "Pausa",
+    "modeStopped": "Parado",
+    "cycles_one": "{{count}} ciclo",
+    "cycles_other": "{{count}} ciclos",
+    "hintFocus": "30 min foco · 5 min pausa",
+    "hintBreak": "☕ pausa",
+    "start": "Iniciar",
+    "resume": "Retomar",
+    "pause": "Pausar",
+    "reset": "Reiniciar"
+  },
+  "modeToggle": {
+    "tooltip": "Clique para alternar modo do dia",
+    "presencial": "Presencial",
+    "virtual": "Virtual"
+  },
+  "despachos": {
+    "title": "Despachos",
+    "queue": "Fila",
+    "history": "Histórico",
+    "selectCase": "Selecionar processo…",
+    "selectAssignee": "Responsável…",
+    "noAssignee": "Sem resp.",
+    "queueEmpty": "Fila vazia.",
+    "historyEmpty": "Nenhum despacho realizado.",
+    "notesPlaceholder": "Observações…",
+    "markDone": "Despacho Realizado",
+    "loc": {
+      "secretaria": "Secretaria",
+      "gabinete": "Gabinete"
+    },
+    "tipo": {
+      "conclusaoDecisao": "Conclusão para Decisão",
+      "conclusaoJulgamento": "Conclusão para Julgamento",
+      "conclusaoSentenca": "Conclusão para Sentença",
+      "vistaMP": "Vista ao Ministério Público",
+      "cumprimentoDiligencia": "Cumprimento de Diligência",
+      "juntadaPeticao": "Juntada de Petição",
+      "outros": "Outros"
+    }
+  },
+  "agenda": {
+    "todayCardTitle": "Tarefas e Compromissos",
+    "emptyToday": "Nenhuma tarefa neste dia",
+    "noDateTitle": "Tarefas Sem Prazo",
+    "noDateQuickPlaceholder": "Nova tarefa sem prazo…",
+    "noDateEmpty": "Nenhuma tarefa sem prazo",
+    "tomorrowTitle": "Amanhã",
+    "yesterday": "Ontem",
+    "newForTomorrow": "Nova tarefa para amanhã",
+    "tomorrowEmpty": "Nenhuma tarefa para amanhã",
+    "monthlyViewTitle": "Visão Mensal",
+    "startFromToday": "Iniciar a partir de hoje",
+    "startAfterTomorrow": "Iniciar depois de amanhã",
+    "hearingsTitle": "Audiências",
+    "hearingsUpcoming_one": "{{count}} próxima",
+    "hearingsUpcoming_other": "{{count}} próximas",
+    "hearingsNone": "Nenhuma agendada",
+    "hearingsEmpty": "Nenhuma audiência agendada — cadastre em Casos › editar caso",
+    "orderTooltip": "Ordem (1 = primeira)",
+    "markComplete": "Marcar como concluída",
+    "markIncomplete": "Desmarcar",
+    "cycleAssigneeTooltip": "Clique para mudar responsável"
+  },
   "form": {
     "titleLabel": "Título da tarefa",
     "titlePlaceholder": "Ex: Protocolar recurso no TJSP",
@@ -37,6 +112,7 @@
     "assigneePlaceholder": "Nome do responsável",
     "descriptionLabel": "Descrição",
     "descriptionPlaceholder": "Detalhes sobre o que precisa ser feito…",
+    "timePlaceholder": "Hora",
     "createButton": "Criar tarefa"
   }
 }

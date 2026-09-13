@@ -7,16 +7,41 @@
   "activeCases": "Active cases",
   "activeCasesSummary": "{{total}} in total · {{clients}} clients",
   "statTasksToday": "Tasks today",
+  "overdueLabel": "Overdue",
   "statIncomeMonth": "Income / month",
   "statBalanceMonth": "Balance / month",
   "newCaseButton": "New case",
+  "newTaskButton": "New task",
+  "newProposalButton": "New proposal",
+  "newEntryButton": "New entry",
   "newCaseModalTitle": "New Case",
+  "newTaskModalTitle": "New Task",
+  "newProposalModalTitle": "New Proposal",
+  "newEntryModalTitle": "New Entry",
   "casesBoard": {
     "title": "Case Board",
-    "subtitle": "{{total}} cases · {{active}} active"
+    "subtitle": "{{total}} cases · {{active}} active",
+    "link": "See all →"
   },
   "kanbanEmpty": "Empty",
-  "seeAllTasks": "See all",
+  "kanban": {
+    "uncategorized": "Uncategorized",
+    "despachoLabel": "DISP.",
+    "despachoOrdinals": ["1st", "2nd", "3rd"],
+    "despachoTooltipRecorded": "{{ordinal}} dispatch: {{date}}",
+    "despachoTooltipRegister": "Record {{ordinal}} dispatch"
+  },
+  "weekdaysShort": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+  "today": "Today",
+  "hearingsCard": {
+    "title": "Hearings",
+    "subtitle_one": "{{count}} upcoming",
+    "subtitle_other": "{{count}} upcoming",
+    "none": "None scheduled",
+    "link": "View schedule →",
+    "empty": "No hearings scheduled"
+  },
+  "seeAllTasks": "See all →",
   "overdueCard": {
     "title": "Overdue & Urgent"
   },
@@ -25,7 +50,10 @@
   "noOverdueTasks": "No overdue tasks",
   "allCaughtUp": "All caught up!",
   "todayTasksCard": {
-    "title": "Today's Tasks"
+    "title": "Today's Tasks",
+    "overdueCount_one": "{{count}} overdue",
+    "overdueCount_other": "{{count}} overdue",
+    "todayCount": "{{count}} for today"
   },
   "todayTasksCount_one": "{{count}} task for today",
   "todayTasksCount_other": "{{count}} tasks for today",
@@ -33,16 +61,40 @@
   "noTasksScheduledToday": "No tasks scheduled for today",
   "markAsDone": "Mark as done",
   "financeCard": {
-    "title": "Finance — current month",
-    "subtitle": "Month summary"
+    "title": "This Month's Finances",
+    "subtitle": "Income, expenses, and pending items",
+    "link": "View finances →"
   },
   "finance": {
     "incomeLabel": "Income",
-    "expenseLabel": "Expenses",
+    "expenseLabel": "Expense",
     "balanceLabel": "Balance",
+    "pendingLabel": "Pending",
     "incomeType": "Income",
     "expenseType": "Expense",
     "recentEntries": "Recent entries",
     "noEntries": "No entries recorded"
+  },
+  "areaCard": {
+    "title": "Distribution by Area",
+    "subtitle_one": "{{count}} active case",
+    "subtitle_other": "{{count}} active cases",
+    "link": "View metrics →",
+    "empty": "No active cases to display",
+    "noArea": "No area"
+  },
+  "proposalsCard": {
+    "title": "Proposals",
+    "pendingSubtitle_one": "{{count}} awaiting response",
+    "pendingSubtitle_other": "{{count}} awaiting response",
+    "noPending": "None pending",
+    "link": "See all →",
+    "empty": "No proposals registered",
+    "status": {
+      "enviada": "Awaiting",
+      "aceita": "Accepted",
+      "recusada": "Declined",
+      "rascunho": "Draft"
+    }
   }
 }

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
 import { useClients } from '@/hooks/useClients'
@@ -41,10 +42,11 @@ function initials(nome) {
 
 /* ── sub-components ─────────────────────────────────────────────────── */
 function GridView({ clients, onNavigate, onEdit }) {
+  const { t } = useTranslation()
   if (clients.length === 0) return (
     <div className={styles.emptyState}>
       <div className={styles.emptyIcon}>👤</div>
-      <p>Nenhum cliente encontrado</p>
+      <p>{t('clients.emptyList')}</p>
     </div>
   )
   return (
@@ -63,10 +65,10 @@ function GridView({ clients, onNavigate, onEdit }) {
             <span>{c.cidade} — {c.estado}</span>
           </div>
           <div className={styles.clientFooter}>
-            <span className={styles.clientCasos}>{c.casos} {c.casos === 1 ? 'processo' : 'processos'}</span>
+            <span className={styles.clientCasos}>{t('clients.casesCount', { count: c.casos })}</span>
             <button
               className={styles.editIconBtn}
-              title="Editar"
+              title={t('common.edit')}
               onClick={e => { e.stopPropagation(); onEdit(c.id) }}
             >
               <EditIcon />
@@ -79,10 +81,11 @@ function GridView({ clients, onNavigate, onEdit }) {
 }
 
 function ListView({ clients, onNavigate, onEdit }) {
+  const { t } = useTranslation()
   if (clients.length === 0) return (
     <div className={styles.emptyState}>
       <div className={styles.emptyIcon}>👤</div>
-      <p>Nenhum cliente encontrado</p>
+      <p>{t('clients.emptyList')}</p>
     </div>
   )
   return (
@@ -90,12 +93,12 @@ function ListView({ clients, onNavigate, onEdit }) {
       <table className={styles.table}>
         <thead>
           <tr>
-            <th>Cliente</th>
-            <th>Tipo</th>
-            <th>Telefone</th>
-            <th>Documento</th>
-            <th>Cidade</th>
-            <th>Processos</th>
+            <th>{t('clients.table.client')}</th>
+            <th>{t('clients.table.type')}</th>
+            <th>{t('clients.table.phone')}</th>
+            <th>{t('clients.table.document')}</th>
+            <th>{t('clients.table.city')}</th>
+            <th>{t('clients.table.cases')}</th>
             <th></th>
           </tr>
         </thead>
@@ -120,7 +123,7 @@ function ListView({ clients, onNavigate, onEdit }) {
               <td>{c.cidade}</td>
               <td><span className={styles.casosCount}>{c.casos}</span></td>
               <td onClick={e => e.stopPropagation()}>
-                <button className={styles.editIconBtn} title="Editar" onClick={() => onEdit(c.id)}>
+                <button className={styles.editIconBtn} title={t('common.edit')} onClick={() => onEdit(c.id)}>
                   <EditIcon />
                 </button>
               </td>
@@ -150,6 +153,7 @@ function SkeletonGrid() {
 
 /* ── page ───────────────────────────────────────────────────────────── */
 export default function Clients() {
+  const { t } = useTranslation()
   const { lawyer } = useAuth()
   const toast = useToast()
   const navigate = useNavigate()
@@ -174,7 +178,7 @@ export default function Clients() {
   function handleSave() {
     refetch()
     setFormOpen(false)
-    toast.success(editing ? 'Cliente atualizado.' : 'Cliente criado.')
+    toast.success(editing ? t('clients.toastUpdated') : t('clients.toastCreated'))
   }
 
   function handleViewChange(v) {
@@ -197,15 +201,21 @@ export default function Clients() {
     return list
   }, [clients, search, filterTipo])
 
+  const tipoFilters = [
+    { v: 'todos', l: t('clients.all') },
+    { v: 'PF', l: t('clients.typePF') },
+    { v: 'PJ', l: t('clients.typePJ') },
+  ]
+
   return (
     <PageShell
-      title="Clientes"
-      subtitle={loading ? 'Carregando…' : `${clients.length} clientes cadastrados`}
+      title={t('clients.pageTitle')}
+      subtitle={loading ? t('clients.loading') : t('clients.countSubtitle', { count: clients.length })}
       viewToggle={<ViewToggle value={view === 'grid' ? 'kanban' : 'lista'} onChange={handleViewChange} />}
       action={
         <button className={styles.btnNovo} onClick={openNew}>
           <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.75.75 0 0 1 .75.75v5.5h5.5a.75.75 0 0 1 0 1.5h-5.5v5.5a.75.75 0 0 1-1.5 0v-5.5H1.75a.75.75 0 0 1 0-1.5h5.5v-5.5A.75.75 0 0 1 8 1Z"/></svg>
-          Novo cliente
+          {t('clients.newClient')}
         </button>
       }
       filters={
@@ -217,13 +227,13 @@ export default function Clients() {
             <input
               className={styles.searchInput}
               type="text"
-              placeholder="Buscar por nome, e-mail ou documento..."
+              placeholder={t('clients.searchPlaceholder')}
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
           </div>
           <div className={styles.filterGroup}>
-            {[{ v: 'todos', l: 'Todos' }, { v: 'PF', l: 'Pessoa Física' }, { v: 'PJ', l: 'Pessoa Jurídica' }].map(({ v, l }) => (
+            {tipoFilters.map(({ v, l }) => (
               <button
                 key={v}
                 className={`${styles.filterBtn} ${filterTipo === v ? styles.filterActive : ''}`}
@@ -235,7 +245,7 @@ export default function Clients() {
       }
     >
       {error
-        ? <div className={styles.emptyState}><p>Erro ao carregar clientes.</p></div>
+        ? <div className={styles.emptyState}><p>{t('clients.errorLoading')}</p></div>
         : loading
           ? view === 'grid'
             ? <SkeletonGrid />
@@ -246,7 +256,7 @@ export default function Clients() {
       }
 
       {formOpen && (
-        <Modal title={editing ? 'Editar cliente' : 'Novo cliente'} onClose={() => setFormOpen(false)}>
+        <Modal title={editing ? t('clients.editClient') : t('clients.newClient')} onClose={() => setFormOpen(false)}>
           <ClientForm initial={editing} onSave={handleSave} onClose={() => setFormOpen(false)} />
         </Modal>
       )}

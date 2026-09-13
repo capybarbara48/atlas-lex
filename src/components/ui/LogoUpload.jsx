@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import styles from './LogoUpload.module.css'
@@ -8,6 +9,7 @@ const ACCEPTED  = 'image/png,image/jpeg,image/webp,image/svg+xml'
 const ACCEPTED_TYPES = ACCEPTED.split(',')
 
 export default function LogoUpload({ value, onChange }) {
+  const { t } = useTranslation()
   const { session } = useAuth()
   const [uploading, setUploading] = useState(false)
   const [error,     setError]     = useState(null)
@@ -17,11 +19,11 @@ export default function LogoUpload({ value, onChange }) {
   async function handleFile(file) {
     setError(null)
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      setError('Formato inválido. Use PNG, JPG, WebP ou SVG.')
+      setError(t('ui.logoUpload.invalidFormat', 'Formato inválido. Use PNG, JPG, WebP ou SVG.'))
       return
     }
     if (file.size > MAX_BYTES) {
-      setError('Arquivo muito grande. Máximo 2 MB.')
+      setError(t('ui.logoUpload.tooLarge', 'Arquivo muito grande. Máximo 2 MB.'))
       return
     }
     setUploading(true)
@@ -33,7 +35,7 @@ export default function LogoUpload({ value, onChange }) {
       .upload(path, file, { upsert: true, contentType: file.type })
 
     if (upErr) {
-      setError('Erro ao enviar: ' + upErr.message)
+      setError(t('ui.logoUpload.uploadError', 'Erro ao enviar: {{message}}', { message: upErr.message }))
       setUploading(false)
       return
     }
@@ -60,17 +62,17 @@ export default function LogoUpload({ value, onChange }) {
           <div className={styles.previewImgWrap}>
             <img
               src={value}
-              alt="logo"
+              alt={t('ui.logoUpload.alt', 'logo')}
               className={styles.previewImg}
               onError={e => { e.target.style.display = 'none' }}
             />
           </div>
           <div className={styles.previewActions}>
             <button type="button" className={styles.changeBtnSm} onClick={() => inputRef.current.click()}>
-              Trocar
+              {t('ui.logoUpload.changeButton', 'Trocar')}
             </button>
             <button type="button" className={styles.removeBtnSm} onClick={remove}>
-              Remover
+              {t('ui.logoUpload.removeButton', 'Remover')}
             </button>
           </div>
         </div>
@@ -93,9 +95,9 @@ export default function LogoUpload({ value, onChange }) {
                 </svg>
               </div>
               <p className={styles.zoneText}>
-                <span className={styles.zoneLink}>Clique para selecionar</span> ou arraste seu logo aqui
+                <span className={styles.zoneLink}>{t('ui.logoUpload.dropLink', 'Clique para selecionar')}</span> {t('ui.logoUpload.dropText', 'ou arraste seu logo aqui')}
               </p>
-              <p className={styles.zoneHint}>PNG, JPG, WebP ou SVG · máx. 2 MB</p>
+              <p className={styles.zoneHint}>{t('ui.logoUpload.hint', 'PNG, JPG, WebP ou SVG · máx. 2 MB')}</p>
             </>
           )}
         </div>

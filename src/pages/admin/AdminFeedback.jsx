@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/context/ToastContext'
 import styles from './AdminFeedback.module.css'
 
 const TIPOS = ['sugestão', 'bug', 'elogio']
+const TIPO_KEY = { 'sugestão': 'sugestao', bug: 'bug', elogio: 'elogio' }
 
 function tipoClass(tipo) {
   if (tipo === 'bug') return styles.tipoBug
@@ -11,7 +13,13 @@ function tipoClass(tipo) {
   return styles.tipoSugestao
 }
 
+function tipoLabel(t, tipo) {
+  return t(`admin.feedback.type.${TIPO_KEY[tipo] ?? 'sugestao'}`)
+}
+
 export default function AdminFeedback() {
+  const { t, i18n } = useTranslation()
+  const locale = i18n.language === 'en' ? 'en-US' : 'pt-BR'
   const toast = useToast()
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
@@ -26,7 +34,7 @@ export default function AdminFeedback() {
       .select('id, tipo, titulo, mensagem, lida, created_at, lawyer_id, lawyers(full_name, email, firm_name)')
       .order('created_at', { ascending: false })
     if (error) {
-      toast.error('Erro ao carregar feedbacks.')
+      toast.error(t('admin.feedback.loadError'))
     } else {
       setItems(data ?? [])
     }
@@ -42,7 +50,7 @@ export default function AdminFeedback() {
       .update({ lida: !current })
       .eq('id', id)
     if (error) {
-      toast.error('Erro ao atualizar.')
+      toast.error(t('admin.feedback.updateError'))
     } else {
       setItems(prev => prev.map(f => f.id === id ? { ...f, lida: !current } : f))
     }
@@ -64,10 +72,10 @@ export default function AdminFeedback() {
       <div className={styles.pageHeader}>
         <div>
           <h1 className={styles.title}>
-            Feedback
-            {unread > 0 && <span className={styles.unreadBadge}>{unread} novo{unread !== 1 ? 's' : ''}</span>}
+            {t('admin.feedback.title')}
+            {unread > 0 && <span className={styles.unreadBadge}>{t('admin.feedback.newBadge', { count: unread })}</span>}
           </h1>
-          <p className={styles.sub}>{items.length} envio{items.length !== 1 ? 's' : ''} recebido{items.length !== 1 ? 's' : ''}</p>
+          <p className={styles.sub}>{t('admin.feedback.subtitle', { count: items.length })}</p>
         </div>
       </div>
 
@@ -77,9 +85,9 @@ export default function AdminFeedback() {
           value={filterTipo}
           onChange={e => setFilterTipo(e.target.value)}
         >
-          <option value="all">Todos os tipos</option>
-          {TIPOS.map(t => (
-            <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+          <option value="all">{t('admin.feedback.allTypes')}</option>
+          {TIPOS.map(tipo => (
+            <option key={tipo} value={tipo}>{tipoLabel(t, tipo)}</option>
           ))}
         </select>
         <select
@@ -87,23 +95,23 @@ export default function AdminFeedback() {
           value={filterLida}
           onChange={e => setFilterLida(e.target.value)}
         >
-          <option value="all">Todos</option>
-          <option value="nao_lida">Não lido</option>
-          <option value="lida">Lido</option>
+          <option value="all">{t('admin.feedback.allReadStatus')}</option>
+          <option value="nao_lida">{t('admin.feedback.unread')}</option>
+          <option value="lida">{t('admin.feedback.read')}</option>
         </select>
       </div>
 
       {loading ? (
         <div className={styles.loadWrap}><div className={styles.spinner} /></div>
       ) : filtered.length === 0 ? (
-        <div className={styles.empty}>Nenhum feedback encontrado.</div>
+        <div className={styles.empty}>{t('admin.feedback.noResults')}</div>
       ) : (
         <div className={styles.list}>
           {filtered.map(f => (
             <div key={f.id} className={`${styles.item} ${!f.lida ? styles.unread : ''}`}>
               <div className={styles.itemHeader}>
                 <div className={styles.itemMeta}>
-                  <span className={`${styles.tipoBadge} ${tipoClass(f.tipo)}`}>{f.tipo}</span>
+                  <span className={`${styles.tipoBadge} ${tipoClass(f.tipo)}`}>{tipoLabel(t, f.tipo)}</span>
                   <span className={styles.itemUser}>
                     {f.lawyers?.full_name ?? f.lawyers?.email ?? '—'}
                     {f.lawyers?.firm_name && <span className={styles.itemFirm}> · {f.lawyers.firm_name}</span>}
@@ -111,13 +119,13 @@ export default function AdminFeedback() {
                 </div>
                 <div className={styles.itemActions}>
                   <span className={styles.itemDate}>
-                    {new Date(f.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    {new Date(f.created_at).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' })}
                   </span>
                   <button
                     className={`${styles.lidaBtn} ${f.lida ? styles.lidaBtnLida : ''}`}
                     disabled={marking === f.id}
                     onClick={() => toggleLida(f.id, f.lida)}
-                    title={f.lida ? 'Marcar como não lido' : 'Marcar como lido'}
+                    title={f.lida ? t('admin.feedback.markUnread') : t('admin.feedback.markRead')}
                   >
                     {f.lida ? (
                       <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
@@ -129,7 +137,7 @@ export default function AdminFeedback() {
                         <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 0 1 0-1.186A10.004 10.004 0 0 1 10 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0 1 10 17c-4.257 0-7.893-2.66-9.336-6.41ZM14 10a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" clipRule="evenodd"/>
                       </svg>
                     )}
-                    {f.lida ? 'Lido' : 'Marcar lido'}
+                    {f.lida ? t('admin.feedback.read') : t('admin.feedback.markReadShort')}
                   </button>
                 </div>
               </div>

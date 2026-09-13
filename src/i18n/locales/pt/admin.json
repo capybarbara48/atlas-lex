@@ -4,6 +4,7 @@
     "users": "Usuários",
     "feedback": "Feedback",
     "tickets": "Suporte",
+    "teamInvites": "Equipe",
     "backToApp": "Voltar ao app"
   },
   "role": {
@@ -108,5 +109,46 @@
     "replyHint": "⌘ + Enter para enviar",
     "sending": "Enviando…",
     "reply": "Responder"
+  },
+  "teamInvites": {
+    "title": "Convites de Equipe",
+    "pendingBadge_one": "{{count}} pendente",
+    "pendingBadge_other": "{{count}} pendentes",
+    "subtitle_one": "{{count}} convite no total",
+    "subtitle_other": "{{count}} convites no total",
+    "empty": "Nenhum convite encontrado.",
+    "loadError": "Erro ao carregar convites.",
+    "approveError": "Erro ao aprovar convite.",
+    "approveSuccess": "Convite aprovado. O responsável pode agora orientar o membro a se cadastrar.",
+    "rejectConfirm": "Rejeitar e excluir este convite?",
+    "rejectError": "Erro ao rejeitar convite.",
+    "rejectSuccess": "Convite rejeitado e removido.",
+    "filter": {
+      "pendingAdmin": "Aguardando aprovação",
+      "pendingInvite": "Aprovados",
+      "active": "Ativos",
+      "disabled": "Desativados",
+      "all": "Todos"
+    },
+    "status": {
+      "pending_admin": "Aguardando aprovação",
+      "pending_invite": "Aprovado — aguardando cadastro",
+      "active": "Ativo",
+      "disabled": "Desativado"
+    },
+    "role": {
+      "advogado": "Advogado",
+      "estagiario": "Estagiário"
+    },
+    "table": {
+      "member": "Membro",
+      "firm": "Escritório",
+      "role": "Função",
+      "status": "Status",
+      "date": "Data"
+    },
+    "approve": "Aprovar",
+    "reject": "Rejeitar",
+    "remove": "Remover"
   }
 }

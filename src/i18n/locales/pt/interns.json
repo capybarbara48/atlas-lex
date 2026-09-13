@@ -21,10 +21,28 @@
   "addMember": "+ Adicionar membro",
   "editMember": "Editar membro",
   "addMemberModal": "Adicionar membro à equipe",
+  "changeAssigneeTooltip": "Clique para mudar responsável",
   "emptySetup": {
     "title": "Nenhum membro cadastrado",
     "text": "Adicione membros da equipe para atribuir tarefas e acompanhar a produtividade de cada pessoa.",
-    "button": "+ Adicionar primeiro membro"
+    "button": "+ Adicionar primeiro membro",
+    "textWithPath": "Adicione os nomes da sua equipe em <0>Configurações → Responsáveis</0> para começar a atribuir tarefas e visualizar a produtividade de cada membro."
+  },
+  "history": {
+    "title": "Histórico de Atividade",
+    "empty": "Nenhuma atividade registrada neste mês.",
+    "task": "Tarefa",
+    "despacho": "Despacho"
+  },
+  "pdf": {
+    "monthTooltip": "Mês de referência do relatório",
+    "allMembers": "Todos os membros",
+    "memberCount_one": "{{count}} membro",
+    "memberCount_other": "{{count}} membros",
+    "selectAll": "Selecionar todos",
+    "clear": "Limpar",
+    "generate": "Gerar PDF",
+    "selectMemberError": "Selecione ao menos um membro da equipe."
   },
   "page": {
     "title": "Equipe",

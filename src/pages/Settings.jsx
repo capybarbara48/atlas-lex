@@ -90,9 +90,10 @@ function Field({ label, hint, children }) {
 
 /* ── Header preview ─────────────────────────────────────────────── */
 function HeaderPreview({ firmName, accent }) {
+  const { t } = useTranslation()
   return (
     <div className={styles.preview}>
-      <div className={styles.previewLabel}>Pré-visualização do cabeçalho</div>
+      <div className={styles.previewLabel}>{t('settings.branding.previewLabel', 'Pré-visualização do cabeçalho')}</div>
       <div className={styles.previewHeader} style={{ background: accent }}>
         <div className={styles.previewLeft}>
           <div className={styles.previewLogoMark} style={{ border: '1px solid rgba(255,255,255,0.3)' }}>
@@ -111,17 +112,20 @@ function HeaderPreview({ firmName, accent }) {
 }
 
 /* ── Team Members Section ────────────────────────────────────────── */
-const ROLE_LABELS = { advogado: 'Advogado', estagiario: 'Estagiário' }
-const ROLE_CAPS   = { advogado: 3, estagiario: 3 }
-
-const STATUS_INFO = {
-  pending_admin:  { label: 'Aguardando aprovação', cls: 'st-gold'  },
-  pending_invite: { label: 'Aprovado — aguardando cadastro', cls: 'st-teal' },
-  active:         { label: 'Ativo', cls: 'st-green' },
-  disabled:       { label: 'Desativado', cls: 'st-gray' },
-}
+const ROLE_CAPS = { advogado: 3, estagiario: 3 }
 
 function TeamMembersSection({ lawyerId, session, responsaveis = [] }) {
+  const { t } = useTranslation()
+  const ROLE_LABELS = {
+    advogado:   t('settings.team.roleLabel.advogado', 'Advogado'),
+    estagiario: t('settings.team.roleLabel.estagiario', 'Estagiário'),
+  }
+  const STATUS_INFO = {
+    pending_admin:  { label: t('settings.team.status.pendingAdmin', 'Aguardando aprovação'), cls: 'st-gold'  },
+    pending_invite: { label: t('settings.team.status.pendingInvite', 'Aprovado — aguardando cadastro'), cls: 'st-teal' },
+    active:         { label: t('settings.team.status.active', 'Ativo'), cls: 'st-green' },
+    disabled:       { label: t('settings.team.status.disabled', 'Desativado'), cls: 'st-gray' },
+  }
   const [members,     setMembers]     = useState([])
   const [loading,     setLoading]     = useState(true)
   const [saving,      setSaving]      = useState(false)
@@ -144,7 +148,10 @@ function TeamMembersSection({ lawyerId, session, responsaveis = [] }) {
     setError('')
     const cap = ROLE_CAPS[role]
     if (countByRole(role) >= cap) {
-      setError(`Limite de ${cap} ${ROLE_LABELS[role].toLowerCase()}s atingido.`)
+      setError(t('settings.team.limitReached', 'Limite de {{cap}} {{role}} atingido.', {
+        cap,
+        role: ROLE_LABELS[role].toLowerCase() + 's',
+      }))
       return
     }
     setSaving(true)
@@ -162,7 +169,7 @@ function TeamMembersSection({ lawyerId, session, responsaveis = [] }) {
   }
 
   async function handleRemove(id) {
-    if (!window.confirm('Remover este membro? O acesso será revogado imediatamente.')) return
+    if (!window.confirm(t('settings.team.removeConfirm', 'Remover este membro? O acesso será revogado imediatamente.'))) return
     const { error } = await supabase.from('team_members').delete().eq('id', id)
     if (error) { setError(error.message); return }
     setMembers(m => m.filter(x => x.id !== id))
@@ -171,9 +178,9 @@ function TeamMembersSection({ lawyerId, session, responsaveis = [] }) {
   return (
     <div>
       {loading
-        ? <div style={{ fontSize: '0.8rem', color: 'var(--text-3)' }}>Carregando…</div>
+        ? <div style={{ fontSize: '0.8rem', color: 'var(--text-3)' }}>{t('settings.team.loading', 'Carregando…')}</div>
         : members.length === 0
-          ? <div style={{ fontSize: '0.82rem', color: 'var(--text-3)', marginBottom: '1rem' }}>Nenhum membro convidado ainda.</div>
+          ? <div style={{ fontSize: '0.82rem', color: 'var(--text-3)', marginBottom: '1rem' }}>{t('settings.team.empty', 'Nenhum membro convidado ainda.')}</div>
           : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.25rem' }}>
               {members.map(m => {
@@ -192,14 +199,14 @@ function TeamMembersSection({ lawyerId, session, responsaveis = [] }) {
                       </div>
                       {m.status === 'pending_invite' && (
                         <div style={{ fontSize: '0.72rem', color: 'var(--accent)', marginTop: '0.3rem', fontWeight: 500 }}>
-                          Instrua o membro a se cadastrar em <strong>atlas-lex.com</strong> com o e-mail <strong>{m.invited_email}</strong>
+                          {t('settings.team.inviteInstructionsPre', 'Instrua o membro a se cadastrar em')} <strong>atlas-lex.com</strong> {t('settings.team.inviteInstructionsMid', 'com o e-mail')} <strong>{m.invited_email}</strong>
                         </div>
                       )}
                     </div>
                     <button
                       onClick={() => handleRemove(m.id)}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', fontSize: '0.75rem', padding: '0.25rem', borderRadius: 4, flexShrink: 0 }}
-                      title="Remover membro"
+                      title={t('settings.team.removeTitle', 'Remover membro')}
                     >✕</button>
                   </div>
                 )
@@ -210,45 +217,48 @@ function TeamMembersSection({ lawyerId, session, responsaveis = [] }) {
 
       <form onSubmit={handleAdd} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto auto', gap: '0.65rem', alignItems: 'end' }}>
         <div>
-          <label style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: '0.3rem' }}>Nome completo</label>
+          <label style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: '0.3rem' }}>{t('settings.team.form.fullName', 'Nome completo')}</label>
           <input
             style={{ width: '100%', background: 'var(--bg)', border: 'var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.5rem 0.75rem', fontSize: '0.875rem', color: 'var(--text)', fontFamily: 'inherit' }}
-            value={name} onChange={e => setName(e.target.value)} required placeholder="Ex: Ana Souza" />
+            value={name} onChange={e => setName(e.target.value)} required placeholder={t('settings.team.form.fullNamePlaceholder', 'Ex: Ana Souza')} />
         </div>
         <div>
-          <label style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: '0.3rem' }}>E-mail</label>
+          <label style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: '0.3rem' }}>{t('settings.team.form.email', 'E-mail')}</label>
           <input
             type="email"
             style={{ width: '100%', background: 'var(--bg)', border: 'var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.5rem 0.75rem', fontSize: '0.875rem', color: 'var(--text)', fontFamily: 'inherit' }}
-            value={email} onChange={e => setEmail(e.target.value)} required placeholder="ana@escritorio.com" />
+            value={email} onChange={e => setEmail(e.target.value)} required placeholder={t('settings.team.form.emailPlaceholder', 'ana@escritorio.com')} />
         </div>
         <div>
-          <label style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: '0.3rem' }}>Responsável vinculado</label>
+          <label style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: '0.3rem' }}>{t('settings.team.form.linkedResp', 'Responsável vinculado')}</label>
           <select
             style={{ width: '100%', background: 'var(--bg)', border: 'var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.5rem 0.75rem', fontSize: '0.875rem', color: 'var(--text)', fontFamily: 'inherit', cursor: 'pointer' }}
             value={linkedResp} onChange={e => setLinkedResp(e.target.value)}>
-            <option value="">— Nenhum —</option>
+            <option value="">{t('settings.team.form.linkedRespNone', '— Nenhum —')}</option>
             {responsaveis.map(r => <option key={r} value={r}>{r}</option>)}
           </select>
         </div>
         <div>
-          <label style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: '0.3rem' }}>Função</label>
+          <label style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: '0.3rem' }}>{t('settings.team.form.role', 'Função')}</label>
           <select
             style={{ background: 'var(--bg)', border: 'var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.5rem 0.75rem', fontSize: '0.875rem', color: 'var(--text)', fontFamily: 'inherit', cursor: 'pointer' }}
             value={role} onChange={e => setRole(e.target.value)}>
-            <option value="estagiario">Estagiário</option>
-            <option value="advogado">Advogado</option>
+            <option value="estagiario">{t('settings.team.form.roleEstagiario', 'Estagiário')}</option>
+            <option value="advogado">{t('settings.team.form.roleAdvogado', 'Advogado')}</option>
           </select>
         </div>
         <button
           type="submit" disabled={saving || !name.trim() || !email.trim()}
           style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', padding: '0.5rem 1rem', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', opacity: (saving || !name.trim() || !email.trim()) ? 0.5 : 1, whiteSpace: 'nowrap' }}
-        >{saving ? 'Salvando…' : '+ Convidar'}</button>
+        >{saving ? t('common.saving', 'Salvando…') : t('settings.team.inviteButton', '+ Convidar')}</button>
       </form>
 
       <div style={{ marginTop: '0.75rem', fontSize: '0.72rem', color: 'var(--text-3)' }}>
-        {countByRole('advogado')}/{ROLE_CAPS.advogado} advogados · {countByRole('estagiario')}/{ROLE_CAPS.estagiario} estagiários
-        &nbsp;·&nbsp;Convites ficam pendentes até aprovação pelo administrador Atlas Lex.
+        {t('settings.team.countNote', '{{advCount}}/{{advCap}} advogados · {{estCount}}/{{estCap}} estagiários', {
+          advCount: countByRole('advogado'), advCap: ROLE_CAPS.advogado,
+          estCount: countByRole('estagiario'), estCap: ROLE_CAPS.estagiario,
+        })}
+        &nbsp;·&nbsp;{t('settings.team.inviteNote', 'Convites ficam pendentes até aprovação pelo administrador Atlas Lex.')}
       </div>
 
       {error && <div style={{ marginTop: '0.75rem', padding: '0.5rem 0.75rem', background: 'rgba(220,38,38,0.07)', border: '1px solid rgba(220,38,38,0.25)', borderRadius: 'var(--radius-sm)', fontSize: '0.82rem', color: '#dc2626' }}>{error}</div>}
@@ -346,9 +356,9 @@ export default function Settings() {
       .update({ full_name: fullName, oab_number: oabNumber })
       .eq('id', session.user.id)
     setSaving(false)
-    if (error) { setError('Erro ao salvar perfil: ' + error.message); return }
+    if (error) { setError(t('settings.profile.saveError', 'Erro ao salvar perfil: {{error}}', { error: error.message })); return }
     await refreshLawyer()
-    setSuccess('Perfil atualizado com sucesso!')
+    setSuccess(t('settings.profile.saveSuccess', 'Perfil atualizado com sucesso!'))
     setTimeout(() => setSuccess(''), 3000)
   }
 
@@ -365,9 +375,9 @@ export default function Settings() {
       })
       .eq('id', session.user.id)
     setSaving(false)
-    if (error) { setError('Erro ao salvar marca: ' + error.message); return }
+    if (error) { setError(t('settings.branding.saveError', 'Erro ao salvar marca: {{error}}', { error: error.message })); return }
     await refreshLawyer()
-    setSuccess('Identidade visual atualizada!')
+    setSuccess(t('settings.branding.saveSuccess', 'Identidade visual atualizada!'))
     setTimeout(() => setSuccess(''), 3000)
   }
 
@@ -380,7 +390,7 @@ export default function Settings() {
   function handleResetPrefs() {
     resetPreferences(lawyer)
     setPrefs(loadPreferences(lawyer))
-    setSuccess('Preferências redefinidas para o padrão!')
+    setSuccess(t('settings.display.resetSuccess', 'Preferências redefinidas para o padrão!'))
     setTimeout(() => setSuccess(''), 3000)
   }
 
@@ -399,9 +409,9 @@ export default function Settings() {
       }})
       .eq('id', session.user.id)
     setListSaving(false)
-    if (error) { setError('Erro ao salvar listas: ' + error.message); return }
+    if (error) { setError(t('settings.lists.saveError', 'Erro ao salvar listas: {{error}}', { error: error.message })); return }
     await refreshLawyer()
-    setSuccess('Listas atualizadas com sucesso!')
+    setSuccess(t('settings.lists.saveSuccess', 'Listas atualizadas com sucesso!'))
     setTimeout(() => setSuccess(''), 3000)
   }
 
@@ -414,7 +424,7 @@ export default function Settings() {
       .from('lawyers')
       .update({ preferences: { ...existing, language: lang } })
       .eq('id', session.user.id)
-    if (error) { i18n.changeLanguage(previous); setError('Erro ao salvar idioma: ' + error.message); return }
+    if (error) { i18n.changeLanguage(previous); setError(t('settings.language.saveError', 'Erro ao salvar idioma: {{error}}', { error: error.message })); return }
     await refreshLawyer()
   }
 
@@ -434,9 +444,9 @@ export default function Settings() {
       }})
       .eq('id', session.user.id)
     setFontSaving(false)
-    if (error) { setError('Erro ao salvar tipografia: ' + error.message); return }
+    if (error) { setError(t('settings.typography.saveError', 'Erro ao salvar tipografia: {{error}}', { error: error.message })); return }
     await refreshLawyer()
-    setSuccess('Tipografia salva!')
+    setSuccess(t('settings.typography.saveSuccess', 'Tipografia salva!'))
     setTimeout(() => setSuccess(''), 3000)
   }
 
@@ -451,7 +461,7 @@ export default function Settings() {
     const raw = newQuotaLitis.trim().replace('%', '')
     const num = parseFloat(raw)
     if (isNaN(num) || num < 0 || num > 100) {
-      setError('Percentual inválido. Digite um número entre 0 e 100 (ex: 30).')
+      setError(t('settings.lists.quotaLitis.invalidPercent', 'Percentual inválido. Digite um número entre 0 e 100 (ex: 30).'))
       setTimeout(() => setError(''), 3000)
       return
     }
@@ -479,14 +489,14 @@ export default function Settings() {
     const v = newArea.trim()
     if (!v || areas.some(a => a.value.toLowerCase() === v.toLowerCase())) return
     const { error } = await addArea(v)
-    if (error) { setError('Erro ao adicionar área: ' + error.message); return }
+    if (error) { setError(t('settings.lists.areas.addError', 'Erro ao adicionar área: {{error}}', { error: error.message })); return }
     setNewArea('')
   }
 
   return (
     <PageShell
-      title="Configurações"
-      subtitle="Personalize o Atlas Adv para a identidade visual do seu escritório em apenas 3 minutos. Configure opções, tribunais e responsáveis do seu escritório."
+      title={t('settings.pageTitle', 'Configurações')}
+      subtitle={t('settings.pageSubtitle', 'Personalize o Atlas Adv para a identidade visual do seu escritório em apenas 3 minutos. Configure opções, tribunais e responsáveis do seu escritório.')}
     >
       <div className={styles.layout}>
 
@@ -496,30 +506,30 @@ export default function Settings() {
 
         {/* ── Perfil ── */}
         <Section
-          title="Perfil do Advogado"
-          subtitle="Suas informações pessoais e profissionais"
+          title={t('settings.profile.title', 'Perfil do Advogado')}
+          subtitle={t('settings.profile.subtitle', 'Suas informações pessoais e profissionais')}
         >
           <form onSubmit={handleSaveProfile} className={styles.form}>
             <div className={styles.formGrid}>
-              <Field label="Nome completo">
+              <Field label={t('settings.profile.fullName', 'Nome completo')}>
                 <input
                   className={styles.input}
                   type="text"
                   value={fullName}
                   onChange={e => setFullName(e.target.value)}
-                  placeholder="Dr. Elcimar Reis"
+                  placeholder={t('settings.profile.fullNamePlaceholder', 'Dr. Elcimar Reis')}
                 />
               </Field>
-              <Field label="Número OAB" hint="Ex: 123456/SP">
+              <Field label={t('settings.profile.oabNumber', 'Número OAB')} hint={t('settings.profile.oabHint', 'Ex: 123456/SP')}>
                 <input
                   className={styles.input}
                   type="text"
                   value={oabNumber}
                   onChange={e => setOabNumber(e.target.value)}
-                  placeholder="123456/SP"
+                  placeholder={t('settings.profile.oabPlaceholder', '123456/SP')}
                 />
               </Field>
-              <Field label="E-mail" hint="Gerenciado pelo Google — não editável">
+              <Field label={t('settings.profile.email', 'E-mail')} hint={t('settings.profile.emailHint', 'Gerenciado pelo Google — não editável')}>
                 <input
                   className={styles.input}
                   type="email"
@@ -531,7 +541,7 @@ export default function Settings() {
             </div>
             <div className={styles.formFooter}>
               <button type="submit" className={styles.btnSave} disabled={saving}>
-                {saving ? 'Salvando…' : 'Salvar perfil'}
+                {saving ? t('common.saving', 'Salvando…') : t('settings.profile.saveButton', 'Salvar perfil')}
               </button>
             </div>
           </form>
@@ -539,28 +549,28 @@ export default function Settings() {
 
         {/* ── Identidade Visual ── */}
         <Section
-          title="Identidade Visual"
-          subtitle="Cada advogado tem sua própria marca — logo, nome e cor de destaque"
+          title={t('settings.branding.title', 'Identidade Visual')}
+          subtitle={t('settings.branding.subtitle', 'Cada advogado tem sua própria marca — logo, nome e cor de destaque')}
         >
           <HeaderPreview firmName={firmName} accent={accent} />
 
           <form onSubmit={handleSaveBranding} className={styles.form}>
             <div className={styles.formGrid}>
-              <Field label="Nome do escritório" hint="Aparece no cabeçalho de todas as páginas">
+              <Field label={t('settings.branding.firmName', 'Nome do escritório')} hint={t('settings.branding.firmNameHint', 'Aparece no cabeçalho de todas as páginas')}>
                 <input
                   className={styles.input}
                   type="text"
                   value={firmName}
                   onChange={e => setFirmName(e.target.value)}
-                  placeholder="Reis Advocacia"
+                  placeholder={t('settings.branding.firmNamePlaceholder', 'Reis Advocacia')}
                 />
               </Field>
-              <Field label="Logotipo" hint="PNG, JPG, WebP ou SVG · máx. 2 MB">
+              <Field label={t('settings.branding.logo', 'Logotipo')} hint={t('settings.branding.logoHint', 'PNG, JPG, WebP ou SVG · máx. 2 MB')}>
                 <LogoUpload value={logoUrl} onChange={setLogoUrl} />
               </Field>
             </div>
 
-            <Field label="Cor de destaque" hint="Usada no cabeçalho, botões e elementos ativos">
+            <Field label={t('settings.branding.accentColor', 'Cor de destaque')} hint={t('settings.branding.accentHint', 'Usada no cabeçalho, botões e elementos ativos')}>
               <div className={styles.colorPicker}>
                 <div className={styles.presetColors}>
                   {PRESET_COLORS.map(c => (
@@ -580,7 +590,7 @@ export default function Settings() {
                     className={styles.colorInput}
                     value={accent}
                     onChange={e => setAccent(e.target.value)}
-                    title="Cor personalizada"
+                    title={t('settings.branding.customColorTitle', 'Cor personalizada')}
                   />
                   <div className={styles.hexInputWrap}>
                     <span className={styles.hexDot} style={{ background: accent }} />
@@ -602,7 +612,7 @@ export default function Settings() {
                     />
                   </div>
                   <span className={styles.colorDarkPreview} style={{ background: darken(accent) }}>
-                    Variante escura
+                    {t('settings.branding.darkVariant', 'Variante escura')}
                   </span>
                 </div>
               </div>
@@ -610,7 +620,7 @@ export default function Settings() {
 
             <div className={styles.formFooter}>
               <button type="submit" className={styles.btnSave} disabled={saving}>
-                {saving ? 'Salvando…' : 'Salvar identidade visual'}
+                {saving ? t('common.saving', 'Salvando…') : t('settings.branding.saveButton', 'Salvar identidade visual')}
               </button>
             </div>
           </form>
@@ -618,15 +628,15 @@ export default function Settings() {
 
         {/* ── Menu de Navegação ── */}
         <Section
-          title="Menu de Navegação"
-          subtitle="Escolha como o menu principal aparece no sistema. Alterado imediatamente."
+          title={t('settings.nav.title', 'Menu de Navegação')}
+          subtitle={t('settings.nav.subtitle', 'Escolha como o menu principal aparece no sistema. Alterado imediatamente.')}
         >
           <div className={styles.navModeGrid}>
             {[
               {
                 value: 'sidebar',
-                label: 'Lateral Esquerdo',
-                sub: 'Recolhe ao afastar o mouse',
+                label: t('settings.nav.sidebar.label', 'Lateral Esquerdo'),
+                sub: t('settings.nav.sidebar.sub', 'Recolhe ao afastar o mouse'),
                 preview: (
                   <div className={styles.navPreview}>
                     <div className={styles.navPreviewSidebar}>
@@ -640,8 +650,8 @@ export default function Settings() {
               },
               {
                 value: 'top',
-                label: 'Barra Superior',
-                sub: 'Estilo abas do Chrome',
+                label: t('settings.nav.top.label', 'Barra Superior'),
+                sub: t('settings.nav.top.sub', 'Estilo abas do Chrome'),
                 preview: (
                   <div className={styles.navPreview} style={{ flexDirection: 'column' }}>
                     <div className={styles.navPreviewTop}>
@@ -655,8 +665,8 @@ export default function Settings() {
               },
               {
                 value: 'bottom',
-                label: 'Dock Inferior',
-                sub: 'Reaparece ao aproximar o mouse',
+                label: t('settings.nav.bottom.label', 'Dock Inferior'),
+                sub: t('settings.nav.bottom.sub', 'Reaparece ao aproximar o mouse'),
                 preview: (
                   <div className={styles.navPreview} style={{ flexDirection: 'column' }}>
                     <div className={styles.navPreviewContent} style={{ flex: 1 }}>
@@ -705,19 +715,23 @@ export default function Settings() {
 
         {/* ── Preferências ── */}
         <Section
-          title="Preferências de Exibição"
-          subtitle="Personalize como o conteúdo é apresentado. Salvo localmente neste dispositivo."
+          title={t('settings.display.title', 'Preferências de Exibição')}
+          subtitle={t('settings.display.subtitle', 'Personalize como o conteúdo é apresentado. Salvo localmente neste dispositivo.')}
         >
           <div className={styles.prefGrid}>
 
             {/* Density */}
             <div className={styles.prefRow}>
               <div className={styles.prefRowLabel}>
-                <span className={styles.prefLabel}>Densidade das listas</span>
-                <span className={styles.prefSub}>Controla o espaçamento em tabelas e listas</span>
+                <span className={styles.prefLabel}>{t('settings.display.density.label', 'Densidade das listas')}</span>
+                <span className={styles.prefSub}>{t('settings.display.density.sub', 'Controla o espaçamento em tabelas e listas')}</span>
               </div>
               <div className={styles.prefOptions}>
-                {[{ v: 'compacto', l: 'Compacto' }, { v: 'normal', l: 'Normal' }, { v: 'espaçoso', l: 'Espaçoso' }].map(({ v, l }) => (
+                {[
+                  { v: 'compacto', l: t('settings.display.density.compact', 'Compacto') },
+                  { v: 'normal',   l: t('settings.display.density.normal', 'Normal') },
+                  { v: 'espaçoso', l: t('settings.display.density.spacious', 'Espaçoso') },
+                ].map(({ v, l }) => (
                   <button key={v} type="button"
                     className={`${styles.prefBtn} ${(prefs.density ?? 'normal') === v ? styles.prefBtnActive : ''}`}
                     onClick={() => handlePrefChange('density', v)}
@@ -729,11 +743,14 @@ export default function Settings() {
             {/* Task sort */}
             <div className={styles.prefRow}>
               <div className={styles.prefRowLabel}>
-                <span className={styles.prefLabel}>Ordenação padrão de tarefas</span>
-                <span className={styles.prefSub}>Aplicado ao abrir a página de Tarefas</span>
+                <span className={styles.prefLabel}>{t('settings.display.taskSort.label', 'Ordenação padrão de tarefas')}</span>
+                <span className={styles.prefSub}>{t('settings.display.taskSort.sub', 'Aplicado ao abrir a página de Tarefas')}</span>
               </div>
               <div className={styles.prefOptions}>
-                {[{ v: 'due_date', l: 'Por vencimento' }, { v: 'priority', l: 'Por prioridade' }].map(({ v, l }) => (
+                {[
+                  { v: 'due_date', l: t('settings.display.taskSort.dueDate', 'Por vencimento') },
+                  { v: 'priority', l: t('settings.display.taskSort.priority', 'Por prioridade') },
+                ].map(({ v, l }) => (
                   <button key={v} type="button"
                     className={`${styles.prefBtn} ${(prefs.task_sort ?? 'due_date') === v ? styles.prefBtnActive : ''}`}
                     onClick={() => handlePrefChange('task_sort', v)}
@@ -745,15 +762,15 @@ export default function Settings() {
             {/* Dashboard cards */}
             <div className={styles.prefRow}>
               <div className={styles.prefRowLabel}>
-                <span className={styles.prefLabel}>Cards do Painel</span>
-                <span className={styles.prefSub}>Escolha quais cards aparecem no dashboard</span>
+                <span className={styles.prefLabel}>{t('settings.display.dashboardCards.label', 'Cards do Painel')}</span>
+                <span className={styles.prefSub}>{t('settings.display.dashboardCards.sub', 'Escolha quais cards aparecem no dashboard')}</span>
               </div>
               <div className={styles.prefOptions} style={{ flexWrap: 'wrap', gap: '0.4rem' }}>
                 {[
-                  { v: 'show_casos',      l: 'Casos' },
-                  { v: 'show_tarefas',    l: 'Tarefas' },
-                  { v: 'show_financeiro', l: 'Financeiro' },
-                  { v: 'show_atrasadas',  l: 'Atrasadas' },
+                  { v: 'show_casos',      l: t('settings.display.dashboardCards.cases', 'Casos') },
+                  { v: 'show_tarefas',    l: t('settings.display.dashboardCards.tasks', 'Tarefas') },
+                  { v: 'show_financeiro', l: t('settings.display.dashboardCards.financial', 'Financeiro') },
+                  { v: 'show_atrasadas',  l: t('settings.display.dashboardCards.overdue', 'Atrasadas') },
                 ].map(({ v, l }) => {
                   const on = prefs[v] !== false
                   return (
@@ -769,13 +786,13 @@ export default function Settings() {
             {/* Day mode pill */}
             <div className={styles.prefRow} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '0.75rem' }}>
               <div className={styles.prefRowLabel}>
-                <span className={styles.prefLabel}>Etiqueta de modo do dia</span>
-                <span className={styles.prefSub}>Exibe indicador "Virtual" ou "Presencial" nos cards e mini-cards do Espaço de Trabalho</span>
+                <span className={styles.prefLabel}>{t('settings.display.dayMode.label', 'Etiqueta de modo do dia')}</span>
+                <span className={styles.prefSub}>{t('settings.display.dayMode.sub', 'Exibe indicador "Virtual" ou "Presencial" nos cards e mini-cards do Espaço de Trabalho')}</span>
               </div>
               <div className={styles.dayModePreviewGrid}>
                 {[
-                  { v: true,  label: 'Ativado',   caption: 'Com etiqueta de modo' },
-                  { v: false, label: 'Desativado', caption: 'Sem etiqueta de modo' },
+                  { v: true,  label: t('settings.display.dayMode.enabled', 'Ativado'),   caption: t('settings.display.dayMode.enabledCaption', 'Com etiqueta de modo') },
+                  { v: false, label: t('settings.display.dayMode.disabled', 'Desativado'), caption: t('settings.display.dayMode.disabledCaption', 'Sem etiqueta de modo') },
                 ].map(({ v, label, caption }) => {
                   const active = (prefs.show_day_mode !== false) === v
                   return (
@@ -798,7 +815,7 @@ export default function Settings() {
                                 <rect x="5" y="13" width="6" height="2" rx="1"/>
                                 <rect x="3" y="15" width="10" height="1.5" rx="0.75"/>
                               </svg>
-                              Virtual
+                              {t('settings.display.dayMode.virtualLabel', 'Virtual')}
                             </span>
                           )}
                         </div>
@@ -819,22 +836,22 @@ export default function Settings() {
           </div>
           <div className={styles.formFooter}>
             <button type="button" className={styles.btnReset} onClick={handleResetPrefs}>
-              Redefinir preferências
+              {t('settings.display.resetButton', 'Redefinir preferências')}
             </button>
-            <span className={styles.prefNote}>Preferências salvas localmente neste dispositivo</span>
+            <span className={styles.prefNote}>{t('settings.display.resetNote', 'Preferências salvas localmente neste dispositivo')}</span>
           </div>
         </Section>
 
         {/* ── Tipografia ── */}
         <Section
-          title="Tipografia"
-          subtitle="Escolha as fontes do seu escritório. Alterações aplicadas em tempo real."
+          title={t('settings.typography.title', 'Tipografia')}
+          subtitle={t('settings.typography.subtitle', 'Escolha as fontes do seu escritório. Alterações aplicadas em tempo real.')}
         >
           <div className={styles.prefGrid}>
 
             {/* Custom font upload */}
             <div style={{ marginBottom: '0.5rem' }}>
-              <div className={styles.listBlockTitle} style={{ marginBottom: '0.5rem' }}>Sua fonte personalizada</div>
+              <div className={styles.listBlockTitle} style={{ marginBottom: '0.5rem' }}>{t('settings.typography.customFontTitle', 'Sua fonte personalizada')}</div>
               <FontUpload
                 customFont={customFont}
                 onFont={f => setCustomFont(f)}
@@ -850,11 +867,14 @@ export default function Settings() {
             {/* Font scope */}
             <div className={styles.prefRow}>
               <div className={styles.prefRowLabel}>
-                <span className={styles.prefLabel}>Aplicar em</span>
-                <span className={styles.prefSub}>Todo o sistema ou somente em documentos PDF</span>
+                <span className={styles.prefLabel}>{t('settings.typography.applyTo', 'Aplicar em')}</span>
+                <span className={styles.prefSub}>{t('settings.typography.applyToSub', 'Todo o sistema ou somente em documentos PDF')}</span>
               </div>
               <div className={styles.prefOptions}>
-                {[{ v: 'all', l: 'Todo o sistema' }, { v: 'pdf_only', l: 'Só em PDF' }].map(({ v, l }) => (
+                {[
+                  { v: 'all',      l: t('settings.typography.applyToAll', 'Todo o sistema') },
+                  { v: 'pdf_only', l: t('settings.typography.applyToPdfOnly', 'Só em PDF') },
+                ].map(({ v, l }) => (
                   <button key={v} type="button"
                     className={`${styles.prefBtn} ${fontScope === v ? styles.prefBtnActive : ''}`}
                     onClick={() => setFontScope(v)}
@@ -865,7 +885,7 @@ export default function Settings() {
 
             {/* Heading font */}
             <div className={styles.prefRow} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '0.5rem' }}>
-              <span className={styles.prefLabel}>Fonte principal (títulos)</span>
+              <span className={styles.prefLabel}>{t('settings.typography.headingFont', 'Fonte principal (títulos)')}</span>
               <div className={styles.prefOptions} style={{ flexWrap: 'wrap' }}>
                 {[...HEADING_FONTS, ...(customFont ? [{ family: 'CustomFont', label: customFont.displayName }] : [])].map(f => (
                   <button key={f.label} type="button"
@@ -879,7 +899,7 @@ export default function Settings() {
 
             {/* Body font */}
             <div className={styles.prefRow} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '0.5rem' }}>
-              <span className={styles.prefLabel}>Fonte secundária (texto)</span>
+              <span className={styles.prefLabel}>{t('settings.typography.bodyFont', 'Fonte secundária (texto)')}</span>
               <div className={styles.prefOptions} style={{ flexWrap: 'wrap' }}>
                 {[...BODY_FONTS, ...(customFont ? [{ family: 'CustomFont', label: customFont.displayName }] : [])].map(f => (
                   <button key={f.label} type="button"
@@ -893,7 +913,7 @@ export default function Settings() {
 
             {/* Mono font */}
             <div className={styles.prefRow} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '0.5rem' }}>
-              <span className={styles.prefLabel}>Fonte terciária (números, processos)</span>
+              <span className={styles.prefLabel}>{t('settings.typography.monoFont', 'Fonte terciária (números, processos)')}</span>
               <div className={styles.prefOptions} style={{ flexWrap: 'wrap' }}>
                 {[...MONO_FONTS, ...(customFont ? [{ family: 'CustomFont', label: customFont.displayName }] : [])].map(f => (
                   <button key={f.label} type="button"
@@ -908,13 +928,13 @@ export default function Settings() {
             {/* Preview */}
             <div style={{ background: 'var(--bg)', border: 'var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.875rem 1rem' }}>
               <div style={{ fontFamily: fontHeading && fontHeading !== 'CustomFont' ? `'${fontHeading}', serif` : fontHeading === 'CustomFont' ? "'CustomFont', serif" : 'inherit', fontSize: '1rem', fontWeight: 700, marginBottom: '0.3rem' }}>
-                Assessoria Jurídica Especializada
+                {t('settings.typography.previewTitle', 'Assessoria Jurídica Especializada')}
               </div>
               <div style={{ fontFamily: fontBody && fontBody !== 'CustomFont' ? `'${fontBody}', sans-serif` : fontBody === 'CustomFont' ? "'CustomFont', sans-serif" : 'inherit', fontSize: '0.78rem', color: 'var(--text-2)', marginBottom: '0.4rem' }}>
-                Atendemos famílias e empresas com comprometimento, ética e excelência jurídica.
+                {t('settings.typography.previewBody', 'Atendemos famílias e empresas com comprometimento, ética e excelência jurídica.')}
               </div>
               <div style={{ fontFamily: fontMono && fontMono !== 'CustomFont' ? `'${fontMono}', monospace` : fontMono === 'CustomFont' ? "'CustomFont', monospace" : 'monospace', fontSize: '0.7rem', color: 'var(--text-3)', borderTop: 'var(--border)', paddingTop: '0.35rem' }}>
-                Proc. nº 1234.567.2024.8.00
+                {t('settings.typography.previewMono', 'Proc. nº 1234.567.2024.8.00')}
               </div>
             </div>
 
@@ -922,21 +942,21 @@ export default function Settings() {
 
           <div className={styles.formFooter}>
             <button type="button" className={styles.btnSave} onClick={handleSaveFonts} disabled={fontSaving}>
-              {fontSaving ? 'Salvando…' : 'Salvar tipografia'}
+              {fontSaving ? t('settings.typography.saving', 'Salvando…') : t('settings.typography.saveButton', 'Salvar tipografia')}
             </button>
           </div>
         </Section>
 
         {/* ── Listas personalizáveis ── */}
         <Section
-          title="Listas Personalizáveis"
-          subtitle="Configure as opções disponíveis para todo o seu escritório. Essas opções aparecem nas propostas de honorários e no cadastramento de casos e clientes."
+          title={t('settings.lists.title', 'Listas Personalizáveis')}
+          subtitle={t('settings.lists.subtitle', 'Configure as opções disponíveis para todo o seu escritório. Essas opções aparecem nas propostas de honorários e no cadastramento de casos e clientes.')}
         >
           <div className={styles.listEditor}>
 
             {/* Tipos de serviço */}
             <div className={styles.listBlock}>
-              <span className={styles.listBlockTitle}>Tipos de serviço (Propostas)</span>
+              <span className={styles.listBlockTitle}>{t('settings.lists.serviceTypes.title', 'Tipos de serviço (Propostas)')}</span>
               <div className={styles.listItems}>
                 {serviceTypes.map(item => (
                   <span key={item} className={styles.listTag}>
@@ -945,7 +965,7 @@ export default function Settings() {
                       type="button"
                       className={styles.listTagDel}
                       onClick={() => setServiceTypes(prev => prev.filter(i => i !== item))}
-                      title="Remover"
+                      title={t('settings.lists.removeTitle', 'Remover')}
                     >×</button>
                   </span>
                 ))}
@@ -956,17 +976,17 @@ export default function Settings() {
                   value={newServiceType}
                   onChange={e => setNewServiceType(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addServiceType())}
-                  placeholder="Novo tipo de serviço…"
+                  placeholder={t('settings.lists.serviceTypes.placeholder', 'Novo tipo de serviço…')}
                 />
                 <button type="button" className={styles.btnListAdd} onClick={addServiceType}>
-                  Adicionar
+                  {t('common.add', 'Adicionar')}
                 </button>
               </div>
             </div>
 
             {/* Percentuais de quota-litis */}
             <div className={styles.listBlock}>
-              <span className={styles.listBlockTitle}>Percentuais de Quota-Litis</span>
+              <span className={styles.listBlockTitle}>{t('settings.lists.quotaLitis.title', 'Percentuais de Quota-Litis')}</span>
               <div className={styles.listItems}>
                 {quotaLitis.map(item => (
                   <span key={item} className={styles.listTag}>
@@ -975,7 +995,7 @@ export default function Settings() {
                       type="button"
                       className={styles.listTagDel}
                       onClick={() => setQuotaLitis(prev => prev.filter(i => i !== item))}
-                      title="Remover"
+                      title={t('settings.lists.removeTitle', 'Remover')}
                     >×</button>
                   </span>
                 ))}
@@ -986,17 +1006,17 @@ export default function Settings() {
                   value={newQuotaLitis}
                   onChange={e => setNewQuotaLitis(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addQuotaLitis())}
-                  placeholder="Ex: 40%"
+                  placeholder={t('settings.lists.quotaLitis.placeholder', 'Ex: 40%')}
                 />
                 <button type="button" className={styles.btnListAdd} onClick={addQuotaLitis}>
-                  Adicionar
+                  {t('common.add', 'Adicionar')}
                 </button>
               </div>
             </div>
 
             {/* Tribunais */}
             <div className={styles.listBlock}>
-              <span className={styles.listBlockTitle}>Tribunais — ative os grupos que seu escritório utiliza</span>
+              <span className={styles.listBlockTitle}>{t('settings.lists.tribunals.title', 'Tribunais — ative os grupos que seu escritório utiliza')}</span>
               <div className={styles.tribunaisGroups}>
                 {TRIBUNAIS_MASTER.map(group => {
                   const active = tribunaisActiveGroups.includes(group.key)
@@ -1017,7 +1037,7 @@ export default function Settings() {
                       </div>
                       <span className={styles.tribunaisGroupLabel}>{group.label}</span>
                       <span className={styles.tribunaisGroupStatus}>
-                        {active ? '✓ Ativo' : 'Inativo'}
+                        {active ? `✓ ${t('settings.lists.tribunals.active', 'Ativo')}` : t('settings.lists.tribunals.inactive', 'Inativo')}
                       </span>
                     </button>
                   )
@@ -1027,10 +1047,10 @@ export default function Settings() {
 
             {/* Áreas de Atuação */}
             <div className={styles.listBlock}>
-              <span className={styles.listBlockTitle}>Áreas de Atuação (Casos)</span>
+              <span className={styles.listBlockTitle}>{t('settings.lists.areas.title', 'Áreas de Atuação (Casos)')}</span>
               <div className={styles.listItems}>
                 {areas.length === 0
-                  ? <span style={{ fontSize: '0.78rem', color: 'var(--text-3)' }}>Nenhuma área cadastrada ainda.</span>
+                  ? <span style={{ fontSize: '0.78rem', color: 'var(--text-3)' }}>{t('settings.lists.areas.empty', 'Nenhuma área cadastrada ainda.')}</span>
                   : areas.map(item => (
                     <span key={item.id} className={styles.listTag}>
                       {item.value}
@@ -1038,7 +1058,7 @@ export default function Settings() {
                         type="button"
                         className={styles.listTagDel}
                         onClick={() => deleteArea(item.id)}
-                        title="Remover"
+                        title={t('settings.lists.removeTitle', 'Remover')}
                       >×</button>
                     </span>
                   ))
@@ -1050,20 +1070,20 @@ export default function Settings() {
                   value={newArea}
                   onChange={e => setNewArea(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddArea())}
-                  placeholder="Ex: Direito Digital…"
+                  placeholder={t('settings.lists.areas.placeholder', 'Ex: Direito Digital…')}
                 />
                 <button type="button" className={styles.btnListAdd} onClick={handleAddArea}>
-                  Adicionar
+                  {t('common.add', 'Adicionar')}
                 </button>
               </div>
             </div>
 
             {/* Responsáveis */}
             <div className={styles.listBlock}>
-              <span className={styles.listBlockTitle}>Responsáveis (Advogados / Estagiários)</span>
+              <span className={styles.listBlockTitle}>{t('settings.lists.responsibles.title', 'Responsáveis (Advogados / Estagiários)')}</span>
               <div className={styles.listItems}>
                 {responsaveis.length === 0
-                  ? <span style={{ fontSize: '0.78rem', color: 'var(--text-3)' }}>Nenhum cadastrado ainda.</span>
+                  ? <span style={{ fontSize: '0.78rem', color: 'var(--text-3)' }}>{t('settings.lists.responsibles.empty', 'Nenhum cadastrado ainda.')}</span>
                   : responsaveis.map(item => (
                     <span key={item} className={styles.listTag}>
                       {item}
@@ -1071,7 +1091,7 @@ export default function Settings() {
                         type="button"
                         className={styles.listTagDel}
                         onClick={() => setResponsaveis(prev => prev.filter(i => i !== item))}
-                        title="Remover"
+                        title={t('settings.lists.removeTitle', 'Remover')}
                       >×</button>
                     </span>
                   ))
@@ -1083,20 +1103,20 @@ export default function Settings() {
                   value={newResponsavel}
                   onChange={e => setNewResponsavel(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addResponsavel())}
-                  placeholder="Ex: Dr. Elcimar Reis"
+                  placeholder={t('settings.lists.responsibles.placeholder', 'Ex: Dr. Elcimar Reis')}
                 />
                 <button type="button" className={styles.btnListAdd} onClick={addResponsavel}>
-                  Adicionar
+                  {t('common.add', 'Adicionar')}
                 </button>
               </div>
             </div>
 
             {/* Parceiros */}
             <div className={styles.listBlock}>
-              <span className={styles.listBlockTitle}>Parceiros</span>
+              <span className={styles.listBlockTitle}>{t('settings.lists.partners.title', 'Parceiros')}</span>
               <div className={styles.listItems}>
                 {parceiros.length === 0
-                  ? <span style={{ fontSize: '0.78rem', color: 'var(--text-3)' }}>Nenhum parceiro cadastrado ainda.</span>
+                  ? <span style={{ fontSize: '0.78rem', color: 'var(--text-3)' }}>{t('settings.lists.partners.empty', 'Nenhum parceiro cadastrado ainda.')}</span>
                   : parceiros.map(item => (
                     <span key={item} className={styles.listTag}>
                       {item}
@@ -1104,7 +1124,7 @@ export default function Settings() {
                         type="button"
                         className={styles.listTagDel}
                         onClick={() => setParceiros(prev => prev.filter(i => i !== item))}
-                        title="Remover"
+                        title={t('settings.lists.removeTitle', 'Remover')}
                       >×</button>
                     </span>
                   ))
@@ -1116,10 +1136,10 @@ export default function Settings() {
                   value={newParceiro}
                   onChange={e => setNewParceiro(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addParceiro())}
-                  placeholder="Ex: Dr. João Parceiro"
+                  placeholder={t('settings.lists.partners.placeholder', 'Ex: Dr. João Parceiro')}
                 />
                 <button type="button" className={styles.btnListAdd} onClick={addParceiro}>
-                  Adicionar
+                  {t('common.add', 'Adicionar')}
                 </button>
               </div>
             </div>
@@ -1127,7 +1147,7 @@ export default function Settings() {
           </div>
           <div className={styles.formFooter} style={{ marginTop: '1.25rem' }}>
             <button type="button" className={styles.btnSave} onClick={handleSaveLists} disabled={listSaving}>
-              {listSaving ? 'Salvando…' : 'Salvar listas'}
+              {listSaving ? t('common.saving', 'Salvando…') : t('settings.lists.saveButton', 'Salvar listas')}
             </button>
           </div>
         </Section>
@@ -1135,8 +1155,8 @@ export default function Settings() {
         {/* ── Membros da Equipe ── */}
         {!isTeamMember && (
           <Section
-            title="Membros da Equipe"
-            subtitle="Convide advogados e estagiários para acessar o escritório com suas próprias credenciais. Estagiários não têm acesso ao módulo Financeiro nem a Clientes."
+            title={t('settings.team.title', 'Membros da Equipe')}
+            subtitle={t('settings.team.subtitle', 'Convide advogados e estagiários para acessar o escritório com suas próprias credenciais. Estagiários não têm acesso ao módulo Financeiro nem a Clientes.')}
           >
             <TeamMembersSection lawyerId={lawyer?.id} session={session} responsaveis={responsaveis} />
           </Section>
@@ -1144,23 +1164,23 @@ export default function Settings() {
 
         {/* ── Conta ── */}
         <Section
-          title="Conta"
-          subtitle="Informações da sua conta no Atlas Adv"
+          title={t('settings.account.title', 'Conta')}
+          subtitle={t('settings.account.subtitle', 'Informações da sua conta no Atlas Adv')}
         >
           <div className={styles.accountInfo}>
             <div className={styles.accountRow}>
-              <span className={styles.accountLabel}>Provedor de autenticação</span>
+              <span className={styles.accountLabel}>{t('settings.account.authProvider', 'Provedor de autenticação')}</span>
               <span className={styles.accountValue}>Google OAuth</span>
             </div>
             <div className={styles.accountRow}>
-              <span className={styles.accountLabel}>ID do usuário</span>
+              <span className={styles.accountLabel}>{t('settings.account.userId', 'ID do usuário')}</span>
               <code className={styles.accountCode}>{session?.user?.id}</code>
             </div>
             <div className={styles.accountRow}>
-              <span className={styles.accountLabel}>Último acesso</span>
+              <span className={styles.accountLabel}>{t('settings.account.lastAccess', 'Último acesso')}</span>
               <span className={styles.accountValue}>
                 {session?.user?.last_sign_in_at
-                  ? new Date(session.user.last_sign_in_at).toLocaleString('pt-BR')
+                  ? new Date(session.user.last_sign_in_at).toLocaleString(i18n.language === 'en' ? 'en-US' : 'pt-BR')
                   : '—'}
               </span>
             </div>
@@ -1171,47 +1191,47 @@ export default function Settings() {
               className={styles.btnDanger}
               onClick={() => supabase.auth.signOut()}
             >
-              Encerrar sessão
+              {t('settings.account.signOutButton', 'Encerrar sessão')}
             </button>
           </div>
         </Section>
 
         {/* ── Suporte ── */}
         <Section
-          title="Suporte"
-          subtitle="Abra chamados, acompanhe respostas e obtenha ajuda da nossa equipe."
+          title={t('settings.support.title', 'Suporte')}
+          subtitle={t('settings.support.subtitle', 'Abra chamados, acompanhe respostas e obtenha ajuda da nossa equipe.')}
         >
           <SuporteSection />
         </Section>
 
         {/* ── Desenvolvimento / Teste ── */}
         <Section
-          title="Desenvolvimento"
-          subtitle="Ferramentas para teste — não aparecem em produção para outros usuários"
+          title={t('settings.dev.title', 'Desenvolvimento')}
+          subtitle={t('settings.dev.subtitle', 'Ferramentas para teste — não aparecem em produção para outros usuários')}
         >
           <div className={styles.devBox}>
             <div className={styles.devInfo}>
-              <span className={styles.devLabel}>Simular novo usuário</span>
+              <span className={styles.devLabel}>{t('settings.dev.simulateNewUser', 'Simular novo usuário')}</span>
               <span className={styles.devDesc}>
-                Redefine o flag de onboarding para <code>false</code> no banco de dados.
-                Na próxima renderização, o wizard de boas-vindas será exibido novamente.
+                {t('settings.dev.simulateDescPre', 'Redefine o flag de onboarding para')} <code>false</code>{' '}
+                {t('settings.dev.simulateDescPost', 'no banco de dados. Na próxima renderização, o wizard de boas-vindas será exibido novamente.')}
               </span>
             </div>
             <button
               type="button"
               className={styles.btnDevReset}
               onClick={async () => {
-                const ok = window.confirm('Redefinir onboarding? O wizard vai aparecer agora.')
+                const ok = window.confirm(t('settings.dev.resetConfirm', 'Redefinir onboarding? O wizard vai aparecer agora.'))
                 if (!ok) return
                 const { error } = await supabase
                   .from('lawyers')
                   .update({ onboarding_completed: false })
                   .eq('id', session.user.id)
-                if (error) { alert('Erro: ' + error.message); return }
+                if (error) { alert(t('settings.dev.resetError', 'Erro: {{error}}', { error: error.message })); return }
                 await refreshLawyer()
               }}
             >
-              ↺ Reiniciar onboarding
+              ↺ {t('settings.dev.resetButton', 'Reiniciar onboarding')}
             </button>
           </div>
         </Section>

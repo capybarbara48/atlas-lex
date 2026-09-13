@@ -1,4 +1,6 @@
 {
+  "pageTitle": "Proposals",
+  "history": "History",
   "newProposal": "New proposal",
   "newProposalModal": "New proposal",
   "editProposal": "Edit proposal",
@@ -7,15 +9,27 @@
   "loading": "Loading…",
   "countSubtitle_one": "{{count}} proposal · {{approved}} approved · {{pending}} under review",
   "countSubtitle_other": "{{count}} proposals · {{approved}} approved · {{pending}} under review",
+  "proposalCount_one": "{{count}} proposal",
+  "proposalCount_other": "{{count}} proposals",
   "errorLoading": "Error loading proposals.",
   "emptyPipeline": "No proposals",
   "emptyList": "No proposals found",
   "generatePdf": "Generate PDF",
+  "generatePdfButton": "Generate Proposal PDF",
+  "generating": "Generating…",
+  "pdf": "PDF",
   "pdfOpened": "PDF opened in a new tab.",
   "pdfPopupBlocked": "Please allow pop-ups in your browser to generate the PDF.",
   "toastCreated": "Proposal created.",
   "toastUpdated": "Proposal updated.",
+  "toastSavedAndPdf": "Proposal saved and PDF generated.",
+  "toastDeleted": "Proposal deleted.",
   "validUntil": "Valid until {{date}}",
+  "confirmDeleteLabel": "Delete?",
+  "linkedToRecord": "linked to client record",
+  "autoPurgeNote": "Auto-purge after 6 months",
+  "autoPurgeToast_one": "{{count}} rejected proposal older than 6 months was automatically removed.",
+  "autoPurgeToast_other": "{{count}} rejected proposals older than 6 months were automatically removed.",
   "view": {
     "pipeline": "Pipeline",
     "list": "List"
@@ -24,6 +38,12 @@
     "pendente": "Under Review",
     "aprovado": "Approved",
     "recusado": "Rejected"
+  },
+  "pipelineColumns": {
+    "enviada": "Sent",
+    "aceita": "Accepted",
+    "recusada": "Rejected",
+    "rascunho": "Drafts"
   },
   "status": {
     "pendente": "Pending",
@@ -44,10 +64,12 @@
   "table": {
     "proposal": "Proposal",
     "client": "Client",
+    "service": "Service",
     "fee": "Fee",
     "value": "Value",
     "status": "Status",
     "created": "Created",
+    "date": "Date",
     "validUntil": "Valid Until"
   },
   "form": {
@@ -57,6 +79,56 @@
     "amountLabel": "Amount (R$)",
     "hourlyAmountLabel": "Hourly rate (R$)",
     "percentageLabel": "Contingency percentage (%)",
-    "createButton": "Create proposal"
+    "createButton": "Create proposal",
+    "percentageCustomPlaceholder": "E.g.: 25",
+    "customOption": "Custom…"
+  },
+  "formTitle": "Proposal Details",
+  "fields": {
+    "client": "Client",
+    "fromList": "From list",
+    "typeIn": "Type in",
+    "clientNamePlaceholder": "Client name",
+    "selectClientPlaceholder": "Select client…",
+    "serviceType": "Service Type",
+    "selectOption": "Select…",
+    "serviceTypePlaceholder": "E.g.: Labor Lawsuit",
+    "feeAmount": "Fee Amount",
+    "successFee": "Final Success Share",
+    "noSuccessFee": "No success share",
+    "partner": "Correspondent / Partner",
+    "partnerMarkupLabel": "Apply partner markup (+30%)",
+    "partnerMarkupHint": "does not appear on the PDF",
+    "notes": "Notes",
+    "notesPlaceholder": "Additional terms, deadlines, relevant information…",
+    "notesPlaceholderShort": "Additional terms, deadlines…"
+  },
+  "summary": {
+    "title": "Summary",
+    "baseValue": "Base value",
+    "partnerMarkup": "Partner markup (+30%)",
+    "finalValue": "Final value",
+    "pixValue": "Upfront value (10% off)"
+  },
+  "fees": {
+    "title": "Card Fees",
+    "hint": "Configure the fees applied to each installment plan. These values are used in the generated PDF.",
+    "saveButton": "Save fees",
+    "saveSuccess": "Card fees saved."
+  },
+  "expiry": {
+    "awaitingRemoval": "Awaiting removal",
+    "expiringSoon": "Expiring soon",
+    "awaitingRemovalTitle": "Awaiting automatic removal",
+    "expiringSoonTitle": "Will be removed soon"
+  },
+  "errors": {
+    "clientNameRequired": "Enter the client's name.",
+    "serviceTypeRequired": "Select the service type.",
+    "feeAmountRequired": "Enter the fee amount.",
+    "saveProposalFailed": "Error saving proposal.",
+    "saveFailed": "Error saving changes.",
+    "deleteFailed": "Error deleting proposal.",
+    "feesSaveFailed": "Error saving fees."
   }
 }

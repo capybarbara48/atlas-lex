@@ -1,16 +1,14 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { useProposals, saveProposal, updateProposalStatus, updateProposal, deleteProposal } from '@/hooks/useProposals'
 import { useToast } from '@/context/ToastContext'
 import { supabase } from '@/lib/supabase'
+import { formatDate, formatCurrency } from '@/lib/formatters'
 import PageShell from '@/components/ui/PageShell'
 import styles from './Proposals.module.css'
 
 /* ── helpers ──────────────────────────────────────────────────────────── */
-
-function fmtBRL(v) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v ?? 0)
-}
 
 function parseBRL(str) {
   if (!str) return 0
@@ -24,11 +22,6 @@ function formatCurrencyInput(value) {
   return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-function shortDate(iso) {
-  if (!iso) return '—'
-  return new Date(iso.includes('T') ? iso : iso + 'T12:00:00').toLocaleDateString('pt-BR')
-}
-
 function daysSince(iso) {
   if (!iso) return 0
   const d = new Date(iso.includes('T') ? iso : iso + 'T12:00:00')
@@ -39,18 +32,18 @@ const MONTHS_6 = 180
 const MONTHS_5 = 150
 
 const PIPELINE_COLS = [
-  { key: 'enviada',  label: 'Enviadas',  color: '#d97706', bg: '#fef3c7' },
-  { key: 'aceita',   label: 'Aceitas',   color: '#16a34a', bg: '#dcfce7' },
-  { key: 'recusada', label: 'Recusadas', color: '#dc2626', bg: '#fee2e2' },
-  { key: 'rascunho', label: 'Rascunhos', color: '#6b7280', bg: '#f3f4f6' },
+  { key: 'enviada',  color: '#d97706', bg: '#fef3c7' },
+  { key: 'aceita',   color: '#16a34a', bg: '#dcfce7' },
+  { key: 'recusada', color: '#dc2626', bg: '#fee2e2' },
+  { key: 'rascunho', color: '#6b7280', bg: '#f3f4f6' },
 ]
 
-const STATUS_BADGE = {
-  enviada:  { cls: 'badge st-gold',  label: 'Enviada'  },
-  aceita:   { cls: 'badge st-green', label: 'Aceita'   },
-  recusada: { cls: 'badge st-red',   label: 'Recusada' },
-  rascunho: { cls: 'badge st-gray',  label: 'Rascunho' },
-  expirada: { cls: 'badge st-red',   label: 'Expirada' },
+const STATUS_BADGE_CLS = {
+  enviada:  'badge st-gold',
+  aceita:   'badge st-green',
+  recusada: 'badge st-red',
+  rascunho: 'badge st-gray',
+  expirada: 'badge st-red',
 }
 
 /* ── PDF generator ────────────────────────────────────────────────────── */
@@ -402,6 +395,7 @@ function ChevronDown() {
 /* ── StatusSelect (inline in history cards) ─────────────────────────── */
 
 function StatusSelect({ proposalId, current, onChanged }) {
+  const { t } = useTranslation()
   const [busy, setBusy] = useState(false)
 
   async function handleChange(e) {
@@ -420,11 +414,11 @@ function StatusSelect({ proposalId, current, onChanged }) {
       disabled={busy}
       onClick={e => e.stopPropagation()}
     >
-      <option value="enviada">Enviada</option>
-      <option value="aceita">Aceita</option>
-      <option value="recusada">Recusada</option>
-      <option value="rascunho">Rascunho</option>
-      <option value="expirada">Expirada</option>
+      <option value="enviada">{t('proposals.status.enviada')}</option>
+      <option value="aceita">{t('proposals.status.aceita')}</option>
+      <option value="recusada">{t('proposals.status.recusada')}</option>
+      <option value="rascunho">{t('proposals.status.rascunho')}</option>
+      <option value="expirada">{t('proposals.status.expirada')}</option>
     </select>
   )
 }
@@ -432,6 +426,7 @@ function StatusSelect({ proposalId, current, onChanged }) {
 /* ── EditModal ──────────────────────────────────────────────────────── */
 
 function EditModal({ proposal, serviceTypes, quotaOptions, onSave, onClose, toast }) {
+  const { t } = useTranslation()
   const isLinked = !proposal.client_name_override && !!proposal.clients?.full_name
   const initName = proposal.client_name_override || proposal.clients?.full_name || ''
 
@@ -448,7 +443,7 @@ function EditModal({ proposal, serviceTypes, quotaOptions, onSave, onClose, toas
   const [saving, setSaving]               = useState(false)
 
   async function handleSave() {
-    if (!clientName.trim()) { toast.error('Informe o nome do cliente.'); return }
+    if (!clientName.trim()) { toast.error(t('proposals.errors.clientNameRequired')); return }
     setSaving(true)
     const newVal = parseBRL(valorStr)
     const { error } = await updateProposal(proposal.id, {
@@ -463,9 +458,9 @@ function EditModal({ proposal, serviceTypes, quotaOptions, onSave, onClose, toas
     })
     setSaving(false)
     if (error) {
-      toast.error('Erro ao salvar alterações.')
+      toast.error(t('proposals.errors.saveFailed'))
     } else {
-      toast.success('Proposta atualizada.')
+      toast.success(t('proposals.toastUpdated'))
       onSave()
     }
   }
@@ -474,8 +469,8 @@ function EditModal({ proposal, serviceTypes, quotaOptions, onSave, onClose, toas
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h3 className={styles.modalTitle}>Editar Proposta</h3>
-          <button className={styles.modalClose} onClick={onClose} aria-label="Fechar">
+          <h3 className={styles.modalTitle}>{t('proposals.editProposal')}</h3>
+          <button className={styles.modalClose} onClick={onClose} aria-label={t('common.close')}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="15" height="15">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
@@ -485,32 +480,32 @@ function EditModal({ proposal, serviceTypes, quotaOptions, onSave, onClose, toas
         <div className={styles.modalBody}>
           <div className={styles.fieldGroup}>
             <label className={styles.fieldLabel}>
-              Cliente
-              {isLinked && <span className={styles.linkedNote}> · vinculado ao cadastro</span>}
+              {t('proposals.fields.client')}
+              {isLinked && <span className={styles.linkedNote}> · {t('proposals.linkedToRecord')}</span>}
             </label>
             <input
               className={styles.input}
               type="text"
               value={clientName}
               onChange={e => setClientName(e.target.value)}
-              placeholder="Nome do cliente"
+              placeholder={t('proposals.fields.clientNamePlaceholder')}
             />
           </div>
 
           <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel}>Tipo de Serviço</label>
+            <label className={styles.fieldLabel}>{t('proposals.fields.serviceType')}</label>
             {serviceTypes.length > 0 ? (
               <select className={styles.select} value={serviceType} onChange={e => setServiceType(e.target.value)}>
-                <option value="">Selecionar…</option>
+                <option value="">{t('proposals.fields.selectOption')}</option>
                 {serviceTypes.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             ) : (
-              <input className={styles.input} type="text" value={serviceType} onChange={e => setServiceType(e.target.value)} placeholder="Ex.: Ação Trabalhista" />
+              <input className={styles.input} type="text" value={serviceType} onChange={e => setServiceType(e.target.value)} placeholder={t('proposals.fields.serviceTypePlaceholder')} />
             )}
           </div>
 
           <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel}>Valor dos Honorários</label>
+            <label className={styles.fieldLabel}>{t('proposals.fields.feeAmount')}</label>
             <div className={styles.currencyWrap}>
               <span className={styles.currencyPrefix}>R$</span>
               <input
@@ -520,48 +515,48 @@ function EditModal({ proposal, serviceTypes, quotaOptions, onSave, onClose, toas
                 value={valorStr}
                 onChange={e => setValorStr(e.target.value)}
                 onBlur={e => setValorStr(formatCurrencyInput(e.target.value))}
-                placeholder="0,00"
+                placeholder={t('common.currencyPlaceholder')}
               />
             </div>
           </div>
 
           {quotaOptions.length > 0 && (
             <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel}>Participação Final de Êxito</label>
+              <label className={styles.fieldLabel}>{t('proposals.fields.successFee')}</label>
               <select className={styles.select} value={participacaoPct} onChange={e => setParticipacaoPct(e.target.value)}>
-                <option value="">Sem participação de êxito</option>
+                <option value="">{t('proposals.fields.noSuccessFee')}</option>
                 {quotaOptions.map(q => <option key={q} value={q}>{q}</option>)}
               </select>
             </div>
           )}
 
           <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel}>Status</label>
+            <label className={styles.fieldLabel}>{t('proposals.table.status')}</label>
             <select className={styles.select} value={status} onChange={e => setStatus(e.target.value)}>
-              <option value="enviada">Enviada</option>
-              <option value="aceita">Aceita</option>
-              <option value="recusada">Recusada</option>
-              <option value="rascunho">Rascunho</option>
-              <option value="expirada">Expirada</option>
+              <option value="enviada">{t('proposals.status.enviada')}</option>
+              <option value="aceita">{t('proposals.status.aceita')}</option>
+              <option value="recusada">{t('proposals.status.recusada')}</option>
+              <option value="rascunho">{t('proposals.status.rascunho')}</option>
+              <option value="expirada">{t('proposals.status.expirada')}</option>
             </select>
           </div>
 
           <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel}>Observações</label>
+            <label className={styles.fieldLabel}>{t('proposals.fields.notes')}</label>
             <textarea
               className={styles.textarea}
               rows={3}
               value={notes}
               onChange={e => setNotes(e.target.value)}
-              placeholder="Condições adicionais, prazos…"
+              placeholder={t('proposals.fields.notesPlaceholderShort')}
             />
           </div>
         </div>
 
         <div className={styles.modalFooter}>
-          <button className={styles.modalCancel} onClick={onClose}>Cancelar</button>
+          <button className={styles.modalCancel} onClick={onClose}>{t('common.cancel')}</button>
           <button className={styles.modalSave} onClick={handleSave} disabled={saving}>
-            {saving ? 'Salvando…' : 'Salvar alterações'}
+            {saving ? t('common.saving') : t('common.saveChanges')}
           </button>
         </div>
       </div>
@@ -572,6 +567,7 @@ function EditModal({ proposal, serviceTypes, quotaOptions, onSave, onClose, toas
 /* ── Pipeline (history tab) ─────────────────────────────────────────── */
 
 function PipelineView({ proposals, onPDF, onEdit, onDeleteRequest, onDeleteConfirm, confirmDeleteId, onStatusChange }) {
+  const { t, i18n } = useTranslation()
   return (
     <div className={styles.pipelineWrapper}>
       <div className={styles.pipeline}>
@@ -584,7 +580,7 @@ function PipelineView({ proposals, onPDF, onEdit, onDeleteRequest, onDeleteConfi
                   className={styles.pipelineColTitle}
                   style={{ color: col.color, background: col.bg }}
                 >
-                  {col.label}
+                  {t(`proposals.pipelineColumns.${col.key}`)}
                 </span>
                 <span className={styles.pipelineColCount}>{items.length}</span>
               </div>
@@ -593,12 +589,12 @@ function PipelineView({ proposals, onPDF, onEdit, onDeleteRequest, onDeleteConfi
                   <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="10" height="10">
                     <circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><circle cx="8" cy="11" r="0.5" fill="currentColor"/>
                   </svg>
-                  Purge automático após 6 meses
+                  {t('proposals.autoPurgeNote')}
                 </div>
               )}
               <div className={styles.pipelineItems}>
                 {items.length === 0
-                  ? <div className={styles.pipelineEmpty}>Nenhuma proposta</div>
+                  ? <div className={styles.pipelineEmpty}>{t('proposals.emptyPipeline')}</div>
                   : items.map(p => {
                       const clientName = p.client_name_override || p.clients?.full_name || '—'
                       const age = daysSince(p.created_at)
@@ -611,7 +607,7 @@ function PipelineView({ proposals, onPDF, onEdit, onDeleteRequest, onDeleteConfi
                               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" width="10" height="10">
                                 <path d="M8 1L1 14h14L8 1z"/><line x1="8" y1="6" x2="8" y2="9"/><circle cx="8" cy="12" r="0.5" fill="currentColor"/>
                               </svg>
-                              {age >= MONTHS_6 ? 'Aguardando remoção' : 'Expira em breve'}
+                              {age >= MONTHS_6 ? t('proposals.expiry.awaitingRemoval') : t('proposals.expiry.expiringSoon')}
                             </div>
                           )}
                           <div className={styles.pipelineCardClient}>{clientName}</div>
@@ -619,36 +615,36 @@ function PipelineView({ proposals, onPDF, onEdit, onDeleteRequest, onDeleteConfi
                             <div className={styles.pipelineCardService}>{p.service_type}</div>
                           )}
                           <div className={styles.pipelineCardFee}>
-                            {Number(p.fee_amount) > 0 ? fmtBRL(p.fee_amount) : '—'}
+                            {Number(p.fee_amount) > 0 ? formatCurrency(p.fee_amount, i18n.language) : '—'}
                           </div>
 
                           <div className={styles.cardActionsRow}>
-                            <span className={styles.pipelineCardDate}>{shortDate(p.created_at)}</span>
+                            <span className={styles.pipelineCardDate}>{formatDate(p.created_at, i18n.language)}</span>
                             {isConfirming ? (
                               <div className={styles.confirmDeleteInline}>
-                                <span className={styles.confirmDeleteLabel}>Excluir?</span>
+                                <span className={styles.confirmDeleteLabel}>{t('proposals.confirmDeleteLabel')}</span>
                                 <button
                                   className={styles.confirmYesBtn}
                                   onClick={() => onDeleteConfirm(p.id)}
                                 >
-                                  Sim
+                                  {t('common.yes')}
                                 </button>
                                 <button
                                   className={styles.confirmNoBtn}
                                   onClick={() => onDeleteRequest(null)}
                                 >
-                                  Não
+                                  {t('common.no')}
                                 </button>
                               </div>
                             ) : (
                               <div className={styles.cardBtns}>
-                                <button className={styles.cardIconBtn} title="Gerar PDF" onClick={() => onPDF(p)}>
+                                <button className={styles.cardIconBtn} title={t('proposals.generatePdf')} onClick={() => onPDF(p)}>
                                   <PdfIcon />
                                 </button>
-                                <button className={styles.cardIconBtn} title="Editar" onClick={() => onEdit(p)}>
+                                <button className={styles.cardIconBtn} title={t('common.edit')} onClick={() => onEdit(p)}>
                                   <EditIcon />
                                 </button>
-                                <button className={`${styles.cardIconBtn} ${styles.cardDeleteBtn}`} title="Excluir" onClick={() => onDeleteRequest(p.id)}>
+                                <button className={`${styles.cardIconBtn} ${styles.cardDeleteBtn}`} title={t('common.delete')} onClick={() => onDeleteRequest(p.id)}>
                                   <TrashIcon />
                                 </button>
                               </div>
@@ -678,6 +674,8 @@ function PipelineView({ proposals, onPDF, onEdit, onDeleteRequest, onDeleteConfi
 /* ── List view (history tab) ─────────────────────────────────────────── */
 
 function ListView({ proposals, onPDF, onEdit, onDeleteRequest, onDeleteConfirm, confirmDeleteId, onStatusChange }) {
+  const { t, i18n } = useTranslation()
+
   if (proposals.length === 0) {
     return (
       <div className={styles.emptyState}>
@@ -689,7 +687,7 @@ function ListView({ proposals, onPDF, onEdit, onDeleteRequest, onDeleteConfirm, 
             <line x1="16" y1="17" x2="8" y2="17"/>
           </svg>
         </div>
-        <p className={styles.emptyText}>Nenhuma proposta encontrada</p>
+        <p className={styles.emptyText}>{t('proposals.emptyList')}</p>
       </div>
     )
   }
@@ -699,18 +697,18 @@ function ListView({ proposals, onPDF, onEdit, onDeleteRequest, onDeleteConfirm, 
       <table className={styles.table}>
         <thead>
           <tr>
-            <th>Cliente</th>
-            <th>Serviço</th>
-            <th>Valor</th>
-            <th>Status</th>
-            <th>Data</th>
+            <th>{t('proposals.table.client')}</th>
+            <th>{t('proposals.table.service')}</th>
+            <th>{t('proposals.table.value')}</th>
+            <th>{t('proposals.table.status')}</th>
+            <th>{t('proposals.table.date')}</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           {proposals.map(p => {
             const clientName = p.client_name_override || p.clients?.full_name || '—'
-            const badge = STATUS_BADGE[p.status] ?? STATUS_BADGE.rascunho
+            const badgeCls = STATUS_BADGE_CLS[p.status] ?? STATUS_BADGE_CLS.rascunho
             const age = daysSince(p.created_at)
             const nearExpiry = p.status === 'recusada' && age >= MONTHS_5
             const isConfirming = confirmDeleteId === p.id
@@ -719,29 +717,29 @@ function ListView({ proposals, onPDF, onEdit, onDeleteRequest, onDeleteConfirm, 
                 <td className={styles.clientCell}>
                   {clientName}
                   {nearExpiry && (
-                    <span className={styles.expiryInline} title={age >= MONTHS_6 ? 'Aguardando remoção automática' : 'Será removida em breve'}>
+                    <span className={styles.expiryInline} title={age >= MONTHS_6 ? t('proposals.expiry.awaitingRemovalTitle') : t('proposals.expiry.expiringSoonTitle')}>
                       ⚠
                     </span>
                   )}
                 </td>
                 <td className={styles.serviceCell}>{p.service_type || '—'}</td>
                 <td className={styles.valorCell}>
-                  {Number(p.fee_amount) > 0 ? fmtBRL(p.fee_amount) : '—'}
+                  {Number(p.fee_amount) > 0 ? formatCurrency(p.fee_amount, i18n.language) : '—'}
                 </td>
-                <td><span className={badge.cls}>{badge.label}</span></td>
-                <td className={styles.dateCell}>{shortDate(p.created_at)}</td>
+                <td><span className={badgeCls}>{t(`proposals.status.${p.status}`)}</span></td>
+                <td className={styles.dateCell}>{formatDate(p.created_at, i18n.language)}</td>
                 <td onClick={e => e.stopPropagation()} className={styles.actionsCell}>
                   {isConfirming ? (
                     <div className={styles.confirmDeleteRow}>
-                      <span className={styles.confirmDeleteLabel}>Excluir?</span>
-                      <button className={styles.confirmYesBtn} onClick={() => onDeleteConfirm(p.id)}>Sim</button>
-                      <button className={styles.confirmNoBtn} onClick={() => onDeleteRequest(null)}>Não</button>
+                      <span className={styles.confirmDeleteLabel}>{t('proposals.confirmDeleteLabel')}</span>
+                      <button className={styles.confirmYesBtn} onClick={() => onDeleteConfirm(p.id)}>{t('common.yes')}</button>
+                      <button className={styles.confirmNoBtn} onClick={() => onDeleteRequest(null)}>{t('common.no')}</button>
                     </div>
                   ) : (
                     <div className={styles.cardBtns}>
-                      <button className={styles.cardIconBtn} title="PDF" onClick={() => onPDF(p)}><PdfIcon /></button>
-                      <button className={styles.cardIconBtn} title="Editar" onClick={() => onEdit(p)}><EditIcon /></button>
-                      <button className={`${styles.cardIconBtn} ${styles.cardDeleteBtn}`} title="Excluir" onClick={() => onDeleteRequest(p.id)}><TrashIcon /></button>
+                      <button className={styles.cardIconBtn} title={t('proposals.pdf')} onClick={() => onPDF(p)}><PdfIcon /></button>
+                      <button className={styles.cardIconBtn} title={t('common.edit')} onClick={() => onEdit(p)}><EditIcon /></button>
+                      <button className={`${styles.cardIconBtn} ${styles.cardDeleteBtn}`} title={t('common.delete')} onClick={() => onDeleteRequest(p.id)}><TrashIcon /></button>
                     </div>
                   )}
                 </td>
@@ -757,6 +755,7 @@ function ListView({ proposals, onPDF, onEdit, onDeleteRequest, onDeleteConfirm, 
 /* ── CardFeesPanel ─────────────────────────────────────────────────── */
 
 function CardFeesPanel({ lawyer, refreshLawyer, toast }) {
+  const { t } = useTranslation()
   const saved = lawyer?.preferences?.prop_fees ?? {}
   const [open, setOpen] = useState(false)
   const [fees, setFees] = useState(() => {
@@ -780,10 +779,10 @@ function CardFeesPanel({ lawyer, refreshLawyer, toast }) {
       .eq('id', lawyer.id)
     setSaving(false)
     if (error) {
-      toast.error('Erro ao salvar taxas.')
+      toast.error(t('proposals.errors.feesSaveFailed'))
     } else {
       await refreshLawyer()
-      toast.success('Taxas do cartão salvas.')
+      toast.success(t('proposals.fees.saveSuccess'))
     }
   }
 
@@ -794,14 +793,14 @@ function CardFeesPanel({ lawyer, refreshLawyer, toast }) {
           <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
           <line x1="1" y1="10" x2="23" y2="10"/>
         </svg>
-        Taxas do Cartão
+        {t('proposals.fees.title')}
         <span className={`${styles.feesPanelChevron} ${open ? styles.feesPanelChevronOpen : ''}`}>
           <ChevronDown />
         </span>
       </button>
       {open && (
         <div className={styles.feesBody}>
-          <p className={styles.feesHint}>Configure as taxas aplicadas a cada parcelamento. Estes valores são usados no PDF gerado.</p>
+          <p className={styles.feesHint}>{t('proposals.fees.hint')}</p>
           <div className={styles.feesGrid}>
             {Array.from({ length: 11 }, (_, i) => i + 2).map(n => (
               <div key={n} className={styles.feeRow}>
@@ -814,7 +813,7 @@ function CardFeesPanel({ lawyer, refreshLawyer, toast }) {
                     className={styles.feeInput}
                     value={fees[n]}
                     onChange={e => setFees(f => ({ ...f, [n]: e.target.value }))}
-                    placeholder="0,00"
+                    placeholder={t('common.currencyPlaceholder')}
                   />
                   <span className={styles.feeSuffix}>%</span>
                 </div>
@@ -823,7 +822,7 @@ function CardFeesPanel({ lawyer, refreshLawyer, toast }) {
           </div>
           <div className={styles.feesFooter}>
             <button className={styles.feesSaveBtn} onClick={handleSave} disabled={saving}>
-              {saving ? 'Salvando…' : 'Salvar taxas'}
+              {saving ? t('common.saving') : t('proposals.fees.saveButton')}
             </button>
           </div>
         </div>
@@ -835,6 +834,7 @@ function CardFeesPanel({ lawyer, refreshLawyer, toast }) {
 /* ── Main page ──────────────────────────────────────────────────────── */
 
 export default function Proposals() {
+  const { t, i18n } = useTranslation()
   const { lawyer, refreshLawyer } = useAuth()
   const toast = useToast()
 
@@ -856,7 +856,7 @@ export default function Proposals() {
     purgedRef.current = true
     Promise.all(stale.map(p => deleteProposal(p.id))).then(() => {
       const n = stale.length
-      toast.info(`${n} proposta${n > 1 ? 's' : ''} recusada${n > 1 ? 's' : ''} com mais de 6 meses ${n > 1 ? 'foram removidas' : 'foi removida'} automaticamente.`)
+      toast.info(t('proposals.autoPurgeToast', { count: n }))
       refetch()
     })
   }, [rawProposals])
@@ -898,9 +898,9 @@ export default function Proposals() {
   }, [clientMode, clientFreeText, clientId, dbClients])
 
   async function handleGenerate() {
-    if (!resolvedClientName) { toast.error('Informe o nome do cliente.'); return }
-    if (!serviceType) { toast.error('Selecione o tipo de serviço.'); return }
-    if (!finalValor)  { toast.error('Informe o valor dos honorários.'); return }
+    if (!resolvedClientName) { toast.error(t('proposals.errors.clientNameRequired')); return }
+    if (!serviceType) { toast.error(t('proposals.errors.serviceTypeRequired')); return }
+    if (!finalValor)  { toast.error(t('proposals.errors.feeAmountRequired')); return }
 
     setSubmitting(true)
     const { error: saveErr } = await saveProposal(lawyer.id, {
@@ -917,7 +917,7 @@ export default function Proposals() {
     })
 
     if (saveErr) {
-      toast.error('Erro ao salvar proposta.')
+      toast.error(t('proposals.errors.saveProposalFailed'))
       setSubmitting(false)
       return
     }
@@ -932,8 +932,8 @@ export default function Proposals() {
       lawyer,
     })
 
-    if (!ok) toast.error('Permita pop-ups no navegador para gerar o PDF.')
-    else     toast.success('Proposta salva e PDF gerado.')
+    if (!ok) toast.error(t('proposals.pdfPopupBlocked'))
+    else     toast.success(t('proposals.toastSavedAndPdf'))
 
     await refetch()
     setSubmitting(false)
@@ -951,16 +951,16 @@ export default function Proposals() {
       propFees,
       lawyer,
     })
-    if (!ok) toast.error('Permita pop-ups no navegador para gerar o PDF.')
+    if (!ok) toast.error(t('proposals.pdfPopupBlocked'))
   }
 
   async function handleDeleteConfirm(id) {
     const { error: delErr } = await deleteProposal(id)
     setConfirmDeleteId(null)
     if (delErr) {
-      toast.error('Erro ao excluir proposta.')
+      toast.error(t('proposals.errors.deleteFailed'))
     } else {
-      toast.success('Proposta excluída.')
+      toast.success(t('proposals.toastDeleted'))
       refetch()
     }
   }
@@ -969,21 +969,21 @@ export default function Proposals() {
 
   return (
     <PageShell
-      title="Propostas"
-      subtitle={loading ? 'Carregando…' : `${proposalCount} ${proposalCount === 1 ? 'proposta' : 'propostas'}`}
+      title={t('proposals.pageTitle')}
+      subtitle={loading ? t('proposals.loading') : t('proposals.proposalCount', { count: proposalCount })}
     >
       <div className={styles.tabBar}>
         <button
           className={`${styles.tabBtn} ${tab === 'nova' ? styles.tabBtnActive : ''}`}
           onClick={() => setTab('nova')}
         >
-          Nova Proposta
+          {t('proposals.newProposal')}
         </button>
         <button
           className={`${styles.tabBtn} ${tab === 'historico' ? styles.tabBtnActive : ''}`}
           onClick={() => { setTab('historico'); refetch() }}
         >
-          Histórico
+          {t('proposals.history')}
           {proposalCount > 0 && (
             <span className={styles.tabCount}>{proposalCount}</span>
           )}
@@ -994,26 +994,26 @@ export default function Proposals() {
         <div className={styles.splitLayout}>
           {/* ── Left: form ── */}
           <div className={styles.formCard}>
-            <h2 className={styles.cardTitle}>Dados da Proposta</h2>
+            <h2 className={styles.cardTitle}>{t('proposals.formTitle')}</h2>
 
             {/* Client */}
             <div className={styles.fieldGroup}>
               <div className={styles.fieldHeader}>
-                <label className={styles.fieldLabel}>Cliente</label>
+                <label className={styles.fieldLabel}>{t('proposals.fields.client')}</label>
                 <div className={styles.clientModeToggle}>
                   <button
                     className={`${styles.clientModeBtn} ${clientMode === 'db' ? styles.clientModeBtnActive : ''}`}
                     onClick={() => { setClientMode('db'); loadClients() }}
                     type="button"
                   >
-                    Da lista
+                    {t('proposals.fields.fromList')}
                   </button>
                   <button
                     className={`${styles.clientModeBtn} ${clientMode === 'free' ? styles.clientModeBtnActive : ''}`}
                     onClick={() => setClientMode('free')}
                     type="button"
                   >
-                    Digitar
+                    {t('proposals.fields.typeIn')}
                   </button>
                 </div>
               </div>
@@ -1024,7 +1024,7 @@ export default function Proposals() {
                   onFocus={loadClients}
                   onChange={e => setClientId(e.target.value)}
                 >
-                  <option value="">Selecionar cliente…</option>
+                  <option value="">{t('proposals.fields.selectClientPlaceholder')}</option>
                   {(dbClients ?? []).map(c => (
                     <option key={c.id} value={c.id}>{c.full_name}</option>
                   ))}
@@ -1033,7 +1033,7 @@ export default function Proposals() {
                 <input
                   className={styles.input}
                   type="text"
-                  placeholder="Nome do cliente"
+                  placeholder={t('proposals.fields.clientNamePlaceholder')}
                   value={clientFreeText}
                   onChange={e => setClientFreeText(e.target.value)}
                 />
@@ -1042,14 +1042,14 @@ export default function Proposals() {
 
             {/* Service type */}
             <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel}>Tipo de Serviço</label>
+              <label className={styles.fieldLabel}>{t('proposals.fields.serviceType')}</label>
               {serviceTypes.length > 0 ? (
                 <select
                   className={styles.select}
                   value={serviceType}
                   onChange={e => setServiceType(e.target.value)}
                 >
-                  <option value="">Selecionar…</option>
+                  <option value="">{t('proposals.fields.selectOption')}</option>
                   {serviceTypes.map(s => (
                     <option key={s} value={s}>{s}</option>
                   ))}
@@ -1058,7 +1058,7 @@ export default function Proposals() {
                 <input
                   className={styles.input}
                   type="text"
-                  placeholder="Ex.: Ação Trabalhista"
+                  placeholder={t('proposals.fields.serviceTypePlaceholder')}
                   value={serviceType}
                   onChange={e => setServiceType(e.target.value)}
                 />
@@ -1067,14 +1067,14 @@ export default function Proposals() {
 
             {/* Valor */}
             <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel}>Valor dos Honorários</label>
+              <label className={styles.fieldLabel}>{t('proposals.fields.feeAmount')}</label>
               <div className={styles.currencyWrap}>
                 <span className={styles.currencyPrefix}>R$</span>
                 <input
                   className={`${styles.input} ${styles.currencyInput}`}
                   type="text"
                   inputMode="decimal"
-                  placeholder="0,00"
+                  placeholder={t('common.currencyPlaceholder')}
                   value={valorStr}
                   onChange={e => setValorStr(e.target.value)}
                   onBlur={e => setValorStr(formatCurrencyInput(e.target.value))}
@@ -1085,13 +1085,13 @@ export default function Proposals() {
             {/* Participação */}
             {quotaOptions.length > 0 && (
               <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>Participação Final de Êxito</label>
+                <label className={styles.fieldLabel}>{t('proposals.fields.successFee')}</label>
                 <select
                   className={styles.select}
                   value={participacaoPct}
                   onChange={e => setParticipacaoPct(e.target.value)}
                 >
-                  <option value="">Sem participação de êxito</option>
+                  <option value="">{t('proposals.fields.noSuccessFee')}</option>
                   {quotaOptions.map(q => (
                     <option key={q} value={q}>{q}</option>
                   ))}
@@ -1101,7 +1101,7 @@ export default function Proposals() {
 
             {/* Partner toggle */}
             <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel}>Correspondente / Parceiro</label>
+              <label className={styles.fieldLabel}>{t('proposals.fields.partner')}</label>
               <label className={styles.toggleRow}>
                 <span className={`${styles.toggle} ${isPartner ? styles.toggleOn : ''}`}>
                   <input
@@ -1113,19 +1113,19 @@ export default function Proposals() {
                   <span className={styles.toggleThumb} />
                 </span>
                 <span className={styles.toggleLabel}>
-                  Aplicar markup de parceiro (+30%)
-                  <span className={styles.toggleHint}> — não aparece no PDF</span>
+                  {t('proposals.fields.partnerMarkupLabel')}
+                  <span className={styles.toggleHint}> — {t('proposals.fields.partnerMarkupHint')}</span>
                 </span>
               </label>
             </div>
 
             {/* Notes */}
             <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel}>Observações</label>
+              <label className={styles.fieldLabel}>{t('proposals.fields.notes')}</label>
               <textarea
                 className={styles.textarea}
                 rows={4}
-                placeholder="Condições adicionais, prazos, informações relevantes…"
+                placeholder={t('proposals.fields.notesPlaceholder')}
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
               />
@@ -1135,29 +1135,29 @@ export default function Proposals() {
           {/* ── Right: summary + fees ── */}
           <div className={styles.summaryCol}>
             <div className={styles.summaryCard}>
-              <h2 className={styles.cardTitle}>Resumo</h2>
+              <h2 className={styles.cardTitle}>{t('proposals.summary.title')}</h2>
 
               <div className={styles.summaryRows}>
                 <div className={styles.summaryRow}>
-                  <span className={styles.summaryRowLabel}>Valor base</span>
-                  <span className={styles.summaryRowValue}>{fmtBRL(baseValor)}</span>
+                  <span className={styles.summaryRowLabel}>{t('proposals.summary.baseValue')}</span>
+                  <span className={styles.summaryRowValue}>{formatCurrency(baseValor, i18n.language)}</span>
                 </div>
                 {isPartner && (
                   <div className={`${styles.summaryRow} ${styles.summaryRowPartner}`}>
-                    <span className={styles.summaryRowLabel}>Markup parceiro (+30%)</span>
-                    <span className={styles.summaryRowValue}>+ {fmtBRL(baseValor * 0.3)}</span>
+                    <span className={styles.summaryRowLabel}>{t('proposals.summary.partnerMarkup')}</span>
+                    <span className={styles.summaryRowValue}>+ {formatCurrency(baseValor * 0.3, i18n.language)}</span>
                   </div>
                 )}
                 <div className={`${styles.summaryRow} ${styles.summaryRowFinal}`}>
-                  <span className={styles.summaryRowLabel}>Valor final</span>
-                  <span className={styles.summaryRowValueBig}>{fmtBRL(finalValor)}</span>
+                  <span className={styles.summaryRowLabel}>{t('proposals.summary.finalValue')}</span>
+                  <span className={styles.summaryRowValueBig}>{formatCurrency(finalValor, i18n.language)}</span>
                 </div>
                 <div className={`${styles.summaryRow} ${styles.summaryRowPix}`}>
                   <span className={styles.summaryRowLabel}>
                     <span className={styles.pixBadge}>PIX</span>
-                    Valor à vista (10% off)
+                    {t('proposals.summary.pixValue')}
                   </span>
-                  <span className={styles.summaryRowValuePix}>{fmtBRL(pixValor)}</span>
+                  <span className={styles.summaryRowValuePix}>{formatCurrency(pixValor, i18n.language)}</span>
                 </div>
               </div>
 
@@ -1171,7 +1171,7 @@ export default function Proposals() {
                   <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
                   <rect x="6" y="14" width="12" height="8"/>
                 </svg>
-                {submitting ? 'Gerando…' : 'Gerar PDF da Proposta'}
+                {submitting ? t('proposals.generating') : t('proposals.generatePdfButton')}
               </button>
             </div>
 
@@ -1188,24 +1188,24 @@ export default function Proposals() {
                 className={`${styles.viewBtn} ${histView === 'pipeline' ? styles.viewActive : ''}`}
                 onClick={() => setHistView('pipeline')}
               >
-                Pipeline
+                {t('proposals.view.pipeline')}
               </button>
               <button
                 className={`${styles.viewBtn} ${histView === 'lista' ? styles.viewActive : ''}`}
                 onClick={() => setHistView('lista')}
               >
-                Lista
+                {t('proposals.view.list')}
               </button>
             </div>
           </div>
 
           {error ? (
             <div className={styles.emptyState}>
-              <p className={styles.emptyText}>Erro ao carregar propostas.</p>
+              <p className={styles.emptyText}>{t('proposals.errorLoading')}</p>
             </div>
           ) : loading ? (
             <div className={styles.emptyState}>
-              <p className={styles.emptyText}>Carregando…</p>
+              <p className={styles.emptyText}>{t('proposals.loading')}</p>
             </div>
           ) : histView === 'pipeline' ? (
             <PipelineView

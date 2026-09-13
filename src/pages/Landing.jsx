@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
 import styles from './Landing.module.css'
 
 /* ── Scroll-aware navbar ─────────────────────────────────────────────── */
 function Navbar({ onLogin }) {
+  const { t } = useTranslation()
   const [scrolled, setScrolled] = useState(false)
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 40)
@@ -20,12 +22,12 @@ function Navbar({ onLogin }) {
           <span className={styles.navWordmark}>Atlas Adv</span>
         </div>
         <nav className={styles.navLinks}>
-          <a href="#recursos" className={styles.navLink}>Recursos</a>
-          <a href="#comparativo" className={styles.navLink}>Comparativo</a>
-          <a href="#precos" className={styles.navLink}>Preços</a>
+          <a href="#recursos" className={styles.navLink}>{t('landing.nav.recursos', 'Recursos')}</a>
+          <a href="#comparativo" className={styles.navLink}>{t('landing.nav.comparativo', 'Comparativo')}</a>
+          <a href="#precos" className={styles.navLink}>{t('landing.nav.precos', 'Preços')}</a>
         </nav>
         <button className={styles.navCta} onClick={onLogin}>
-          Entrar com Google
+          {t('landing.nav.cta', 'Entrar com Google')}
         </button>
       </div>
     </header>
@@ -98,15 +100,15 @@ const Partial = () => (
 
 /* ── Comparison rows ─────────────────────────────────────────────────── */
 const COMPARISON = [
-  { feature: 'Gestão de casos jurídicos',      atlas: true,  planilha: false,   generico: 'partial' },
-  { feature: 'Controle financeiro integrado',  atlas: true,  planilha: 'partial', generico: 'partial' },
-  { feature: 'Propostas comerciais em PDF',    atlas: true,  planilha: false,   generico: false },
-  { feature: 'Gestão de equipe / estagiários', atlas: true,  planilha: false,   generico: 'partial' },
-  { feature: 'Notas e documentação',           atlas: true,  planilha: 'partial', generico: true },
-  { feature: 'Vitrine pública do escritório',  atlas: true,  planilha: false,   generico: false },
-  { feature: 'Feito para o direito brasileiro',atlas: true,  planilha: false,   generico: false },
-  { feature: 'Privacidade com RLS por usuário',atlas: true,  planilha: false,   generico: false },
-  { feature: 'Gratuito para começar',          atlas: true,  planilha: true,    generico: 'partial' },
+  { key: 'caseManagement',   atlas: true,  planilha: false,     generico: 'partial' },
+  { key: 'financialControl', atlas: true,  planilha: 'partial', generico: 'partial' },
+  { key: 'pdfProposals',     atlas: true,  planilha: false,     generico: false },
+  { key: 'teamManagement',   atlas: true,  planilha: false,     generico: 'partial' },
+  { key: 'notes',            atlas: true,  planilha: 'partial', generico: true },
+  { key: 'publicShowcase',   atlas: true,  planilha: false,     generico: false },
+  { key: 'brazilianLaw',     atlas: true,  planilha: false,     generico: false },
+  { key: 'rls',              atlas: true,  planilha: false,     generico: false },
+  { key: 'freeStart',        atlas: true,  planilha: true,      generico: 'partial' },
 ]
 
 function Cel({ v }) {
@@ -117,6 +119,7 @@ function Cel({ v }) {
 
 /* ── Main page ───────────────────────────────────────────────────────── */
 export default function Landing() {
+  const { t } = useTranslation()
   const { session, loading } = useAuth()
   const navigate = useNavigate()
 
@@ -141,23 +144,22 @@ export default function Landing() {
       <section className={styles.hero}>
         <div className={styles.heroInner}>
           <div className={styles.heroText}>
-            <div className={styles.heroBadge}>Beta gratuito · Acesso imediato</div>
+            <div className={styles.heroBadge}>{t('landing.hero.badge', 'Beta gratuito · Acesso imediato')}</div>
             <h1 className={styles.heroTitle}>
-              O sistema jurídico<br />
-              <span className={styles.heroAccent}>que cresce com você</span>
+              {t('landing.hero.titleLine1', 'O sistema jurídico')}<br />
+              <span className={styles.heroAccent}>{t('landing.hero.titleAccent', 'que cresce com você')}</span>
             </h1>
             <p className={styles.heroSub}>
-              Gestão de casos, clientes, financeiro, equipe e propostas profissionais —
-              tudo em uma plataforma feita para advogados brasileiros.
+              {t('landing.hero.subtitle', 'Gestão de casos, clientes, financeiro, equipe e propostas profissionais — tudo em uma plataforma feita para advogados brasileiros.')}
             </p>
             <div className={styles.heroCtas}>
               <button className={styles.ctaPrimary} onClick={handleLogin}>
                 <GoogleIcon />
-                Entrar com Google — é grátis
+                {t('landing.hero.ctaPrimary', 'Entrar com Google — é grátis')}
               </button>
-              <a href="#recursos" className={styles.ctaSecondary}>Ver recursos →</a>
+              <a href="#recursos" className={styles.ctaSecondary}>{t('landing.hero.ctaSecondary', 'Ver recursos →')}</a>
             </div>
-            <p className={styles.heroNote}>Sem cartão de crédito · Setup em menos de 2 minutos</p>
+            <p className={styles.heroNote}>{t('landing.hero.note', 'Sem cartão de crédito · Setup em menos de 2 minutos')}</p>
           </div>
           <div className={styles.heroVisual}>
             <DashMock />
@@ -171,7 +173,14 @@ export default function Landing() {
 
       {/* ── Feature strip ── */}
       <div className={styles.strip}>
-        {['Casos & processos', 'Clientes', 'Financeiro', 'Propostas em PDF', 'Equipe', 'Vitrine pública'].map(f => (
+        {[
+          t('landing.strip.cases', 'Casos & processos'),
+          t('landing.strip.clients', 'Clientes'),
+          t('landing.strip.financials', 'Financeiro'),
+          t('landing.strip.proposals', 'Propostas em PDF'),
+          t('landing.strip.team', 'Equipe'),
+          t('landing.strip.showcase', 'Vitrine pública'),
+        ].map(f => (
           <span key={f} className={styles.stripItem}>
             <span className={styles.stripDot} />
             {f}
@@ -182,40 +191,40 @@ export default function Landing() {
       {/* ── Features ── */}
       <section id="recursos" className={styles.features}>
         <div className={styles.sectionInner}>
-          <p className={styles.sectionEye}>Recursos</p>
-          <h2 className={styles.sectionTitle}>Tudo que seu escritório precisa, em um só lugar</h2>
-          <p className={styles.sectionSub}>Sem planilhas. Sem gambiarras. Desenvolvido especificamente para a advocacia brasileira.</p>
+          <p className={styles.sectionEye}>{t('landing.features.eyebrow', 'Recursos')}</p>
+          <h2 className={styles.sectionTitle}>{t('landing.features.title', 'Tudo que seu escritório precisa, em um só lugar')}</h2>
+          <p className={styles.sectionSub}>{t('landing.features.subtitle', 'Sem planilhas. Sem gambiarras. Desenvolvido especificamente para a advocacia brasileira.')}</p>
 
           <div className={styles.featureGrid}>
             <Feature
               icon={<BriefcaseIcon />}
-              title="Gestão de Casos"
-              desc="Acompanhe processos com status, área do direito, tribunal, datas e documentos. Tudo vinculado ao cliente."
+              title={t('landing.features.cases.title', 'Gestão de Casos')}
+              desc={t('landing.features.cases.desc', 'Acompanhe processos com status, área do direito, tribunal, datas e documentos. Tudo vinculado ao cliente.')}
             />
             <Feature
               icon={<UsersIcon />}
-              title="Clientes & Histórico"
-              desc="Perfil completo com contatos, CPF/CNPJ, casos vinculados e timeline de atividades."
+              title={t('landing.features.clients.title', 'Clientes & Histórico')}
+              desc={t('landing.features.clients.desc', 'Perfil completo com contatos, CPF/CNPJ, casos vinculados e timeline de atividades.')}
             />
             <Feature
               icon={<MoneyIcon />}
-              title="Financeiro Integrado"
-              desc="Receitas, despesas, honorários e inadimplência. Relatórios em tempo real sem planilha nenhuma."
+              title={t('landing.features.financials.title', 'Financeiro Integrado')}
+              desc={t('landing.features.financials.desc', 'Receitas, despesas, honorários e inadimplência. Relatórios em tempo real sem planilha nenhuma.')}
             />
             <Feature
               icon={<DocIcon />}
-              title="Propostas Profissionais"
-              desc="Gere propostas comerciais em PDF com layout personalizado, tabelas de honorários e assinatura digital."
+              title={t('landing.features.proposals.title', 'Propostas Profissionais')}
+              desc={t('landing.features.proposals.desc', 'Gere propostas comerciais em PDF com layout personalizado, tabelas de honorários e assinatura digital.')}
             />
             <Feature
               icon={<TeamIcon />}
-              title="Gestão de Equipe"
-              desc="Distribua tarefas entre estagiários e sócios, acompanhe progresso e defina responsáveis por caso."
+              title={t('landing.features.team.title', 'Gestão de Equipe')}
+              desc={t('landing.features.team.desc', 'Distribua tarefas entre estagiários e sócios, acompanhe progresso e defina responsáveis por caso.')}
             />
             <Feature
               icon={<GlobeIcon />}
-              title="Vitrine do Escritório"
-              desc="Página pública do seu escritório com áreas de atuação, equipe e formulário de contato."
+              title={t('landing.features.showcase.title', 'Vitrine do Escritório')}
+              desc={t('landing.features.showcase.desc', 'Página pública do seu escritório com áreas de atuação, equipe e formulário de contato.')}
             />
           </div>
         </div>
@@ -224,37 +233,33 @@ export default function Landing() {
       {/* ── Differentiators ── */}
       <section className={styles.diff}>
         <div className={styles.sectionInner}>
-          <p className={styles.sectionEye}>Por que Atlas Adv?</p>
-          <h2 className={styles.sectionTitle}>Quatro razões que fazem a diferença</h2>
+          <p className={styles.sectionEye}>{t('landing.diff.eyebrow', 'Por que Atlas Adv?')}</p>
+          <h2 className={styles.sectionTitle}>{t('landing.diff.title', 'Quatro razões que fazem a diferença')}</h2>
 
           <div className={styles.diffGrid}>
 
             <div className={styles.diffCard}>
               <div className={styles.diffNum}>01</div>
-              <h3 className={styles.diffTitle}>Abriu, entendeu.</h3>
-              <p className={styles.diffSub}>Pronto em 2 minutos, não em 2 semanas.</p>
+              <h3 className={styles.diffTitle}>{t('landing.diff.card1.title', 'Abriu, entendeu.')}</h3>
+              <p className={styles.diffSub}>{t('landing.diff.card1.subtitle', 'Pronto em 2 minutos, não em 2 semanas.')}</p>
               <p className={styles.diffBody}>
-                Não existe botão de dúvida no Atlas Adv. A interface fala por si —
-                você foca no direito, não em aprender software.
+                {t('landing.diff.card1.body', 'Não existe botão de dúvida no Atlas Adv. A interface fala por si — você foca no direito, não em aprender software.')}
               </p>
             </div>
 
             <div className={styles.diffCard}>
               <div className={styles.diffNum}>02</div>
-              <h3 className={styles.diffTitle}>Feito para advogados. Não para engenheiros.</h3>
+              <h3 className={styles.diffTitle}>{t('landing.diff.card2.title', 'Feito para advogados. Não para engenheiros.')}</h3>
               <p className={styles.diffBody}>
-                Chega de menus com 40 opções. De relatórios que ninguém lê.
-                De integrações que ninguém configurou.
-                Só o que você usa, todo dia.
+                {t('landing.diff.card2.body', 'Chega de menus com 40 opções. De relatórios que ninguém lê. De integrações que ninguém configurou. Só o que você usa, todo dia.')}
               </p>
             </div>
 
             <div className={styles.diffCard}>
               <div className={styles.diffNum}>03</div>
-              <h3 className={styles.diffTitle}>Sua marca. Sua cor. Sua identidade.</h3>
+              <h3 className={styles.diffTitle}>{t('landing.diff.card3.title', 'Sua marca. Sua cor. Sua identidade.')}</h3>
               <p className={styles.diffBody}>
-                Logo, cor de marca, nome do escritório em cada proposta e cada tela.
-                Atlas Adv fica nos bastidores. Você fica na frente.
+                {t('landing.diff.card3.body', 'Logo, cor de marca, nome do escritório em cada proposta e cada tela. Atlas Adv fica nos bastidores. Você fica na frente.')}
               </p>
             </div>
 
@@ -262,19 +267,19 @@ export default function Landing() {
               <div className={styles.diffNum}>04</div>
               <div className={styles.diffPriceHeader}>
                 <div>
-                  <h3 className={styles.diffTitle}>Metade do preço. O dobro de foco.</h3>
+                  <h3 className={styles.diffTitle}>{t('landing.diff.card4.title', 'Metade do preço. O dobro de foco.')}</h3>
                   <p className={styles.diffBody}>
-                    Por que pagar R$2.000/ano por funcionalidades que você nunca abre?
+                    {t('landing.diff.card4.body', 'Por que pagar R$2.000/ano por funcionalidades que você nunca abre?')}
                   </p>
                 </div>
               </div>
               <table className={styles.priceTable}>
                 <thead>
                   <tr>
-                    <th className={styles.ptHead}>Sistema</th>
-                    <th className={styles.ptHead}>Mensalidade</th>
-                    <th className={styles.ptHead}>Por ano</th>
-                    <th className={styles.ptHead}>Economia</th>
+                    <th className={styles.ptHead}>{t('landing.diff.card4.table.system', 'Sistema')}</th>
+                    <th className={styles.ptHead}>{t('landing.diff.card4.table.monthly', 'Mensalidade')}</th>
+                    <th className={styles.ptHead}>{t('landing.diff.card4.table.yearly', 'Por ano')}</th>
+                    <th className={styles.ptHead}>{t('landing.diff.card4.table.savings', 'Economia')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -285,14 +290,14 @@ export default function Landing() {
                   ].map(r => (
                     <tr key={r.name} className={styles.ptRow}>
                       <td className={styles.ptCell}>{r.name}</td>
-                      <td className={styles.ptCell}>{r.mes}/mês</td>
+                      <td className={styles.ptCell}>{r.mes}{t('landing.diff.card4.table.perMonth', '/mês')}</td>
                       <td className={styles.ptCell}>{r.ano}</td>
-                      <td className={`${styles.ptCell} ${styles.ptEco}`}>você economiza {r.eco}</td>
+                      <td className={`${styles.ptCell} ${styles.ptEco}`}>{t('landing.diff.card4.table.youSave', 'você economiza {{amount}}', { amount: r.eco })}</td>
                     </tr>
                   ))}
                   <tr className={styles.ptRowAtlas}>
-                    <td className={styles.ptCellAtlas}>Atlas Adv Pro</td>
-                    <td className={styles.ptCellAtlas}>R$97/mês</td>
+                    <td className={styles.ptCellAtlas}>{t('landing.diff.card4.table.atlasName', 'Atlas Adv Pro')}</td>
+                    <td className={styles.ptCellAtlas}>R$97{t('landing.diff.card4.table.perMonth', '/mês')}</td>
                     <td className={styles.ptCellAtlas}>R$1.164/ano</td>
                     <td className={styles.ptCellAtlas}>—</td>
                   </tr>
@@ -307,10 +312,10 @@ export default function Landing() {
       {/* ── Stats strip ── */}
       <div className={styles.statsStrip}>
         {[
-          { value: '50+',   label: 'escritórios em beta' },
-          { value: '1.200+',label: 'casos gerenciados'   },
-          { value: '4.9/5', label: 'avaliação média'      },
-          { value: '2 min', label: 'para começar'         },
+          { value: '50+',   label: t('landing.stats.offices', 'escritórios em beta') },
+          { value: '1.200+',label: t('landing.stats.cases', 'casos gerenciados')   },
+          { value: '4.9/5', label: t('landing.stats.rating', 'avaliação média')      },
+          { value: '2 min', label: t('landing.stats.setup', 'para começar')         },
         ].map(s => (
           <div key={s.label} className={styles.statItem}>
             <span className={styles.statValue}>{s.value}</span>
@@ -322,14 +327,14 @@ export default function Landing() {
       {/* ── How it works ── */}
       <section className={styles.howItWorks}>
         <div className={styles.sectionInner}>
-          <p className={styles.sectionEye}>Como funciona</p>
-          <h2 className={styles.sectionTitle}>Comece em menos de 2 minutos</h2>
+          <p className={styles.sectionEye}>{t('landing.how.eyebrow', 'Como funciona')}</p>
+          <h2 className={styles.sectionTitle}>{t('landing.how.title', 'Comece em menos de 2 minutos')}</h2>
 
           <div className={styles.stepsRow}>
             {[
-              { n: '01', title: 'Crie sua conta', desc: 'Login com Google. Sem formulários longos, sem espera de aprovação.' },
-              { n: '02', title: 'Configure seu escritório', desc: 'Adicione nome, OAB, logo e cor de marca. Personalize em segundos.' },
-              { n: '03', title: 'Comece a gerenciar', desc: 'Cadastre clientes, abra casos e controle o financeiro desde o primeiro dia.' },
+              { n: '01', title: t('landing.how.step1.title', 'Crie sua conta'), desc: t('landing.how.step1.desc', 'Login com Google. Sem formulários longos, sem espera de aprovação.') },
+              { n: '02', title: t('landing.how.step2.title', 'Configure seu escritório'), desc: t('landing.how.step2.desc', 'Adicione nome, OAB, logo e cor de marca. Personalize em segundos.') },
+              { n: '03', title: t('landing.how.step3.title', 'Comece a gerenciar'), desc: t('landing.how.step3.desc', 'Cadastre clientes, abra casos e controle o financeiro desde o primeiro dia.') },
             ].map(s => (
               <div key={s.n} className={styles.step}>
                 <div className={styles.stepNum}>{s.n}</div>
@@ -344,41 +349,41 @@ export default function Landing() {
       {/* ── Testimonials ── */}
       <section className={styles.testimonials}>
         <div className={styles.sectionInner}>
-          <p className={styles.sectionEye}>Depoimentos</p>
-          <h2 className={styles.sectionTitle}>O que dizem os primeiros usuários</h2>
+          <p className={styles.sectionEye}>{t('landing.testimonials.eyebrow', 'Depoimentos')}</p>
+          <h2 className={styles.sectionTitle}>{t('landing.testimonials.title', 'O que dizem os primeiros usuários')}</h2>
 
           <div className={styles.testimonialsGrid}>
             {[
               {
-                quote: 'Finalmente um sistema feito para advogado de verdade. Em uma semana já organizei todos os meus processos e clientes. O financeiro integrado salvou meu escritório.',
+                quote: t('landing.testimonials.t1.quote', 'Finalmente um sistema feito para advogado de verdade. Em uma semana já organizei todos os meus processos e clientes. O financeiro integrado salvou meu escritório.'),
                 name: 'Dr. Roberto Almeida',
-                role: 'Advogado Criminalista',
+                role: t('landing.testimonials.t1.role', 'Advogado Criminalista'),
                 city: 'São Paulo, SP',
                 init: 'RA',
               },
               {
-                quote: 'As propostas em PDF impressionam os clientes. Antes eu usava Word e levava horas. Agora em minutos tenho um documento profissional com minha marca.',
+                quote: t('landing.testimonials.t2.quote', 'As propostas em PDF impressionam os clientes. Antes eu usava Word e levava horas. Agora em minutos tenho um documento profissional com minha marca.'),
                 name: 'Dra. Mariana Costa',
-                role: 'Direito de Família',
+                role: t('landing.testimonials.t2.role', 'Direito de Família'),
                 city: 'Belo Horizonte, MG',
                 init: 'MC',
               },
               {
-                quote: 'O controle de estagiários e a gestão de tarefas mudaram como meu escritório opera. Cada processo tem responsável e prazo. Nada cai mais no esquecimento.',
+                quote: t('landing.testimonials.t3.quote', 'O controle de estagiários e a gestão de tarefas mudaram como meu escritório opera. Cada processo tem responsável e prazo. Nada cai mais no esquecimento.'),
                 name: 'Dr. Thiago Santos',
-                role: 'Direito Trabalhista',
+                role: t('landing.testimonials.t3.role', 'Direito Trabalhista'),
                 city: 'Rio de Janeiro, RJ',
                 init: 'TS',
               },
-            ].map(t => (
-              <div key={t.name} className={styles.testimonialCard}>
+            ].map(item => (
+              <div key={item.name} className={styles.testimonialCard}>
                 <div className={styles.testimonialStars}>{'★'.repeat(5)}</div>
-                <p className={styles.testimonialQuote}>"{t.quote}"</p>
+                <p className={styles.testimonialQuote}>"{item.quote}"</p>
                 <div className={styles.testimonialAuthor}>
-                  <div className={styles.testimonialAvatar}>{t.init}</div>
+                  <div className={styles.testimonialAvatar}>{item.init}</div>
                   <div>
-                    <div className={styles.testimonialName}>{t.name}</div>
-                    <div className={styles.testimonialRole}>{t.role} · {t.city}</div>
+                    <div className={styles.testimonialName}>{item.name}</div>
+                    <div className={styles.testimonialRole}>{item.role} · {item.city}</div>
                   </div>
                 </div>
               </div>
@@ -390,29 +395,29 @@ export default function Landing() {
       {/* ── Comparison ── */}
       <section id="comparativo" className={styles.comparison}>
         <div className={styles.sectionInner}>
-          <p className={styles.sectionEye}>Comparativo</p>
-          <h2 className={styles.sectionTitle}>Por que Atlas Adv?</h2>
-          <p className={styles.sectionSub}>Compare com as alternativas que os escritórios usam hoje.</p>
+          <p className={styles.sectionEye}>{t('landing.comparison.eyebrow', 'Comparativo')}</p>
+          <h2 className={styles.sectionTitle}>{t('landing.comparison.title', 'Por que Atlas Adv?')}</h2>
+          <p className={styles.sectionSub}>{t('landing.comparison.subtitle', 'Compare com as alternativas que os escritórios usam hoje.')}</p>
 
           <div className={styles.tableWrap}>
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th className={styles.thFeature}>Recurso</th>
+                  <th className={styles.thFeature}>{t('landing.comparison.colFeature', 'Recurso')}</th>
                   <th className={styles.thAtlas}>
                     <div className={styles.atlasHeader}>
                       <span className={styles.atlasHeaderMark}>A</span>
-                      Atlas Adv
+                      {t('landing.comparison.colAtlas', 'Atlas Adv')}
                     </div>
                   </th>
-                  <th>Planilhas</th>
-                  <th>Sistemas genéricos</th>
+                  <th>{t('landing.comparison.colSpreadsheets', 'Planilhas')}</th>
+                  <th>{t('landing.comparison.colGeneric', 'Sistemas genéricos')}</th>
                 </tr>
               </thead>
               <tbody>
                 {COMPARISON.map(r => (
-                  <tr key={r.feature} className={styles.tr}>
-                    <td className={styles.tdFeature}>{r.feature}</td>
+                  <tr key={r.key} className={styles.tr}>
+                    <td className={styles.tdFeature}>{t(`landing.comparison.rows.${r.key}`)}</td>
                     <td className={`${styles.td} ${styles.tdAtlas}`}><Cel v={r.atlas} /></td>
                     <td className={styles.td}><Cel v={r.planilha} /></td>
                     <td className={styles.td}><Cel v={r.generico} /></td>
@@ -427,43 +432,55 @@ export default function Landing() {
       {/* ── Pricing ── */}
       <section id="precos" className={styles.pricing}>
         <div className={styles.sectionInner}>
-          <p className={styles.sectionEye}>Preços</p>
-          <h2 className={styles.sectionTitle}>Simples e transparente</h2>
-          <p className={styles.sectionSub}>Comece de graça. Cresça quando precisar.</p>
+          <p className={styles.sectionEye}>{t('landing.pricing.eyebrow', 'Preços')}</p>
+          <h2 className={styles.sectionTitle}>{t('landing.pricing.title', 'Simples e transparente')}</h2>
+          <p className={styles.sectionSub}>{t('landing.pricing.subtitle', 'Comece de graça. Cresça quando precisar.')}</p>
 
           <div className={styles.plansRow}>
             <div className={styles.planCard}>
-              <div className={styles.planName}>Beta Gratuito</div>
+              <div className={styles.planName}>{t('landing.pricing.beta.name', 'Beta Gratuito')}</div>
               <div className={styles.planPrice}>
                 <span className={styles.planAmount}>R$0</span>
-                <span className={styles.planPer}>/mês</span>
+                <span className={styles.planPer}>{t('landing.pricing.perMonth', '/mês')}</span>
               </div>
-              <p className={styles.planDesc}>Acesso completo durante o período beta. Sem limitações.</p>
+              <p className={styles.planDesc}>{t('landing.pricing.beta.desc', 'Acesso completo durante o período beta. Sem limitações.')}</p>
               <ul className={styles.planFeats}>
-                {['Casos ilimitados', 'Clientes ilimitados', 'Propostas em PDF', 'Equipe até 5 membros', 'Suporte por e-mail'].map(f => (
+                {[
+                  t('landing.pricing.beta.feat1', 'Casos ilimitados'),
+                  t('landing.pricing.beta.feat2', 'Clientes ilimitados'),
+                  t('landing.pricing.beta.feat3', 'Propostas em PDF'),
+                  t('landing.pricing.beta.feat4', 'Equipe até 5 membros'),
+                  t('landing.pricing.beta.feat5', 'Suporte por e-mail'),
+                ].map(f => (
                   <li key={f} className={styles.planFeat}><Check />{f}</li>
                 ))}
               </ul>
               <button className={styles.planCta} onClick={handleLogin}>
-                Começar agora — é grátis
+                {t('landing.pricing.beta.cta', 'Começar agora — é grátis')}
               </button>
             </div>
 
             <div className={`${styles.planCard} ${styles.planCardPro}`}>
-              <div className={styles.planBadge}>Em breve</div>
-              <div className={styles.planName}>Pro</div>
+              <div className={styles.planBadge}>{t('landing.pricing.pro.badge', 'Em breve')}</div>
+              <div className={styles.planName}>{t('landing.pricing.pro.name', 'Pro')}</div>
               <div className={styles.planPrice}>
                 <span className={styles.planAmount}>R$97</span>
-                <span className={styles.planPer}>/mês</span>
+                <span className={styles.planPer}>{t('landing.pricing.perMonth', '/mês')}</span>
               </div>
-              <p className={styles.planDesc}>Para escritórios em crescimento que precisam de mais poder.</p>
+              <p className={styles.planDesc}>{t('landing.pricing.pro.desc', 'Para escritórios em crescimento que precisam de mais poder.')}</p>
               <ul className={styles.planFeats}>
-                {['Tudo do Beta', 'Equipe ilimitada', 'Relatórios avançados', 'Integração com WhatsApp', 'Suporte prioritário'].map(f => (
+                {[
+                  t('landing.pricing.pro.feat1', 'Tudo do Beta'),
+                  t('landing.pricing.pro.feat2', 'Equipe ilimitada'),
+                  t('landing.pricing.pro.feat3', 'Relatórios avançados'),
+                  t('landing.pricing.pro.feat4', 'Integração com WhatsApp'),
+                  t('landing.pricing.pro.feat5', 'Suporte prioritário'),
+                ].map(f => (
                   <li key={f} className={styles.planFeat}><Check />{f}</li>
                 ))}
               </ul>
               <button className={styles.planCtaDisabled} disabled>
-                Em breve
+                {t('landing.pricing.pro.cta', 'Em breve')}
               </button>
             </div>
           </div>
@@ -473,22 +490,22 @@ export default function Landing() {
       {/* ── Security ── */}
       <section className={styles.security}>
         <div className={styles.sectionInner}>
-          <h2 className={styles.securityTitle}>Seus dados protegidos. Sempre.</h2>
+          <h2 className={styles.securityTitle}>{t('landing.security.title', 'Seus dados protegidos. Sempre.')}</h2>
           <div className={styles.securityGrid}>
             <div className={styles.secCard}>
               <ShieldIcon />
-              <h3>Isolamento total por escritório</h3>
-              <p>Row Level Security garante que nenhum dado vaze entre contas. Cada escritório acessa apenas o próprio.</p>
+              <h3>{t('landing.security.card1.title', 'Isolamento total por escritório')}</h3>
+              <p>{t('landing.security.card1.desc', 'Row Level Security garante que nenhum dado vaze entre contas. Cada escritório acessa apenas o próprio.')}</p>
             </div>
             <div className={styles.secCard}>
               <LockIcon />
-              <h3>Infraestrutura de nível enterprise</h3>
-              <p>Hospedado na Supabase com PostgreSQL, backups automáticos e criptografia em trânsito e em repouso.</p>
+              <h3>{t('landing.security.card2.title', 'Infraestrutura de nível enterprise')}</h3>
+              <p>{t('landing.security.card2.desc', 'Hospedado na Supabase com PostgreSQL, backups automáticos e criptografia em trânsito e em repouso.')}</p>
             </div>
             <div className={styles.secCard}>
               <GdprIcon />
-              <h3>Conforme com a LGPD</h3>
-              <p>Desenvolvido com privacidade em mente. Você controla seus dados e pode exportar ou excluir a qualquer momento.</p>
+              <h3>{t('landing.security.card3.title', 'Conforme com a LGPD')}</h3>
+              <p>{t('landing.security.card3.desc', 'Desenvolvido com privacidade em mente. Você controla seus dados e pode exportar ou excluir a qualquer momento.')}</p>
             </div>
           </div>
         </div>
@@ -497,11 +514,11 @@ export default function Landing() {
       {/* ── Final CTA ── */}
       <section className={styles.finalCta}>
         <div className={styles.finalCtaInner}>
-          <h2 className={styles.finalCtaTitle}>Pronto para modernizar seu escritório?</h2>
-          <p className={styles.finalCtaSub}>Acesso gratuito durante o beta. Comece hoje.</p>
+          <h2 className={styles.finalCtaTitle}>{t('landing.finalCta.title', 'Pronto para modernizar seu escritório?')}</h2>
+          <p className={styles.finalCtaSub}>{t('landing.finalCta.subtitle', 'Acesso gratuito durante o beta. Comece hoje.')}</p>
           <button className={styles.ctaPrimary} onClick={handleLogin}>
             <GoogleIcon />
-            Entrar com Google — é grátis
+            {t('landing.finalCta.cta', 'Entrar com Google — é grátis')}
           </button>
         </div>
       </section>
@@ -513,11 +530,11 @@ export default function Landing() {
             <div className={styles.navLogoMark}>A</div>
             <div>
               <div className={styles.footerName}>Atlas Adv</div>
-              <div className={styles.footerSub}>Gestão jurídica inteligente</div>
+              <div className={styles.footerSub}>{t('landing.footer.tagline', 'Gestão jurídica inteligente')}</div>
             </div>
           </div>
           <div className={styles.footerCopy}>
-            © {new Date().getFullYear()} Atlas Adv. Todos os direitos reservados.
+            {t('landing.footer.copyright', '© {{year}} Atlas Adv. Todos os direitos reservados.', { year: new Date().getFullYear() })}
           </div>
         </div>
       </footer>

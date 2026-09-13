@@ -1,4 +1,5 @@
 import { useState, useMemo, Fragment, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
 import { useAllTasks, updateTaskStatus, updateTaskOrder, updateTaskAssignee } from '@/hooks/useTasks'
@@ -10,11 +11,14 @@ import PageShell from '@/components/ui/PageShell'
 import ViewToggle from '@/components/ui/ViewToggle'
 import Modal from '@/components/ui/Modal'
 import TaskForm from '@/components/forms/TaskForm'
+import { taskStatusLabel, priorityLabel } from '@/lib/statusLabels'
+import { formatDate } from '@/lib/formatters'
 import styles from './Tasks.module.css'
 
 /* ── Calendar helpers ───────────────────────────────────────────────── */
-const WEEKDAYS_SHORT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
-const MONTHS_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
+function weekdaysShort(tr) { return tr('tasks.weekdaysShort', { returnObjects: true }) }
+function monthsShort(tr)   { return tr('tasks.monthsShort', { returnObjects: true }) }
+function monthsLong(tr)    { return tr('tasks.monthsLong', { returnObjects: true }) }
 
 const PRI_DOT = { urgente: 'var(--red)', alta: 'var(--red)', media: '#f59e0b', baixa: 'var(--accent)' }
 const PRI_DOT_HEX = { urgente: '#ef4444', alta: '#ef4444', media: '#f59e0b', baixa: '#4361ee' }
@@ -56,25 +60,38 @@ function mapTask(t) {
 
 /* ── constants ─────────────────────────────────────────────────────── */
 const KANBAN_COLS = [
-  { key: 'pendente',     label: 'Pendente',     color: 'st-gold' },
-  { key: 'em_andamento', label: 'Em Andamento', color: 'st-blue' },
-  { key: 'concluida',    label: 'Concluída',    color: 'st-green' },
-  { key: 'cancelada',    label: 'Cancelada',    color: 'st-dark' },
+  { key: 'pendente',     color: 'st-gold' },
+  { key: 'em_andamento', color: 'st-blue' },
+  { key: 'concluida',    color: 'st-green' },
+  { key: 'cancelada',    color: 'st-dark' },
 ]
 
-const PRI_CSS    = { urgente: 'badge-alta', alta: 'badge-alta', media: 'badge-media', baixa: 'badge-baixa' }
-const PRI_LABELS = { urgente: 'Urgente',   alta: 'Alta',       media: 'Média',       baixa: 'Baixa' }
-
-function fmtDate(d, opts) {
-  if (!d) return '—'
-  return new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', opts)
-}
+const PRI_CSS = { urgente: 'badge-alta', alta: 'badge-alta', media: 'badge-media', baixa: 'badge-baixa' }
 
 /* ── Despachos / Pomodoro constants ────────────────────────────────── */
 const DESP_TIPOS = [
   'Conclusão para Decisão', 'Conclusão para Julgamento', 'Conclusão para Sentença',
   'Vista ao Ministério Público', 'Cumprimento de Diligência', 'Juntada de Petição', 'Outros',
 ]
+
+const DESP_TIPO_KEYS = {
+  'Conclusão para Decisão':      'conclusaoDecisao',
+  'Conclusão para Julgamento':   'conclusaoJulgamento',
+  'Conclusão para Sentença':     'conclusaoSentenca',
+  'Vista ao Ministério Público': 'vistaMP',
+  'Cumprimento de Diligência':   'cumprimentoDiligencia',
+  'Juntada de Petição':          'juntadaPeticao',
+  'Outros':                      'outros',
+}
+function despachoTipoLabel(tr, value) {
+  return tr(`tasks.despachos.tipo.${DESP_TIPO_KEYS[value] ?? value}`, value)
+}
+
+const DESP_LOCS = ['Secretaria', 'Gabinete']
+const DESP_LOC_KEYS = { Secretaria: 'secretaria', Gabinete: 'gabinete' }
+function despachoLocalLabel(tr, value) {
+  return tr(`tasks.despachos.loc.${DESP_LOC_KEYS[value] ?? value}`, value)
+}
 
 /* ── Card icons ─────────────────────────────────────────────────────── */
 const ICON_TODAY = (
@@ -130,6 +147,7 @@ function CardIcon({ icon }) {
 
 /* ── Pomodoro (thin horizontal) ─────────────────────────────────────── */
 function PomodoroThin() {
+  const { t: tr } = useTranslation()
   const { mode, secs, cycles, startFocus, resumeTimer, pauseTimer, resetTimer } = usePomodoroContext()
 
   const mins      = String(Math.floor(secs / 60)).padStart(2, '0')
@@ -150,21 +168,21 @@ function PomodoroThin() {
             Pomodoro
           </span>
           <span className={`badge ${mode === 'focus' ? 'badge-alta' : mode === 'break' ? 'st-green' : 'st-gray'}`} style={{ fontSize: '0.6rem' }}>
-            {mode === 'focus' ? 'Foco' : mode === 'break' ? 'Pausa' : 'Parado'}
+            {mode === 'focus' ? tr('tasks.pomodoro.modeFocus') : mode === 'break' ? tr('tasks.pomodoro.modeBreak') : tr('tasks.pomodoro.modeStopped')}
           </span>
           {cycles > 0 && (
-            <span className="badge st-teal" style={{ fontSize: '0.6rem' }}>{cycles} ciclo{cycles > 1 ? 's' : ''}</span>
+            <span className="badge st-teal" style={{ fontSize: '0.6rem' }}>{tr('tasks.pomodoro.cycles', { count: cycles })}</span>
           )}
         </div>
         <div className={styles.pomThinTimer}>
           <span className={styles.pomThinTime} style={{ color: accentCol }}>{mins}:{ss}</span>
-          <span className={styles.pomThinHint}>{mode === 'break' ? '☕ pausa' : '30 min foco · 5 min pausa'}</span>
+          <span className={styles.pomThinHint}>{mode === 'break' ? tr('tasks.pomodoro.hintBreak') : tr('tasks.pomodoro.hintFocus')}</span>
         </div>
         <div className={styles.pomThinActions}>
           {!running && (
             <button className={styles.pomThinBtnPrimary} onClick={paused ? resumeTimer : startFocus}>
               <svg viewBox="0 0 14 14" fill="currentColor" width="10" height="10"><path d="M3 2v10l9-5z"/></svg>
-              {paused ? 'Retomar' : 'Iniciar'}
+              {paused ? tr('tasks.pomodoro.resume') : tr('tasks.pomodoro.start')}
             </button>
           )}
           {running && (
@@ -173,11 +191,11 @@ function PomodoroThin() {
                 <rect x="2.5" y="2" width="3" height="10"/>
                 <rect x="8.5" y="2" width="3" height="10"/>
               </svg>
-              Pausar
+              {tr('tasks.pomodoro.pause')}
             </button>
           )}
           {secs !== FOCUS_SECS && (
-            <button className={styles.pomThinBtnGhost} onClick={resetTimer} title="Reiniciar">
+            <button className={styles.pomThinBtnGhost} onClick={resetTimer} title={tr('tasks.pomodoro.reset')}>
               <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" width="11" height="11">
                 <path d="M12 7A5 5 0 1 1 7 2M7 0v4h4"/>
               </svg>
@@ -191,13 +209,14 @@ function PomodoroThin() {
 
 /* ── Mode toggle pill ────────────────────────────────────────────────── */
 function ModeToggle({ mode, onToggle, mini }) {
+  const { t: tr } = useTranslation()
   const isPresencial = mode === 'presencial'
   return (
     <button
       className={mini ? styles.modeToggleMini : styles.modeToggle}
       style={{ background: isPresencial ? '#22a84a' : '#7c3aed' }}
       onClick={e => { e.stopPropagation(); onToggle() }}
-      title="Clique para alternar modo do dia"
+      title={tr('tasks.modeToggle.tooltip')}
     >
       {isPresencial ? (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width={mini ? 7 : 9} height={mini ? 7 : 9}>
@@ -211,13 +230,14 @@ function ModeToggle({ mode, onToggle, mini }) {
           <line x1="12" y1="17" x2="12" y2="21"/>
         </svg>
       )}
-      {isPresencial ? 'Presencial' : 'Virtual'}
+      {isPresencial ? tr('tasks.modeToggle.presencial') : tr('tasks.modeToggle.virtual')}
     </button>
   )
 }
 
 /* ── Despachos card ──────────────────────────────────────────────────── */
 function DespachosCard({ lawyerId, responsaveis, isIntern, internName }) {
+  const { t: tr, i18n } = useTranslation()
   const [cases,   setCases]   = useState([])
   const [queue,   setQueue]   = useState([])
   const [history, setHistory] = useState([])
@@ -280,8 +300,7 @@ function DespachosCard({ lawyerId, responsaveis, isIntern, internName }) {
   }
 
   function fmtD(d) {
-    if (!d) return '—'
-    return new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+    return formatDate(d, i18n.language, { day: '2-digit', month: 'short' })
   }
 
   const ICON_DESP = (
@@ -296,35 +315,35 @@ function DespachosCard({ lawyerId, responsaveis, isIntern, internName }) {
     <div className={`${styles.agendaCard} ${styles.agendaCardFull}`}>
       <div className={styles.agendaCardHeader}>
         <span className={styles.agendaCardIcon}>{ICON_DESP}</span>
-        <span className={styles.agendaCardTitle}>Despachos</span>
+        <span className={styles.agendaCardTitle}>{tr('tasks.despachos.title')}</span>
         {queue.length > 0 && <span className="badge badge-alta">{queue.length}</span>}
       </div>
       <div className={styles.dspInner}>
         <div className={styles.dspTabs}>
           <button className={`${styles.dspTab} ${tab === 'fila' ? styles.dspTabActive : ''}`} onClick={() => setTab('fila')}>
-            Fila {queue.length > 0 ? `(${queue.length})` : ''}
+            {tr('tasks.despachos.queue')} {queue.length > 0 ? `(${queue.length})` : ''}
           </button>
           <button className={`${styles.dspTab} ${tab === 'hist' ? styles.dspTabActive : ''}`} onClick={() => setTab('hist')}>
-            Histórico {history.length > 0 ? `(${history.length})` : ''}
+            {tr('tasks.despachos.history')} {history.length > 0 ? `(${history.length})` : ''}
           </button>
         </div>
         {tab === 'fila' && (
           <>
             <div className={styles.dspAddRow}>
               <select className={styles.dspSelect} value={selCase} onChange={e => setSelCase(e.target.value)}>
-                <option value="">Selecionar processo…</option>
+                <option value="">{tr('tasks.despachos.selectCase')}</option>
                 {cases.map(c => <option key={c.id} value={c.id}>{c.case_number ? `${c.title} · ${c.case_number}` : c.title}</option>)}
               </select>
               {responsaveis.length > 0 && !isIntern && (
                 <select className={styles.dspRespSel} value={selResp} onChange={e => setSelResp(e.target.value)}>
-                  <option value="">Responsável…</option>
+                  <option value="">{tr('tasks.despachos.selectAssignee')}</option>
                   {responsaveis.map(r => <option key={r} value={r}>{r.split(' ')[0]}</option>)}
                 </select>
               )}
               <button className={styles.dspAddBtn} onClick={addToQueue} disabled={!selCase}>+</button>
             </div>
             {queue.length === 0
-              ? <div className={styles.dimMsg}>Fila vazia.</div>
+              ? <div className={styles.dimMsg}>{tr('tasks.despachos.queueEmpty')}</div>
               : (
                 <div className={styles.dspQueue}>
                   {queue.map(d => (
@@ -345,7 +364,7 @@ function DespachosCard({ lawyerId, responsaveis, isIntern, internName }) {
                             value={d.responsavel || ''}
                             onChange={e => update(d.id, 'responsavel', e.target.value || null)}
                           >
-                            <option value="">Sem resp.</option>
+                            <option value="">{tr('tasks.despachos.noAssignee')}</option>
                             {responsaveis.map(r => <option key={r} value={r}>{r.split(' ')[0]}</option>)}
                           </select>
                         ) : d.responsavel ? (
@@ -354,18 +373,18 @@ function DespachosCard({ lawyerId, responsaveis, isIntern, internName }) {
                         <button className={styles.dspXBtn} onClick={() => removeQ(d.id)}>×</button>
                       </div>
                       <div className={styles.dspLocalRow}>
-                        {['Secretaria', 'Gabinete'].map(loc => (
+                        {DESP_LOCS.map(loc => (
                           <label key={loc} className={styles.dspRadioLabel}>
                             <input type="radio" name={`local-${d.id}`} checked={d.local === loc} onChange={() => update(d.id, 'local', loc)} />
-                            {loc}
+                            {despachoLocalLabel(tr, loc)}
                           </label>
                         ))}
                       </div>
                       <select className={styles.dspTipoSel} value={d.tipo} onChange={e => update(d.id, 'tipo', e.target.value)}>
-                        {DESP_TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
+                        {DESP_TIPOS.map(tipo => <option key={tipo} value={tipo}>{despachoTipoLabel(tr, tipo)}</option>)}
                       </select>
-                      <textarea className={styles.dspNotes} value={d.notas} onChange={e => update(d.id, 'notas', e.target.value)} placeholder="Observações…" rows={2} />
-                      <button className={styles.dspDoneBtn} onClick={() => markDone(d.id)}>✓ Despacho Realizado</button>
+                      <textarea className={styles.dspNotes} value={d.notas} onChange={e => update(d.id, 'notas', e.target.value)} placeholder={tr('tasks.despachos.notesPlaceholder')} rows={2} />
+                      <button className={styles.dspDoneBtn} onClick={() => markDone(d.id)}>✓ {tr('tasks.despachos.markDone')}</button>
                     </div>
                   ))}
                 </div>
@@ -376,7 +395,7 @@ function DespachosCard({ lawyerId, responsaveis, isIntern, internName }) {
         {tab === 'hist' && (
           <div className={styles.dspHistList}>
             {history.length === 0
-              ? <div className={styles.dimMsg}>Nenhum despacho realizado.</div>
+              ? <div className={styles.dimMsg}>{tr('tasks.despachos.historyEmpty')}</div>
               : history.map(d => (
                 <div key={d.id} className={styles.dspHistItem}>
                   <div className={styles.dspHistTop}>
@@ -392,9 +411,9 @@ function DespachosCard({ lawyerId, responsaveis, isIntern, internName }) {
                     <span className={styles.dspHistDate}>{fmtD(d.done_at)}</span>
                   </div>
                   <div className={styles.dspHistMeta}>
-                    <span className="badge st-teal" style={{ fontSize: '0.6rem' }}>{d.local}</span>
+                    <span className="badge st-teal" style={{ fontSize: '0.6rem' }}>{despachoLocalLabel(tr, d.local)}</span>
                     {d.responsavel && <span className="badge st-blue" style={{ fontSize: '0.6rem' }}>{d.responsavel.split(' ')[0]}</span>}
-                    <span className={styles.dspHistTipo}>{d.tipo}</span>
+                    <span className={styles.dspHistTipo}>{despachoTipoLabel(tr, d.tipo)}</span>
                   </div>
                   {d.notas && <p className={styles.dspHistNotes}>{d.notas}</p>}
                 </div>
@@ -408,13 +427,14 @@ function DespachosCard({ lawyerId, responsaveis, isIntern, internName }) {
 }
 
 function HearingEventItem({ h, todayISO }) {
+  const { t: tr, i18n } = useTranslation()
   const isToday = h.date === todayISO
   const d = new Date(h.date + 'T12:00:00')
-  const monthShort = d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '').toUpperCase()
+  const monthShort = formatDate(d, i18n.language, { month: 'short' }).replace('.', '').toUpperCase()
   return (
     <div className={styles.eventItem}>
       <div className={styles.evDateCol}>
-        <span className={styles.evWeekday}>{WEEKDAYS_SHORT[d.getDay()]}</span>
+        <span className={styles.evWeekday}>{weekdaysShort(tr)[d.getDay()]}</span>
         <span className={styles.evDay}>{d.getDate()}</span>
         <span className={styles.evMonth}>{monthShort}</span>
       </div>
@@ -422,7 +442,7 @@ function HearingEventItem({ h, todayISO }) {
       <div className={styles.evBody}>
         <div className={styles.evTitle}>{h.title}</div>
         <div className={styles.evMeta}>
-          {isToday && <span className={`${styles.evTag} ${styles.evTagHoje}`}>Hoje</span>}
+          {isToday && <span className={`${styles.evTag} ${styles.evTagHoje}`}>{tr('tasks.calendar.today')}</span>}
           {h.cases?.title && <span>{h.cases.title}</span>}
           {h.location && <span>{h.location}</span>}
         </div>
@@ -434,13 +454,14 @@ function HearingEventItem({ h, todayISO }) {
 
 /* ── Agenda: shared sub-components ─────────────────────────────────── */
 function RespPills({ responsaveis, value, onChange }) {
+  const { t: tr } = useTranslation()
   if (responsaveis.length === 0) return null
   return (
     <div className={styles.respPills}>
       <button
         className={`${styles.respPill} ${value === 'todos' ? styles.respPillActiveTodos : ''}`}
         onClick={() => onChange('todos')}
-      >Todos</button>
+      >{tr('tasks.filters.allAssignees')}</button>
       {responsaveis.map((r, i) => {
         const col = RESP_COLORS[i % RESP_COLORS.length]
         const active = value === r
@@ -461,6 +482,7 @@ function RespPills({ responsaveis, value, onChange }) {
 }
 
 function AgendaTaskRow({ t, todayISO, responsaveis, onClick, onCheck, onOrderChange, onDragStart, onDragEnd, isDragging, onCycleAssignee }) {
+  const { t: tr } = useTranslation()
   const overdue = t.due_date && t.due_date.split('T')[0] < todayISO && !['concluida','cancelada'].includes(t.status)
   const done    = t.status === 'concluida'
   const rawTime = t.due_date?.split('T')[1]?.slice(0, 5)
@@ -479,7 +501,7 @@ function AgendaTaskRow({ t, todayISO, responsaveis, onClick, onCheck, onOrderCha
         className={styles.agendaOrderInput}
         defaultValue={t.sort_order ?? ''}
         placeholder="–"
-        title="Ordem (1 = primeira)"
+        title={tr('tasks.agenda.orderTooltip')}
         onClick={e => e.stopPropagation()}
         onBlur={e => onOrderChange(t.id, e.target.value)}
         onKeyDown={e => { if (e.key === 'Enter') { e.target.blur() } }}
@@ -487,7 +509,7 @@ function AgendaTaskRow({ t, todayISO, responsaveis, onClick, onCheck, onOrderCha
       <button
         className={`${styles.agendaCheckBtn} ${done ? styles.agendaCheckBtnDone : ''}`}
         onClick={e => { e.stopPropagation(); onCheck(t.id) }}
-        title={done ? 'Desmarcar' : 'Marcar como concluída'}
+        title={done ? tr('tasks.agenda.markIncomplete') : tr('tasks.agenda.markComplete')}
       />
       <span className={styles.agendaTaskDot} style={{ background: PRI_DOT_HEX[t.priority] ?? '#888' }} />
       <span className={styles.agendaTaskTitle} onClick={() => onClick(t.id)}>{t.title}</span>
@@ -500,7 +522,7 @@ function AgendaTaskRow({ t, todayISO, responsaveis, onClick, onCheck, onOrderCha
             color: respColor(t.assigned_to, responsaveis),
             cursor: responsaveis.length > 0 ? 'pointer' : 'default',
           }}
-          title={responsaveis.length > 0 ? 'Clique para mudar responsável' : t.assigned_to}
+          title={responsaveis.length > 0 ? tr('tasks.agenda.cycleAssigneeTooltip') : t.assigned_to}
           onClick={e => { e.stopPropagation(); onCycleAssignee?.(t.id, t.assigned_to) }}
         >
           {t.assigned_to.split(' ')[0]}
@@ -512,6 +534,7 @@ function AgendaTaskRow({ t, todayISO, responsaveis, onClick, onCheck, onOrderCha
 
 /* ── Agenda view ────────────────────────────────────────────────────── */
 function AgendaView({ rawTasks, responsaveis, filterResp, session, lawyerId, isIntern, internName, onEdit, onNewWithDate, refetch, onCycleAssignee, showDayMode }) {
+  const { t: tr, i18n } = useTranslation()
   const today    = new Date()
   const todayISO = toISO(today)
   const tomorrowISO = toISO(addDays(today, 1))
@@ -613,10 +636,10 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, lawyerId, isI
   , [rawTasks, filterResp, todayISO, weekOffset])
 
   function dayTitle() {
-    if (dayOffset === 0) return 'Hoje'
-    if (dayOffset === 1) return 'Amanhã'
-    if (dayOffset === -1) return 'Ontem'
-    return new Date(selectedISO + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })
+    if (dayOffset === 0) return tr('tasks.calendar.today')
+    if (dayOffset === 1) return tr('tasks.agenda.tomorrowTitle')
+    if (dayOffset === -1) return tr('tasks.agenda.yesterday')
+    return formatDate(selectedISO, i18n.language, { weekday: 'short', day: 'numeric', month: 'short' })
   }
 
   async function handleQuickAdd(e) {
@@ -647,16 +670,16 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, lawyerId, isI
           <CardIcon icon={ICON_TODAY} />
           <div className={styles.agendaNavRow}>
             <button className={styles.agendaNavBtn} onClick={() => setDayOffset(d => d - 1)}>‹</button>
-            <button className={styles.agendaNavBtnToday} onClick={() => setDayOffset(0)}>Hoje</button>
+            <button className={styles.agendaNavBtnToday} onClick={() => setDayOffset(0)}>{tr('tasks.calendar.today')}</button>
             <button className={styles.agendaNavBtn} onClick={() => setDayOffset(d => d + 1)}>›</button>
           </div>
           <span className={styles.agendaCardTitle}>
-            Tarefas e Compromissos — <em>{dayTitle()}</em>
+            {tr('tasks.agenda.todayCardTitle')} — <em>{dayTitle()}</em>
           </span>
           <button
             className={styles.agendaAddBtn}
             onClick={() => onNewWithDate(selectedISO, filterResp !== 'todos' ? filterResp : null)}
-            title="Nova tarefa"
+            title={tr('tasks.newTask')}
           >+</button>
           {showDayMode !== false && <ModeToggle mode={dayModes[selectedISO] ?? 'virtual'} onToggle={() => toggleMode(selectedISO)} />}
         </div>
@@ -667,7 +690,7 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, lawyerId, isI
           onDrop={() => handleDropOnZone(selectedISO + 'T12:00:00')}
         >
           {todayTasks.length === 0
-            ? <div className={styles.agendaEmpty}>Nenhuma tarefa neste dia</div>
+            ? <div className={styles.agendaEmpty}>{tr('tasks.agenda.emptyToday')}</div>
             : todayTasks.map(t => (
                 <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} onDragStart={handleDragStart} onDragEnd={handleDragEnd} isDragging={draggingId === t.id} onCycleAssignee={onCycleAssignee} />
               ))
@@ -679,18 +702,18 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, lawyerId, isI
       <div className={styles.agendaCard}>
         <div className={styles.agendaCardHeader}>
           <CardIcon icon={ICON_NODATE} />
-          <span className={styles.agendaCardTitle}>Tarefas Sem Prazo</span>
+          <span className={styles.agendaCardTitle}>{tr('tasks.agenda.noDateTitle')}</span>
         </div>
         <form className={styles.agendaQuickAdd} onSubmit={handleQuickAdd}>
           <input
             className={styles.agendaQuickInput}
             value={quickTitle}
             onChange={e => setQuickTitle(e.target.value)}
-            placeholder="Nova tarefa sem prazo…"
+            placeholder={tr('tasks.agenda.noDateQuickPlaceholder')}
             disabled={addingQuick}
           />
           <button type="submit" className={styles.agendaQuickBtn} disabled={addingQuick || !quickTitle.trim()}>
-            + Adicionar
+            + {tr('common.add')}
           </button>
         </form>
         <div
@@ -700,7 +723,7 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, lawyerId, isI
           onDrop={() => handleDropOnZone(null)}
         >
           {noDateTasks.length === 0
-            ? <div className={styles.agendaEmpty}>Nenhuma tarefa sem prazo</div>
+            ? <div className={styles.agendaEmpty}>{tr('tasks.agenda.noDateEmpty')}</div>
             : noDateTasks.map(t => (
                 <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} onDragStart={handleDragStart} onDragEnd={handleDragEnd} isDragging={draggingId === t.id} onCycleAssignee={onCycleAssignee} />
               ))
@@ -712,15 +735,15 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, lawyerId, isI
       <div className={`${styles.agendaCard} ${styles.agendaCardFull}`}>
         <div className={styles.agendaCardHeader}>
           <CardIcon icon={ICON_TMR} />
-          <span className={styles.agendaCardTitle}>Amanhã</span>
+          <span className={styles.agendaCardTitle}>{tr('tasks.agenda.tomorrowTitle')}</span>
           <span className={styles.agendaCardSub}>
-            {new Date(tomorrowISO + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'short' })}
+            {formatDate(tomorrowISO, i18n.language, { weekday: 'long', day: 'numeric', month: 'short' })}
           </span>
           {showDayMode !== false && <ModeToggle mode={dayModes[tomorrowISO] ?? 'virtual'} onToggle={() => toggleMode(tomorrowISO)} />}
           <button
             className={styles.agendaAddBtn}
             onClick={() => onNewWithDate(tomorrowISO, filterResp !== 'todos' ? filterResp : null)}
-            title="Nova tarefa para amanhã"
+            title={tr('tasks.agenda.newForTomorrow')}
           >+</button>
         </div>
         <div
@@ -730,7 +753,7 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, lawyerId, isI
           onDrop={() => handleDropOnZone(tomorrowISO + 'T12:00:00')}
         >
           {tomorrowTasks.length === 0
-            ? <div className={styles.agendaEmpty}>Nenhuma tarefa para amanhã</div>
+            ? <div className={styles.agendaEmpty}>{tr('tasks.agenda.tomorrowEmpty')}</div>
             : tomorrowTasks.map(t => (
                 <AgendaTaskRow key={t.id} t={t} todayISO={todayISO} responsaveis={responsaveis} onClick={onEdit} onCheck={handleCheck} onOrderChange={handleOrderChange} onDragStart={handleDragStart} onDragEnd={handleDragEnd} isDragging={draggingId === t.id} onCycleAssignee={onCycleAssignee} />
               ))
@@ -742,12 +765,12 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, lawyerId, isI
       <div className={`${styles.agendaCard} ${styles.agendaCardFull}`}>
         <div className={styles.agendaCardHeader}>
           <CardIcon icon={ICON_UPCOMING} />
-          <span className={styles.agendaCardTitle}>Visão Mensal</span>
+          <span className={styles.agendaCardTitle}>{tr('tasks.agenda.monthlyViewTitle')}</span>
           <div className={styles.weekOffsetToggle}>
             <button
               className={`${styles.weekOffsetBtn} ${weekOffset === 0 ? styles.weekOffsetBtnActive : ''}`}
               onClick={() => setWeekOffset(0)}
-              title="Iniciar a partir de hoje"
+              title={tr('tasks.agenda.startFromToday')}
             >
               <svg viewBox="0 0 16 14" fill="none" width="14" height="13">
                 <rect x="1" y="2" width="14" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
@@ -759,7 +782,7 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, lawyerId, isI
             <button
               className={`${styles.weekOffsetBtn} ${weekOffset === 2 ? styles.weekOffsetBtnActive : ''}`}
               onClick={() => setWeekOffset(2)}
-              title="Iniciar depois de amanhã"
+              title={tr('tasks.agenda.startAfterTomorrow')}
             >
               <svg viewBox="0 0 16 14" fill="none" width="14" height="13">
                 <rect x="1" y="2" width="14" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
@@ -774,17 +797,18 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, lawyerId, isI
           <button
             className={styles.agendaAddBtn}
             onClick={() => onNewWithDate(null, filterResp !== 'todos' ? filterResp : null)}
-            title="Nova tarefa"
+            title={tr('tasks.newTask')}
           >+</button>
         </div>
         <div className={styles.weekGrid}>
           {[0, 7, 14, 21].map(rowStart => {
             const rowDays = weekDays.slice(rowStart, rowStart + 7)
             const f = rowDays[0]?.d, l = rowDays[6]?.d
+            const monShort = monthsShort(tr)
             const label = f && l
               ? f.getMonth() === l.getMonth()
-                ? `${f.getDate()}–${l.getDate()} ${MONTHS_PT[l.getMonth()].slice(0,3)}`
-                : `${f.getDate()} ${MONTHS_PT[f.getMonth()].slice(0,3)} – ${l.getDate()} ${MONTHS_PT[l.getMonth()].slice(0,3)}`
+                ? `${f.getDate()}–${l.getDate()} ${monShort[l.getMonth()]}`
+                : `${f.getDate()} ${monShort[f.getMonth()]} – ${l.getDate()} ${monShort[l.getMonth()]}`
               : ''
             return (
               <Fragment key={rowStart}>
@@ -800,7 +824,7 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, lawyerId, isI
                     onDrop={() => handleDropOnZone(iso + 'T12:00:00')}
                   >
                     <div className={styles.weekCellHeader}>
-                      <span className={styles.weekDayWkd}>{WEEKDAYS_SHORT[d.getDay()]}</span>
+                      <span className={styles.weekDayWkd}>{weekdaysShort(tr)[d.getDay()]}</span>
                       <span className={`${styles.weekDayNum} ${isToday ? styles.weekDayNumToday : ''}`}>{d.getDate()}</span>
                       {showDayMode !== false && <ModeToggle mode={dayModes[iso] ?? 'virtual'} onToggle={() => toggleMode(iso)} mini />}
                     </div>
@@ -823,14 +847,14 @@ function AgendaView({ rawTasks, responsaveis, filterResp, session, lawyerId, isI
       <div className={`${styles.agendaCard} ${styles.agendaCardFull}`}>
         <div className={styles.agendaCardHeader}>
           <CardIcon icon={ICON_HEARING} />
-          <span className={styles.agendaCardTitle}>Audiências</span>
+          <span className={styles.agendaCardTitle}>{tr('tasks.agenda.hearingsTitle')}</span>
           <span className={styles.agendaCardSub}>
-            {(rawHearings ?? []).length > 0 ? `${(rawHearings ?? []).length} próxima(s)` : 'Nenhuma agendada'}
+            {(rawHearings ?? []).length > 0 ? tr('tasks.agenda.hearingsUpcoming', { count: (rawHearings ?? []).length }) : tr('tasks.agenda.hearingsNone')}
           </span>
         </div>
         <div className={styles.agendaCardBody}>
           {(rawHearings ?? []).length === 0
-            ? <div className={styles.agendaEmpty}>Nenhuma audiência agendada — cadastre em Casos &rsaquo; editar caso</div>
+            ? <div className={styles.agendaEmpty}>{tr('tasks.agenda.hearingsEmpty')}</div>
             : <div className={styles.eventList}>
                 {(rawHearings ?? []).map(h => (
                   <HearingEventItem key={h.id} h={h} todayISO={todayISO} />
@@ -880,6 +904,7 @@ function sortTasks(list) {
 
 /* ── KanbanView ─────────────────────────────────────────────────────── */
 function KanbanView({ tasks, responsaveis, onEdit, onStatusChange }) {
+  const { t: tr, i18n } = useTranslation()
   const today = new Date().toISOString().split('T')[0]
   const [draggingId, setDraggingId] = useState(null)
   const [dragOverCol, setDragOverCol] = useState(null)
@@ -906,12 +931,12 @@ function KanbanView({ tasks, responsaveis, onEdit, onStatusChange }) {
               onDrop={e => handleDrop(e, col.key)}
             >
               <div className={styles.kanbanColHeader}>
-                <span className={`${styles.kanbanColTitle} ${col.color}`}>{col.label}</span>
+                <span className={`${styles.kanbanColTitle} ${col.color}`}>{taskStatusLabel(tr, col.key)}</span>
                 <span className={styles.kanbanColCount}>{items.length}</span>
               </div>
               <div className={styles.kanbanItems}>
                 {items.length === 0
-                  ? <div className={styles.kanbanEmpty}>Vazio</div>
+                  ? <div className={styles.kanbanEmpty}>{tr('tasks.kanbanEmpty')}</div>
                   : items.map(t => {
                       const vencida = t.status !== 'concluida' && t.vencimento && t.vencimento < today
                       return (
@@ -925,10 +950,10 @@ function KanbanView({ tasks, responsaveis, onEdit, onStatusChange }) {
                         >
                           <div className={styles.kanbanCardTitle}>{t.titulo}</div>
                           <div className={styles.kanbanCardMeta}>
-                            <span className={`badge ${PRI_CSS[t.prioridade]}`}>{PRI_LABELS[t.prioridade]}</span>
+                            <span className={`badge ${PRI_CSS[t.prioridade]}`}>{priorityLabel(tr, t.prioridade)}</span>
                             {t.vencimento && (
                               <span className={`${styles.kanbanDate} ${vencida ? styles.overdueDate : ''}`}>
-                                {fmtDate(t.vencimento, { day: '2-digit', month: '2-digit' })}
+                                {formatDate(t.vencimento, i18n.language, { day: '2-digit', month: '2-digit' })}
                                 {t.horario && <span className={styles.taskTime}>{t.horario}</span>}
                               </span>
                             )}
@@ -952,15 +977,16 @@ function KanbanView({ tasks, responsaveis, onEdit, onStatusChange }) {
 
 /* ── ListView ───────────────────────────────────────────────────────── */
 const LIST_SORT_COLS = [
-  { key: 'titulo',      label: 'Tarefa' },
-  { key: 'caso',        label: 'Caso' },
-  { key: 'responsavel', label: 'Responsável' },
-  { key: 'prioridade',  label: 'Prioridade' },
-  { key: 'status',      label: 'Status' },
-  { key: 'vencimento',  label: 'Vencimento' },
+  { key: 'titulo',      labelKey: 'tasks.table.task' },
+  { key: 'caso',        labelKey: 'tasks.table.case' },
+  { key: 'responsavel', labelKey: 'tasks.table.assignee' },
+  { key: 'prioridade',  labelKey: 'tasks.table.priority' },
+  { key: 'status',      labelKey: 'tasks.table.status' },
+  { key: 'vencimento',  labelKey: 'tasks.table.dueDate' },
 ]
 
 function ListView({ tasks, responsaveis, onEdit }) {
+  const { t: tr, i18n } = useTranslation()
   const today = new Date().toISOString().split('T')[0]
   const [sortKey, setSortKey] = useState('vencimento')
   const [sortDir, setSortDir] = useState('asc')
@@ -989,7 +1015,7 @@ function ListView({ tasks, responsaveis, onEdit }) {
   if (tasks.length === 0) return (
     <div className={styles.emptyState}>
       <div className={styles.emptyIcon}>✓</div>
-      <p>Nenhuma tarefa encontrada</p>
+      <p>{tr('tasks.emptyList')}</p>
     </div>
   )
   return (
@@ -999,7 +1025,7 @@ function ListView({ tasks, responsaveis, onEdit }) {
           <tr>
             {LIST_SORT_COLS.map(c => (
               <th key={c.key} className={styles.sortableTh} onClick={() => toggleSort(c.key)}>
-                {c.label}
+                {tr(c.labelKey)}
                 {sortKey === c.key && <span className={styles.sortArrow}>{sortDir === 'asc' ? '↑' : '↓'}</span>}
               </th>
             ))}
@@ -1021,14 +1047,14 @@ function ListView({ tasks, responsaveis, onEdit }) {
                       </span>
                     : <span className={styles.caseCell}>—</span>}
                 </td>
-                <td><span className={`badge ${PRI_CSS[t.prioridade]}`}>{PRI_LABELS[t.prioridade]}</span></td>
+                <td><span className={`badge ${PRI_CSS[t.prioridade]}`}>{priorityLabel(tr, t.prioridade)}</span></td>
                 <td><span className={`badge badge-${t.status === 'em_andamento' ? 'pendente' : t.status}`}>
-                  {KANBAN_COLS.find(c => c.key === t.status)?.label ?? t.status}
+                  {taskStatusLabel(tr, t.status)}
                 </span></td>
                 <td className={`${styles.dateCell} ${vencida ? styles.overdueDate : ''}`}>
-                  {fmtDate(t.vencimento, { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                  {formatDate(t.vencimento, i18n.language, { day: '2-digit', month: '2-digit', year: '2-digit' })}
                   {t.horario && <span className={styles.taskTime}>{t.horario}</span>}
-                  {vencida && <span className={styles.vencidaTag}>Vencida</span>}
+                  {vencida && <span className={styles.vencidaTag}>{tr('tasks.overdue')}</span>}
                 </td>
               </tr>
             )
@@ -1041,6 +1067,7 @@ function ListView({ tasks, responsaveis, onEdit }) {
 
 /* ── Calendar view ──────────────────────────────────────────────────── */
 function CalendarView({ tasks, responsaveis, onEdit }) {
+  const { t: tr, i18n } = useTranslation()
   const [calMode, setCalMode] = useState('mes')
   const [anchor,  setAnchor]  = useState(() => new Date())
 
@@ -1067,13 +1094,14 @@ function CalendarView({ tasks, responsaveis, onEdit }) {
 
   let periodLabel
   if (calMode === 'mes') {
-    periodLabel = `${MONTHS_PT[anchor.getMonth()]} ${anchor.getFullYear()}`
+    periodLabel = `${monthsLong(tr)[anchor.getMonth()]} ${anchor.getFullYear()}`
   } else if (calMode === 'semana') {
     const sun = startOfWeek(anchor)
     const sat = addDays(sun, 6)
-    periodLabel = `${sun.getDate()} ${MONTHS_PT[sun.getMonth()].slice(0,3)} – ${sat.getDate()} ${MONTHS_PT[sat.getMonth()].slice(0,3)} ${sat.getFullYear()}`
+    const monShort = monthsShort(tr)
+    periodLabel = `${sun.getDate()} ${monShort[sun.getMonth()]} – ${sat.getDate()} ${monShort[sat.getMonth()]} ${sat.getFullYear()}`
   } else {
-    periodLabel = anchor.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    periodLabel = formatDate(anchor, i18n.language, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
   }
 
   function renderMonth() {
@@ -1095,7 +1123,7 @@ function CalendarView({ tasks, responsaveis, onEdit }) {
     return (
       <div className={styles.calGrid}>
         <div className={styles.calGridHeader}>
-          {WEEKDAYS_SHORT.map(w => <div key={w} className={styles.calWeekday}>{w}</div>)}
+          {weekdaysShort(tr).map(w => <div key={w} className={styles.calWeekday}>{w}</div>)}
         </div>
         <div className={styles.calMonthBody}>
           {trimmed.map(({ d, iso, isCurrentMonth, isToday, dayTasks }) => (
@@ -1118,7 +1146,7 @@ function CalendarView({ tasks, responsaveis, onEdit }) {
                   </div>
                 ))}
                 {dayTasks.length > 3 && (
-                  <div className={styles.calChipMore}>+{dayTasks.length - 3} mais</div>
+                  <div className={styles.calChipMore}>{tr('tasks.calendar.more', { count: dayTasks.length - 3 })}</div>
                 )}
               </div>
             </div>
@@ -1140,7 +1168,7 @@ function CalendarView({ tasks, responsaveis, onEdit }) {
           return (
             <div key={iso} className={`${styles.calWeekCol} ${isToday ? styles.calWeekColToday : ''}`}>
               <div className={styles.calWeekColHeader} onClick={() => { setAnchor(d); setCalMode('dia') }}>
-                <span className={styles.calWeekWkd}>{WEEKDAYS_SHORT[d.getDay()]}</span>
+                <span className={styles.calWeekWkd}>{weekdaysShort(tr)[d.getDay()]}</span>
                 <span className={`${styles.calWeekNum} ${isToday ? styles.calWeekNumToday : ''}`}>{d.getDate()}</span>
               </div>
               <div className={styles.calWeekItems}>
@@ -1172,7 +1200,7 @@ function CalendarView({ tasks, responsaveis, onEdit }) {
     return (
       <div className={styles.calDay}>
         {dayTasks.length === 0
-          ? <div className={styles.calDayEmpty}>Nenhuma tarefa neste dia.</div>
+          ? <div className={styles.calDayEmpty}>{tr('tasks.calendar.emptyDay')}</div>
           : dayTasks.map(t => (
             <div
               key={t.id}
@@ -1185,9 +1213,9 @@ function CalendarView({ tasks, responsaveis, onEdit }) {
                 {t.caso !== '—' && <span className={styles.calDayTaskCase}>{t.caso}</span>}
               </div>
               <div className={styles.calDayTaskMeta}>
-                <span className={`badge ${PRI_CSS[t.prioridade]}`}>{PRI_LABELS[t.prioridade]}</span>
+                <span className={`badge ${PRI_CSS[t.prioridade]}`}>{priorityLabel(tr, t.prioridade)}</span>
                 <span className={`badge badge-${t.status === 'em_andamento' ? 'pendente' : t.status}`}>
-                  {KANBAN_COLS.find(c => c.key === t.status)?.label ?? t.status}
+                  {taskStatusLabel(tr, t.status)}
                 </span>
                 {t.responsavel && (
                   <span className={styles.calDayTaskResp}>
@@ -1208,12 +1236,12 @@ function CalendarView({ tasks, responsaveis, onEdit }) {
       <div className={styles.calToolbar}>
         <div className={styles.calNav}>
           <button className={styles.calNavBtn} onClick={() => navigate(-1)}>‹</button>
-          <button className={styles.calTodayBtn} onClick={() => setAnchor(new Date())}>Hoje</button>
+          <button className={styles.calTodayBtn} onClick={() => setAnchor(new Date())}>{tr('tasks.calendar.today')}</button>
           <button className={styles.calNavBtn} onClick={() => navigate(1)}>›</button>
         </div>
         <span className={styles.calPeriod}>{periodLabel}</span>
         <div className={styles.calModeToggle}>
-          {[['mes','Mês'],['semana','Semana'],['dia','Dia']].map(([m, l]) => (
+          {[['mes', tr('tasks.calendar.month')], ['semana', tr('tasks.calendar.week')], ['dia', tr('tasks.calendar.day')]].map(([m, l]) => (
             <button
               key={m}
               className={`${styles.calModeBtn} ${calMode === m ? styles.calModeBtnActive : ''}`}
@@ -1241,6 +1269,7 @@ function CalendarView({ tasks, responsaveis, onEdit }) {
 
 /* ── page ───────────────────────────────────────────────────────────── */
 export default function Tasks() {
+  const { t: tr } = useTranslation()
   const { lawyer, session, teamRole, memberLinkedResp, memberName } = useAuth()
   const toast = useToast()
   const prefs = loadPreferences(lawyer)
@@ -1272,7 +1301,7 @@ export default function Tasks() {
   function handleSave() {
     refetch()
     setFormOpen(false)
-    toast.success(editing ? 'Tarefa atualizada.' : 'Tarefa criada.')
+    toast.success(editing ? tr('tasks.toastUpdated') : tr('tasks.toastCreated'))
   }
 
   function handleViewChange(v) {
@@ -1290,7 +1319,7 @@ export default function Tasks() {
 
   async function handleStatusChange(taskId, newStatus) {
     const { error } = await updateTaskStatus(taskId, newStatus)
-    if (error) { toast.error('Erro ao mover tarefa.'); return }
+    if (error) { toast.error(tr('tasks.toastMoveError')); return }
     refetch()
   }
 
@@ -1319,13 +1348,13 @@ export default function Tasks() {
 
   return (
     <PageShell
-      title="Espaço de Trabalho"
-      subtitle={loading ? 'Carregando…' : `${tasks.length} tarefas · ${pendentes} pendentes`}
+      title={tr('nav.workspace')}
+      subtitle={loading ? tr('common.loading') : `${tr('tasks.countTasks', { count: tasks.length })} · ${tr('tasks.countPending', { count: pendentes })}`}
       viewToggle={<ViewToggle value={view} onChange={handleViewChange} showCalendar showAgenda />}
       action={
         <button className={styles.btnNovo} onClick={openNew}>
           <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.75.75 0 0 1 .75.75v5.5h5.5a.75.75 0 0 1 0 1.5h-5.5v5.5a.75.75 0 0 1-1.5 0v-5.5H1.75a.75.75 0 0 1 0-1.5h5.5v-5.5A.75.75 0 0 1 8 1Z"/></svg>
-          Nova tarefa
+          {tr('tasks.newTask')}
         </button>
       }
       filters={
@@ -1342,18 +1371,18 @@ export default function Tasks() {
                 <input
                   className={styles.searchInput}
                   type="text"
-                  placeholder="Buscar tarefa ou caso..."
+                  placeholder={tr('tasks.searchPlaceholder')}
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                 />
               </div>
               <div className={styles.filterGroup}>
-                {[{ v: 'todos', l: 'Todas' }, { v: 'urgente', l: 'Urgente' }, { v: 'alta', l: 'Alta' }, { v: 'media', l: 'Média' }, { v: 'baixa', l: 'Baixa' }].map(({ v, l }) => (
+                {['todos', 'urgente', 'alta', 'media', 'baixa'].map(v => (
                   <button
                     key={v}
                     className={`${styles.filterBtn} ${filterPri === v ? styles.filterActive : ''}`}
                     onClick={() => setFilterPri(v)}
-                  >{l}</button>
+                  >{v === 'todos' ? tr('tasks.filterAll') : priorityLabel(tr, v)}</button>
                 ))}
               </div>
               {!isIntern && responsaveis.length > 0 && (
@@ -1361,14 +1390,14 @@ export default function Tasks() {
               )}
               <label className={styles.hideDoneToggle}>
                 <input type="checkbox" checked={hideDone} onChange={e => setHideDone(e.target.checked)} />
-                Ocultar concluídas
+                {tr('tasks.hideCompleted')}
               </label>
             </>
           )
       }
     >
       {error
-        ? <div className={styles.emptyState}><p>Erro ao carregar tarefas.</p></div>
+        ? <div className={styles.emptyState}><p>{tr('tasks.loadError')}</p></div>
         : view === 'agenda'
           ? <AgendaView
               rawTasks={rawTasks ?? []}
@@ -1392,7 +1421,7 @@ export default function Tasks() {
       }
 
       {formOpen && (
-        <Modal title={editing?.id ? 'Editar tarefa' : 'Nova tarefa'} onClose={() => setFormOpen(false)}>
+        <Modal title={editing?.id ? tr('tasks.editTask') : tr('tasks.newTask')} onClose={() => setFormOpen(false)}>
           <TaskForm initial={editing} onSave={handleSave} onClose={() => setFormOpen(false)} />
         </Modal>
       )}

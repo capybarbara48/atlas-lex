@@ -27,7 +27,19 @@
   "chart": {
     "title": "Últimos 6 meses (pagamentos)",
     "income": "Receitas",
-    "expense": "Despesas"
+    "expense": "Despesas",
+    "historyTitle": "Histórico de pagamentos",
+    "legendIncome": "Rec.",
+    "legendExpense": "Desp.",
+    "periods": {
+      "3m": "3m",
+      "6m": "6m",
+      "12m": "12m",
+      "2y": "2a",
+      "3y": "3a",
+      "4y": "4a",
+      "6y": "6a"
+    }
   },
   "table": {
     "description": "Descrição",
@@ -44,6 +56,8 @@
   "loading": "Carregando…",
   "loadError": "Erro ao carregar lançamentos.",
   "empty": "Nenhum lançamento encontrado",
+  "emptyIncomeMonth": "Nenhuma receita registrada em {{month}}",
+  "emptyExpenseMonth": "Nenhuma despesa registrada em {{month}}",
   "form": {
     "descriptionPlaceholder": "Ex: Honorários — Processo Costa vs. Alfa",
     "amountLabel": "Valor (R$)",
@@ -51,6 +65,103 @@
     "categoryPlaceholder": "Ex: Honorários, Custas, Diligências…",
     "dueDateLabel": "Vencimento",
     "paidAtLabel": "Data de pagamento",
-    "createButton": "Criar lançamento"
+    "createButton": "Criar lançamento",
+    "amountTotalLabel": "Valor total (R$)",
+    "descriptionPlaceholderIncome": "Ex: Honorários — Maria vs. João",
+    "descriptionPlaceholderExpense": "Ex: Aluguel do escritório",
+    "categoryOtherPlaceholder": "Descreva a categoria…",
+    "recurringIncomeLabel": "Receita recorrente (valor fixo mensal)",
+    "recurringExpenseLabel": "Despesa fixa (recorrente mensal)",
+    "installmentToggleLabel": "Parcelar em X vezes",
+    "installmentCountLabel": "Nº de parcelas",
+    "installmentDayLabel": "Dia do vencimento",
+    "installmentStartLabel": "Primeiro mês",
+    "installmentPreview": "{{n}} × {{amount}} · dia {{day}} · {{start}} → {{end}}",
+    "createInstallmentsButton": "Criar {{count}} parcelas"
+  },
+  "categories": {
+    "income": {
+      "honorariosContratuais": "Honorários Contratuais",
+      "honorariosSucumbenciais": "Honorários Sucumbenciais",
+      "custas": "Custas",
+      "diligenciaJuridica": "Diligência Jurídica"
+    },
+    "expense": {
+      "aluguel": "Aluguel",
+      "internetTelefone": "Internet / Telefone",
+      "softwareAssinaturas": "Software / Assinaturas",
+      "oabTaxas": "OAB / Taxas",
+      "pessoalSalarios": "Pessoal / Salários",
+      "contabilidade": "Contabilidade",
+      "materialEscritorio": "Material de Escritório",
+      "marketing": "Marketing",
+      "transporte": "Transporte",
+      "outros": "Outros"
+    }
+  },
+  "tabs": {
+    "entries": "Lançamentos",
+    "quotaLitis": "Quota-Litis"
+  },
+  "actions": {
+    "pdf": "PDF",
+    "pdfTitle": "PDF do mês"
+  },
+  "aria": {
+    "prevMonth": "Mês anterior",
+    "nextMonth": "Próximo mês"
+  },
+  "stats": {
+    "received": "Recebido",
+    "expenses": "Despesas",
+    "receivable": "A receber",
+    "balanceOf": "Saldo de {{month}}",
+    "incomeCount_one": "{{count}} receita",
+    "incomeCount_other": "{{count}} receitas",
+    "expenseCount_one": "{{count}} despesa",
+    "expenseCount_other": "{{count}} despesas",
+    "pendingCount_one": "{{count}} pendente",
+    "pendingCount_other": "{{count}} pendentes"
+  },
+  "sections": {
+    "incomeOf": "Receitas de {{month}}",
+    "expensesOf": "Despesas de {{month}}"
+  },
+  "entry": {
+    "recurringBadge": "Fixa",
+    "confirmPaid": "Confirmar pagamento",
+    "unconfirm": "Desfazer confirmação",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "deleteConfirmLabel": "Excluir?"
+  },
+  "modal": {
+    "newIncome": "Nova receita",
+    "newExpense": "Nova despesa"
+  },
+  "quotaLitis": {
+    "emptyTitle": "Nenhum processo ativo com quota-litis cadastrada",
+    "chartTitle": "Quota-Litis Previstas",
+    "receivable": "A receber",
+    "received": "Recebido",
+    "totalExpected": "Total previsto",
+    "cases": "casos",
+    "receivedBadge": "Recebida",
+    "pendingBadge": "A receber",
+    "confirmReceive": "Confirmar recebimento",
+    "undo": "Desfazer",
+    "table": {
+      "case": "Processo",
+      "client": "Cliente",
+      "caseValue": "Valor da causa",
+      "percent": "%",
+      "expectedValue": "Valor esperado",
+      "status": "Situação"
+    }
+  },
+  "toast": {
+    "deleteError": "Erro ao excluir lançamento: {{message}}",
+    "confirmError": "Erro ao confirmar pagamento: {{message}}",
+    "unconfirmError": "Erro ao reverter pagamento: {{message}}"
   }
 }

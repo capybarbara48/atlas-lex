@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import styles from './SearchPalette.module.css'
 
@@ -13,6 +14,7 @@ function useDebounce(value, delay) {
 }
 
 export default function SearchPalette({ onClose }) {
+  const { t } = useTranslation()
   const [query, setQuery]   = useState('')
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
@@ -45,16 +47,16 @@ export default function SearchPalette({ onClose }) {
     ]).then(([clients, cases, tasks]) => {
       const r = []
       if (clients.data?.length) {
-        r.push({ type: 'header', label: 'Clientes' })
+        r.push({ type: 'header', label: t('ui.searchPalette.groupClients', 'Clientes') })
         clients.data.forEach(c => r.push({ type: 'client', id: c.id, label: c.full_name, sub: c.email, badge: c.tipo }))
       }
       if (cases.data?.length) {
-        r.push({ type: 'header', label: 'Casos' })
+        r.push({ type: 'header', label: t('ui.searchPalette.groupCases', 'Casos') })
         cases.data.forEach(c => r.push({ type: 'case', id: c.id, label: c.title, sub: c.case_number ?? c.court, badge: c.status }))
       }
       if (tasks.data?.length) {
-        r.push({ type: 'header', label: 'Tarefas' })
-        tasks.data.forEach(t => r.push({ type: 'task', id: t.id, label: t.title, sub: t.cases?.title, badge: t.priority }))
+        r.push({ type: 'header', label: t('ui.searchPalette.groupTasks', 'Tarefas') })
+        tasks.data.forEach(tk => r.push({ type: 'task', id: tk.id, label: tk.title, sub: tk.cases?.title, badge: tk.priority }))
       }
       setResults(r)
       setActive(0)
@@ -99,7 +101,7 @@ export default function SearchPalette({ onClose }) {
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={handleKey}
-            placeholder="Buscar clientes, casos, tarefas…"
+            placeholder={t('ui.searchPalette.placeholder', 'Buscar clientes, casos, tarefas…')}
           />
           {loading && <div className={styles.spinner} />}
           <kbd className={styles.esc}>Esc</kbd>
@@ -108,12 +110,12 @@ export default function SearchPalette({ onClose }) {
         <div className={styles.results}>
           {!dq.trim() && (
             <div className={styles.hint}>
-              <span>Digite para buscar em toda a plataforma</span>
+              <span>{t('ui.searchPalette.hintDefault', 'Digite para buscar em toda a plataforma')}</span>
             </div>
           )}
 
           {dq.trim() && results.length === 0 && !loading && (
-            <div className={styles.hint}>Nenhum resultado para <strong>"{dq}"</strong></div>
+            <div className={styles.hint}>{t('ui.searchPalette.noResults', 'Nenhum resultado para "{{query}}"', { query: dq })}</div>
           )}
 
           {results.map((r, i) => {
@@ -142,9 +144,9 @@ export default function SearchPalette({ onClose }) {
         </div>
 
         <div className={styles.footer}>
-          <span><kbd>↑↓</kbd> navegar</span>
-          <span><kbd>↵</kbd> abrir</span>
-          <span><kbd>Esc</kbd> fechar</span>
+          <span><kbd>↑↓</kbd> {t('ui.searchPalette.kbdNavigate', 'navegar')}</span>
+          <span><kbd>↵</kbd> {t('ui.searchPalette.kbdOpen', 'abrir')}</span>
+          <span><kbd>Esc</kbd> {t('ui.searchPalette.kbdClose', 'fechar')}</span>
         </div>
       </div>
     </div>

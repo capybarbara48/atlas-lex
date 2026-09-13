@@ -19,5 +19,11 @@
   "online": "Online",
   "openMenu": "Open menu",
   "closeMenu": "Close menu",
-  "beta": "Beta"
+  "beta": "Beta",
+  "workspace": "Workspace",
+  "metricas": "Metrics",
+  "greetingMorning": "Good morning",
+  "greetingAfternoon": "Good afternoon",
+  "greetingEvening": "Good evening",
+  "internBadge": "Intern"
 }

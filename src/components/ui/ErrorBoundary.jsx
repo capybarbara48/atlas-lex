@@ -1,7 +1,9 @@
 import { Component } from 'react'
+import { useTranslation } from 'react-i18next'
 
 /* ── Page-level fallback (inside AppLayout — sidebar stays) ─────────── */
 function PageFallback({ error, onReset }) {
+  const { t } = useTranslation()
   const isDev = import.meta.env.DEV
   return (
     <div style={{
@@ -14,13 +16,13 @@ function PageFallback({ error, onReset }) {
         fontSize: '1.05rem', fontWeight: 700,
         color: 'var(--text)', margin: '0 0 0.5rem',
       }}>
-        Algo deu errado
+        {t('common.errorBoundary.page.title', 'Algo deu errado')}
       </h2>
       <p style={{
         fontSize: '0.875rem', color: 'var(--text-2)',
         margin: '0 0 1.5rem', maxWidth: '380px', lineHeight: 1.6,
       }}>
-        Ocorreu um erro inesperado nesta página. Tente novamente ou volte ao painel.
+        {t('common.errorBoundary.page.message', 'Ocorreu um erro inesperado nesta página. Tente novamente ou volte ao painel.')}
       </p>
 
       {isDev && error?.message && (
@@ -47,7 +49,7 @@ function PageFallback({ error, onReset }) {
             fontFamily: 'inherit', cursor: 'pointer',
           }}
         >
-          Tentar novamente
+          {t('common.errorBoundary.page.retryButton', 'Tentar novamente')}
         </button>
         <a
           href="/painel"
@@ -60,7 +62,7 @@ function PageFallback({ error, onReset }) {
             display: 'inline-flex', alignItems: 'center',
           }}
         >
-          Ir ao painel
+          {t('common.errorBoundary.page.dashboardButton', 'Ir ao painel')}
         </a>
       </div>
     </div>
@@ -69,6 +71,7 @@ function PageFallback({ error, onReset }) {
 
 /* ── App-level fallback (full screen — last resort) ─────────────────── */
 function AppFallback({ error, onReset }) {
+  const { t } = useTranslation()
   const isDev = import.meta.env.DEV
   return (
     <div style={{
@@ -82,13 +85,13 @@ function AppFallback({ error, onReset }) {
         fontSize: '1.25rem', fontWeight: 700,
         color: 'var(--text)', margin: '0 0 0.5rem',
       }}>
-        Atlas Adv encontrou um problema
+        {t('common.errorBoundary.app.title', 'Atlas Adv encontrou um problema')}
       </h1>
       <p style={{
         fontSize: '0.875rem', color: 'var(--text-2)',
         margin: '0 0 2rem', maxWidth: '400px', lineHeight: 1.6,
       }}>
-        Ocorreu um erro inesperado. Recarregue a página ou limpe o cache do navegador.
+        {t('common.errorBoundary.app.message', 'Ocorreu um erro inesperado. Recarregue a página ou limpe o cache do navegador.')}
       </p>
 
       {isDev && error?.message && (
@@ -115,7 +118,7 @@ function AppFallback({ error, onReset }) {
             fontFamily: 'inherit', cursor: 'pointer',
           }}
         >
-          Recarregar página
+          {t('common.errorBoundary.app.reloadButton', 'Recarregar página')}
         </button>
         <button
           onClick={onReset}
@@ -128,7 +131,7 @@ function AppFallback({ error, onReset }) {
             fontFamily: 'inherit', cursor: 'pointer',
           }}
         >
-          Tentar novamente
+          {t('common.errorBoundary.app.retryButton', 'Tentar novamente')}
         </button>
       </div>
     </div>

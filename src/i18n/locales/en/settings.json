@@ -1,6 +1,6 @@
 {
   "pageTitle": "Settings",
-  "pageSubtitle": "Customize Atlas Adv for your firm",
+  "pageSubtitle": "Customize Atlas Adv for your firm's visual identity in just 3 minutes. Configure options, courts and responsible parties for your firm.",
   "language": {
     "label": "Language",
     "sub": "Choose the interface language",
@@ -22,7 +22,7 @@
   },
   "branding": {
     "title": "Visual Identity",
-    "subtitle": "Your firm's brand, accent color and typography",
+    "subtitle": "Each lawyer has their own brand — logo, name and accent color",
     "previewLabel": "Header preview",
     "firmName": "Firm name",
     "firmNameHint": "Appears in the header on every page",
@@ -56,6 +56,22 @@
     "saveError": "Error saving typography: {{error}}",
     "saveSuccess": "Typography saved!"
   },
+  "nav": {
+    "title": "Navigation Menu",
+    "subtitle": "Choose how the main menu appears in the system. Applied immediately.",
+    "sidebar": {
+      "label": "Left Sidebar",
+      "sub": "Collapses when you move the mouse away"
+    },
+    "top": {
+      "label": "Top Bar",
+      "sub": "Chrome tabs style"
+    },
+    "bottom": {
+      "label": "Bottom Dock",
+      "sub": "Reappears when you move the mouse closer"
+    }
+  },
   "display": {
     "title": "Display Preferences",
     "subtitle": "Customize how content is presented. Saved locally on this device.",
@@ -80,17 +96,29 @@
       "financial": "Financial",
       "overdue": "Overdue"
     },
+    "dayMode": {
+      "label": "Day mode tag",
+      "sub": "Shows a \"Virtual\" or \"In-person\" indicator on Workspace cards and mini-cards",
+      "enabled": "Enabled",
+      "enabledCaption": "With mode tag",
+      "disabled": "Disabled",
+      "disabledCaption": "Without mode tag",
+      "virtualLabel": "Virtual"
+    },
     "resetButton": "Reset preferences",
     "resetNote": "Preferences saved locally on this device",
     "resetSuccess": "Preferences reset to default!"
   },
   "lists": {
     "title": "Customizable Lists",
-    "subtitle": "Configure the options available in Proposals and Fees. Changes are saved instantly to the cloud.",
+    "subtitle": "Configure the options available for your whole firm. These options appear in fee proposals and when registering cases and clients.",
     "loading": "Loading lists…",
     "loadDefaults": "Load defaults",
     "removeTitle": "Remove",
     "addError": "Error adding: {{error}}",
+    "saveButton": "Save lists",
+    "saveSuccess": "Lists updated successfully!",
+    "saveError": "Error saving lists: {{error}}",
     "serviceTypes": {
       "title": "Service types (Proposals)",
       "empty": "No types registered yet.",
@@ -103,52 +131,63 @@
       "invalidPercent": "Invalid percentage. Enter a number between 0 and 100 (e.g.: 30)."
     },
     "tribunals": {
-      "title": "Courts and Divisions (Cases)",
+      "title": "Courts — activate the groups your firm uses",
       "empty": "No courts registered yet.",
-      "placeholder": "E.g.: Criminal Enforcement Division"
+      "placeholder": "E.g.: Criminal Enforcement Division",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "areas": {
+      "title": "Practice Areas (Cases)",
+      "empty": "No areas registered yet.",
+      "placeholder": "E.g.: Digital Law…",
+      "addError": "Error adding area: {{error}}"
     },
     "responsibles": {
       "title": "Responsible parties (Lawyers / Interns)",
       "empty": "None registered yet.",
       "placeholder": "E.g.: Dr. Elcimar Reis"
+    },
+    "partners": {
+      "title": "Partners",
+      "empty": "No partners registered yet.",
+      "placeholder": "E.g.: Dr. John Partner"
     }
   },
   "team": {
-    "title": "Team",
-    "subtitle": "Firm members — partners, lawyers, interns and assistants",
-    "empty": "No members registered yet.",
-    "addButton": "Add member",
-    "editButton": "Edit",
-    "removeConfirm": "Remove {{name}}?",
-    "role": {
-      "parceiro": "Partner",
+    "title": "Team Members",
+    "subtitle": "Invite lawyers and interns to access the firm with their own credentials. Interns do not have access to the Financial module or Clients.",
+    "loading": "Loading…",
+    "empty": "No members invited yet.",
+    "removeTitle": "Remove member",
+    "removeConfirm": "Remove this member? Access will be revoked immediately.",
+    "inviteInstructionsPre": "Instruct the member to sign up at",
+    "inviteInstructionsMid": "with the email",
+    "roleLabel": {
       "advogado": "Lawyer",
-      "estagiario": "Intern",
-      "assistente": "Assistant"
+      "estagiario": "Intern"
     },
-    "modal": {
-      "addTitle": "Add team member",
-      "editTitle": "Edit member"
+    "status": {
+      "pendingAdmin": "Awaiting approval",
+      "pendingInvite": "Approved — awaiting sign-up",
+      "active": "Active",
+      "disabled": "Disabled"
     },
     "form": {
-      "fullName": "Full name *",
-      "fullNamePlaceholder": "Dr. John Smith",
-      "role": "Role",
-      "roles": {
-        "parceiro": "Partner",
-        "advogado": "Lawyer",
-        "estagiario": "Intern",
-        "assistente": "Assistant / Secretary"
-      },
+      "fullName": "Full name",
+      "fullNamePlaceholder": "E.g.: Anna Smith",
       "email": "Email",
-      "emailPlaceholder": "john@firm.com",
-      "phone": "Phone",
-      "phonePlaceholder": "(11) 91234-5678",
-      "oab": "Bar Number (optional)",
-      "oabPlaceholder": "SP 123456",
-      "nameRequired": "Name is required.",
-      "update": "Update"
-    }
+      "emailPlaceholder": "anna@firm.com",
+      "linkedResp": "Linked responsible party",
+      "linkedRespNone": "— None —",
+      "role": "Role",
+      "roleEstagiario": "Intern",
+      "roleAdvogado": "Lawyer"
+    },
+    "inviteButton": "+ Invite",
+    "limitReached": "Limit of {{cap}} {{role}} reached.",
+    "countNote": "{{advCount}}/{{advCap}} lawyers · {{estCount}}/{{estCap}} interns",
+    "inviteNote": "Invitations remain pending until approved by the Atlas Lex administrator."
   },
   "account": {
     "title": "Account",

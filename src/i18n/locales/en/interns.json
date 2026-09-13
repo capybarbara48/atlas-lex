@@ -21,10 +21,28 @@
   "addMember": "+ Add member",
   "editMember": "Edit member",
   "addMemberModal": "Add team member",
+  "changeAssigneeTooltip": "Click to change assignee",
   "emptySetup": {
     "title": "No members registered",
     "text": "Add team members to assign tasks and track each person's productivity.",
-    "button": "+ Add first member"
+    "button": "+ Add first member",
+    "textWithPath": "Add your team's names in <0>Settings → Assignees</0> to start assigning tasks and viewing each member's productivity."
+  },
+  "history": {
+    "title": "Activity History",
+    "empty": "No activity recorded this month.",
+    "task": "Task",
+    "despacho": "Order"
+  },
+  "pdf": {
+    "monthTooltip": "Report reference month",
+    "allMembers": "All members",
+    "memberCount_one": "{{count}} member",
+    "memberCount_other": "{{count}} members",
+    "selectAll": "Select all",
+    "clear": "Clear",
+    "generate": "Generate PDF",
+    "selectMemberError": "Select at least one team member."
   },
   "page": {
     "title": "Team",

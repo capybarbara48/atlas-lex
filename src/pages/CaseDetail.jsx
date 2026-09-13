@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { useKanbanSituations } from '@/hooks/useKanbanSituations'
@@ -7,38 +8,14 @@ import { updateCaseSituation, finalizeCase, deleteCase, toggleQuotaLitisReceived
 import { updateTaskAssignee } from '@/hooks/useTasks'
 import { useCaseNotes } from '@/hooks/useCaseNotes'
 import { PROCESS_PHASES } from '@/lib/processPhases'
+import { STATUS_TASK_CSS, STATUS_FIN_CSS, PRIORITY_CSS, taskStatusLabel, finStatusLabel, priorityLabel } from '@/lib/statusLabels'
+import { formatDate, formatCurrency } from '@/lib/formatters'
 import Modal from '@/components/ui/Modal'
 import CaseForm from '@/components/forms/CaseForm'
 import TaskForm from '@/components/forms/TaskForm'
 import EntryForm from '@/components/forms/EntryForm'
 import { Skeleton, SkeletonListItem } from '@/components/ui/Skeleton'
 import styles from './CaseDetail.module.css'
-
-function brl(v) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v ?? 0)
-}
-function fmt(iso) {
-  if (!iso) return '—'
-  return new Date(iso + (iso.length === 10 ? 'T12:00:00' : '')).toLocaleDateString('pt-BR')
-}
-
-const STATUS_TASK = {
-  pendente:     { label: 'Pendente',     cls: 'st-orange' },
-  em_andamento: { label: 'Em andamento', cls: 'st-blue'   },
-  concluida:    { label: 'Concluída',    cls: 'st-teal'   },
-  cancelada:    { label: 'Cancelada',    cls: 'st-gray'   },
-}
-const PRIORITY = {
-  alta:    { label: 'Alta',    cls: 'st-red'    },
-  urgente: { label: 'Urgente', cls: 'st-red'    },
-  media:   { label: 'Média',   cls: 'st-orange' },
-  baixa:   { label: 'Baixa',   cls: 'st-gray'   },
-}
-const STATUS_FIN = {
-  pago:      { label: 'Pago',      cls: 'st-teal'   },
-  pendente:  { label: 'Pendente',  cls: 'st-orange' },
-  cancelado: { label: 'Cancelado', cls: 'st-gray'   },
-}
 
 /* ── PDF generation ─────────────────────────────────────────────────── */
 function generateCasePDF(caso, tasks, entries, lawyer, phase) {
@@ -278,12 +255,8 @@ const CORES = [
 ]
 const COR_MAP = Object.fromEntries(CORES.map(c => [c.key, c]))
 
-function fmtShort(iso) {
-  if (!iso) return ''
-  return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
-}
-
 function CaseNoteExpand({ nota, onClose, onSaved }) {
+  const { t } = useTranslation()
   const [titulo, setTitulo] = useState(nota.titulo ?? '')
   const [corpo,  setCorpo]  = useState(nota.corpo  ?? '')
   const [cor,    setCor]    = useState(nota.cor    ?? null)
@@ -307,16 +280,16 @@ function CaseNoteExpand({ nota, onClose, onSaved }) {
       <div className={styles.noteExpandCard} style={corStyle ? { borderTop: `4px solid ${corStyle.border}` } : {}}>
         <div className={styles.noteExpandHead}>
           <input className={styles.noteExpandTitle} value={titulo}
-            onChange={e => setTitulo(e.target.value)} placeholder="Título da nota" />
+            onChange={e => setTitulo(e.target.value)} placeholder={t('notes.titlePlaceholder')} />
           <div className={styles.noteExpandActions}>
             <button className={`${styles.noteExpandBtn} ${fixada ? styles.noteIconActive : ''}`}
-              title={fixada ? 'Desafixar' : 'Fixar'} onClick={() => setFixada(v => !v)}>
+              title={fixada ? t('notes.unpin') : t('notes.pin')} onClick={() => setFixada(v => !v)}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="12" y1="17" x2="12" y2="22"/>
                 <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17z"/>
               </svg>
             </button>
-            <button className={`${styles.noteExpandBtn} ${styles.noteExpandClose}`} title="Fechar" onClick={save}>
+            <button className={`${styles.noteExpandBtn} ${styles.noteExpandClose}`} title={t('notes.close')} onClick={save}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
               </svg>
@@ -331,14 +304,14 @@ function CaseNoteExpand({ nota, onClose, onSaved }) {
               onClick={() => setCor(cor === c.key ? null : c.key)}
             />
           ))}
-          {cor && <button type="button" className={styles.noteClearColor} onClick={() => setCor(null)}>Sem cor</button>}
+          {cor && <button type="button" className={styles.noteClearColor} onClick={() => setCor(null)}>{t('notes.noColor')}</button>}
         </div>
         <textarea ref={bodyRef} className={styles.noteExpandBody} value={corpo}
-          onChange={e => setCorpo(e.target.value)} placeholder="Escreva sua nota…" />
+          onChange={e => setCorpo(e.target.value)} placeholder={t('notes.bodyPlaceholder')} />
         <div className={styles.noteExpandFooter}>
-          <span className={styles.noteCharCount}>{corpo.length} caracteres</span>
+          <span className={styles.noteCharCount}>{t('notes.charCount', { count: corpo.length })}</span>
           <button className={styles.noteExpandSave} onClick={save} disabled={saving}>
-            {saving ? 'Salvando…' : 'Salvar'}
+            {saving ? t('common.saving') : t('common.save')}
           </button>
         </div>
       </div>
@@ -347,6 +320,7 @@ function CaseNoteExpand({ nota, onClose, onSaved }) {
 }
 
 function CaseDespachoSection({ caseId }) {
+  const { t, i18n } = useTranslation()
   const [desps,   setDesps]   = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -360,21 +334,16 @@ function CaseDespachoSection({ caseId }) {
       .then(({ data }) => { setDesps(data ?? []); setLoading(false) })
   }, [caseId])
 
-  function fmtDt(iso) {
-    if (!iso) return '—'
-    return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-  }
-
   return (
-    <Section title="Despachos Realizados" count={loading ? undefined : desps.length}>
+    <Section title={t('cases.detail.despachos.title')} count={loading ? undefined : desps.length}>
       {loading
         ? <SkeletonListItem />
         : desps.length === 0
-          ? <Empty text="Nenhum despacho registrado neste processo" />
+          ? <Empty text={t('cases.detail.despachos.empty')} />
           : desps.map(d => (
               <div key={d.id} className={styles.listItem}>
                 <div className={styles.listMain}>
-                  <span className={styles.listTitle}>{d.tipo || 'Despacho'}</span>
+                  <span className={styles.listTitle}>{d.tipo || t('cases.detail.despachos.fallbackLabel')}</span>
                   {d.notas && <span className={styles.listSub}>{d.notas}</span>}
                 </div>
                 <div className={styles.listMeta}>
@@ -382,7 +351,9 @@ function CaseDespachoSection({ caseId }) {
                   {d.responsavel && (
                     <span className="badge st-blue" style={{ fontSize: '0.6rem' }}>{d.responsavel.split(' ')[0]}</span>
                   )}
-                  <span className={styles.listDate}>{fmtDt(d.done_at)}</span>
+                  <span className={styles.listDate}>
+                    {formatDate(d.done_at, i18n.language, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </span>
                 </div>
               </div>
             ))
@@ -392,6 +363,7 @@ function CaseDespachoSection({ caseId }) {
 }
 
 function CaseNotesSection({ caseId, lawyerId }) {
+  const { t, i18n } = useTranslation()
   const { data: notasRaw, refetch } = useCaseNotes(caseId)
   const notas = notasRaw ?? []
 
@@ -426,7 +398,7 @@ function CaseNotesSection({ caseId, lawyerId }) {
   }
 
   async function handleDelete(nota) {
-    if (!window.confirm('Excluir esta nota?')) return
+    if (!window.confirm(t('notes.confirmDelete'))) return
     await supabase.from('notas').delete().eq('id', nota.id)
     refetch()
   }
@@ -434,17 +406,17 @@ function CaseNotesSection({ caseId, lawyerId }) {
   return (
     <div className={styles.section}>
       <div className={styles.sectionHeader}>
-        <span className={styles.sectionTitle}>Notas</span>
+        <span className={styles.sectionTitle}>{t('notes.title')}</span>
         <span className={styles.sectionCount}>{notas.length}</span>
         <button className={styles.sectionAddBtn} onClick={openAdd}>
-          {addOpen ? '✕ Cancelar' : '+ Nova nota'}
+          {addOpen ? `✕ ${t('common.cancel')}` : `+ ${t('notes.newNote')}`}
         </button>
       </div>
       <div className={styles.sectionBody}>
         {addOpen && (
           <form className={styles.noteAddForm} onSubmit={handleAdd}>
             <input className={styles.noteAddTitle} value={newTitulo}
-              onChange={e => setNewTitulo(e.target.value)} placeholder="Título da nota" autoFocus />
+              onChange={e => setNewTitulo(e.target.value)} placeholder={t('notes.titlePlaceholder')} autoFocus />
             <div className={styles.noteColorPicker}>
               {CORES.map(c => (
                 <button key={c.key} type="button"
@@ -456,18 +428,18 @@ function CaseNotesSection({ caseId, lawyerId }) {
             </div>
             <textarea className={styles.noteAddBody} value={newCorpo}
               onChange={e => setNewCorpo(e.target.value)}
-              placeholder="Escreva a nota… (Ctrl+Enter para salvar)" rows={3}
+              placeholder={t('notes.bodyPlaceholderWithShortcut')} rows={3}
               onKeyDown={e => { if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); handleAdd(e) } }} />
             <div className={styles.noteAddFooter}>
-              <button type="button" className={styles.noteAddCancel} onClick={() => setAddOpen(false)}>Cancelar</button>
+              <button type="button" className={styles.noteAddCancel} onClick={() => setAddOpen(false)}>{t('common.cancel')}</button>
               <button type="submit" className={styles.noteAddSave}
                 disabled={saving || (!newTitulo.trim() && !newCorpo.trim())}>
-                {saving ? 'Salvando…' : 'Salvar nota'}
+                {saving ? t('notes.saving') : t('notes.saveNote')}
               </button>
             </div>
           </form>
         )}
-        {notas.length === 0 && !addOpen && <p className={styles.empty}>Nenhuma nota vinculada.</p>}
+        {notas.length === 0 && !addOpen && <p className={styles.empty}>{t('cases.detail.noNotes')}</p>}
         {notas.length > 0 && (
           <div className={styles.noteGrid}>
             {notas.map(n => {
@@ -479,16 +451,16 @@ function CaseNotesSection({ caseId, lawyerId }) {
                   onClick={() => setExpandNota(n)}
                 >
                   <div className={styles.noteCardHead}>
-                    <span className={styles.noteCardDate}>{fmtShort(n.updated_at)}</span>
+                    <span className={styles.noteCardDate}>{formatDate(n.updated_at, i18n.language, { day: '2-digit', month: 'short' })}</span>
                     <div className={styles.noteCardActions} onClick={e => e.stopPropagation()}>
                       <button className={`${styles.noteIconBtn} ${n.fixada ? styles.noteIconActive : ''}`}
-                        title={n.fixada ? 'Desafixar' : 'Fixar'} onClick={() => handlePin(n)}>
+                        title={n.fixada ? t('notes.unpin') : t('notes.pin')} onClick={() => handlePin(n)}>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <line x1="12" y1="17" x2="12" y2="22"/>
                           <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17z"/>
                         </svg>
                       </button>
-                      <button className={`${styles.noteIconBtn} ${styles.noteDelBtn}`} title="Excluir" onClick={() => handleDelete(n)}>
+                      <button className={`${styles.noteIconBtn} ${styles.noteDelBtn}`} title={t('notes.delete')} onClick={() => handleDelete(n)}>
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <polyline points="3 6 5 6 21 6"/>
                           <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
@@ -501,7 +473,7 @@ function CaseNotesSection({ caseId, lawyerId }) {
                   </div>
                   {n.titulo
                     ? <div className={styles.noteCardTitle}>{n.titulo}</div>
-                    : <div className={`${styles.noteCardTitle} ${styles.noteCardNoTitle}`}>Sem título</div>}
+                    : <div className={`${styles.noteCardTitle} ${styles.noteCardNoTitle}`}>{t('notes.noTitle')}</div>}
                   {n.corpo && <div className={styles.noteCardBody}>{n.corpo}</div>}
                 </div>
               )
@@ -519,12 +491,13 @@ function CaseNotesSection({ caseId, lawyerId }) {
 }
 
 const OUTCOMES = [
-  { key: 'procedente',   label: 'Procedente',   icon: '✓', color: '#22c55e', bg: '#dcfce7', border: '#86efac' },
-  { key: 'improcedente', label: 'Improcedente', icon: '✕', color: '#ef4444', bg: '#fee2e2', border: '#fca5a5' },
-  { key: 'outro',        label: 'Outro motivo', icon: '●', color: '#64748b', bg: '#f1f5f9', border: '#cbd5e1' },
+  { key: 'procedente',   labelKey: 'cases.outcome.procedente', icon: '✓', color: '#22c55e', bg: '#dcfce7', border: '#86efac' },
+  { key: 'improcedente', labelKey: 'cases.outcome.improcedente', icon: '✕', color: '#ef4444', bg: '#fee2e2', border: '#fca5a5' },
+  { key: 'outro',        labelKey: 'cases.detail.outcomeOther', icon: '●', color: '#64748b', bg: '#f1f5f9', border: '#cbd5e1' },
 ]
 
 function FinalizarModal({ onClose, onConfirm }) {
+  const { t } = useTranslation()
   const [outcome, setOutcome] = useState(null)
   const [reason,  setReason]  = useState('')
   const [saving,  setSaving]  = useState(false)
@@ -539,7 +512,7 @@ function FinalizarModal({ onClose, onConfirm }) {
 
   return (
     <div className={styles.finalizeBody}>
-      <p className={styles.finalizeQuestion}>Qual foi o resultado deste processo?</p>
+      <p className={styles.finalizeQuestion}>{t('cases.detail.finalizeQuestion')}</p>
       <div className={styles.outcomeCards}>
         {OUTCOMES.map(o => (
           <button
@@ -550,7 +523,7 @@ function FinalizarModal({ onClose, onConfirm }) {
             onClick={() => setOutcome(o.key)}
           >
             <span className={styles.outcomeIcon} style={{ color: o.color }}>{o.icon}</span>
-            <span className={styles.outcomeLabel}>{o.label}</span>
+            <span className={styles.outcomeLabel}>{t(o.labelKey)}</span>
             {outcome === o.key && (
               <span className={styles.outcomeCheck} style={{ background: o.color }}>✓</span>
             )}
@@ -562,19 +535,19 @@ function FinalizarModal({ onClose, onConfirm }) {
           className={styles.outcomeReason}
           value={reason}
           onChange={e => setReason(e.target.value)}
-          placeholder="Descreva o motivo do encerramento…"
+          placeholder={t('cases.detail.finalizeReasonPlaceholder')}
           rows={3}
           autoFocus
         />
       )}
       <div className={styles.finalizeFooter}>
-        <button className={styles.finalizeCancelBtn} onClick={onClose}>Cancelar</button>
+        <button className={styles.finalizeCancelBtn} onClick={onClose}>{t('common.cancel')}</button>
         <button
           className={styles.finalizeConfirmBtn}
           onClick={handleConfirm}
           disabled={saving || !outcome || (outcome === 'outro' && !reason.trim())}
         >
-          {saving ? 'Finalizando…' : 'Finalizar Processo'}
+          {saving ? t('cases.detail.finalizing') : t('cases.detail.finalizeModalTitle')}
         </button>
       </div>
     </div>
@@ -582,6 +555,7 @@ function FinalizarModal({ onClose, onConfirm }) {
 }
 
 function PhaseSelectorSection({ selectedPhase, onSelect }) {
+  const { t } = useTranslation()
   const [search, setSearch] = useState('')
 
   const filtered = useMemo(() => {
@@ -606,17 +580,17 @@ function PhaseSelectorSection({ selectedPhase, onSelect }) {
   return (
     <div className={styles.section}>
       <div className={styles.sectionHeader}>
-        <span className={styles.sectionTitle}>Fase para o PDF</span>
+        <span className={styles.sectionTitle}>{t('cases.detail.phaseForPdf')}</span>
         {selectedPhase
           ? <span className={styles.phaseSelectedPill}>
               <span className={styles.phaseSelectedId}>{selectedPhase.id}</span>
               {selectedPhase.titulo}
             </span>
-          : <span className={styles.phaseNoneLabel}>Nenhuma fase selecionada</span>
+          : <span className={styles.phaseNoneLabel}>{t('cases.detail.noPhaseSelected')}</span>
         }
         {selectedPhase && (
           <button className={styles.phaseClearBtn} onClick={() => onSelect(null)}>
-            Sem fase
+            {t('cases.detail.clearPhase')}
           </button>
         )}
       </div>
@@ -625,7 +599,7 @@ function PhaseSelectorSection({ selectedPhase, onSelect }) {
           className={styles.phaseSearch}
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Filtrar fases ou situações…"
+          placeholder={t('cases.detail.phaseFilterPlaceholder')}
         />
         <div className={styles.phaseList}>
           <div
@@ -634,12 +608,12 @@ function PhaseSelectorSection({ selectedPhase, onSelect }) {
           >
             <span className={`${styles.phaseItemId} ${styles.phaseItemIdNone}`}>—</span>
             <div className={styles.phaseItemBody}>
-              <div className={styles.phaseItemTitle}>Gerar sem fase</div>
-              <div className={styles.phaseItemType}>O PDF será gerado sem indicar a situação atual</div>
+              <div className={styles.phaseItemTitle}>{t('cases.detail.generateWithoutPhase')}</div>
+              <div className={styles.phaseItemType}>{t('cases.detail.generateWithoutPhaseDesc')}</div>
             </div>
           </div>
           {Object.keys(groups).length === 0 && search && (
-            <div className={styles.phaseEmpty}>Nenhuma fase encontrada.</div>
+            <div className={styles.phaseEmpty}>{t('cases.detail.noPhaseFound')}</div>
           )}
           {Object.entries(groups).map(([grupo, items]) => (
             <div key={grupo}>
@@ -654,7 +628,7 @@ function PhaseSelectorSection({ selectedPhase, onSelect }) {
                   <div className={styles.phaseItemBody}>
                     <div className={styles.phaseItemTitle}>{p.titulo}</div>
                     <div className={styles.phaseItemType}>
-                      {p.tipo === 'aguardando' ? 'Situação de Espera' : 'Fase Processual'}
+                      {p.tipo === 'aguardando' ? t('cases.detail.waitingSituation') : t('cases.detail.processPhase')}
                     </div>
                   </div>
                 </div>
@@ -668,6 +642,7 @@ function PhaseSelectorSection({ selectedPhase, onSelect }) {
 }
 
 export default function CaseDetail() {
+  const { t, i18n } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
   const { lawyer } = useAuth()
@@ -693,15 +668,15 @@ export default function CaseDetail() {
   }
 
   async function handleDelete() {
-    if (!window.confirm('Excluir este processo permanentemente? Todas as tarefas, lançamentos e notas vinculados serão removidos. Esta ação não pode ser desfeita.')) return
+    if (!window.confirm(t('cases.detail.deleteConfirm'))) return
     const { error } = await deleteCase(id)
-    if (error) { alert('Erro ao excluir: ' + error.message); return }
+    if (error) { alert(t('cases.detail.deleteError', { error: error.message })); return }
     navigate('/painel/casos')
   }
 
   async function handleFinalize(outcome, reason) {
     const { error } = await finalizeCase(id, outcome, reason)
-    if (error) { alert('Erro ao finalizar: ' + error.message); return }
+    if (error) { alert(t('cases.detail.finalizeError', { error: error.message })); return }
     setFinalizarOpen(false)
     navigate('/painel/casos')
   }
@@ -782,7 +757,7 @@ export default function CaseDetail() {
 
   if (error) return (
     <div className={styles.loadWrap}>
-      <p style={{ color: 'var(--text-2)' }}>Erro ao carregar: {error}</p>
+      <p style={{ color: 'var(--text-2)' }}>{t('cases.detail.errorLoading', { error })}</p>
     </div>
   )
 
@@ -803,7 +778,7 @@ export default function CaseDetail() {
       {/* ── Header ── */}
       <div className={styles.header}>
         <button className={styles.backBtn} onClick={() => navigate('/painel/casos')}>
-          ← Casos
+          ← {t('cases.detail.backToCases')}
         </button>
 
         <div className={styles.headerMain}>
@@ -812,7 +787,7 @@ export default function CaseDetail() {
             <div className={styles.caseName}>
               {caso.title}
               {overdueTasks.length > 0 && (
-                <span className={`badge st-red`}>{overdueTasks.length} atrasada{overdueTasks.length > 1 ? 's' : ''}</span>
+                <span className={`badge st-red`}>{t('cases.detail.overdueBadge', { count: overdueTasks.length })}</span>
               )}
             </div>
             {caso.case_number && <div className={styles.caseSub}>{caso.case_number}</div>}
@@ -833,37 +808,37 @@ export default function CaseDetail() {
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
                 <path d="M13.5 4.5 6 12 2.5 8.5"/>
               </svg>
-              Finalizar
+              {t('cases.detail.finalizeButton')}
             </button>
           )}
-          <button className={styles.deleteBtn} onClick={handleDelete} title="Excluir processo">
+          <button className={styles.deleteBtn} onClick={handleDelete} title={t('cases.detail.deleteTooltip')}>
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
               <path d="M2 4h12M5 4V2.5h6V4M6.5 7v5M9.5 7v5M3 4l.75 9.5a1 1 0 0 0 1 .975h6.5a1 1 0 0 0 1-.975L13 4"/>
             </svg>
           </button>
-          <button className={styles.editBtn} onClick={() => setEditing(true)}>Editar</button>
+          <button className={styles.editBtn} onClick={() => setEditing(true)}>{t('common.edit')}</button>
         </div>
       </div>
 
       {/* ── Info card ── */}
       <div className={styles.infoCard}>
         {caso.clients && (
-          <InfoRow label="Cliente" value={
+          <InfoRow label={t('cases.detail.client')} value={
             <Link to={`/painel/clientes/${caso.clients.id}`} className={styles.clientLink}>
               {caso.clients.full_name}
             </Link>
           } />
         )}
-        <InfoRow label="Área"       value={caso.area} />
-        <InfoRow label="Tribunal"   value={caso.court} />
-        <InfoRow label="Valor da causa" value={caso.valor > 0 ? brl(caso.valor) : null} />
+        <InfoRow label={t('cases.detail.area')}       value={caso.area} />
+        <InfoRow label={t('cases.detail.court')}   value={caso.court} />
+        <InfoRow label={t('cases.detail.caseValue')} value={caso.valor > 0 ? formatCurrency(caso.valor, i18n.language) : null} />
         {caso.quota_litis_pct && (
           <div className={styles.infoRow}>
-            <span className={styles.infoLabel}>Quota-Litis</span>
+            <span className={styles.infoLabel}>{t('cases.detail.quotaLitis')}</span>
             <span className={styles.infoValue} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
               <span className="badge st-blue">{caso.quota_litis_pct}</span>
               <span style={{ fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
-                → {brl(Number(caso.valor) * parseFloat(caso.quota_litis_pct) / 100)}
+                → {formatCurrency(Number(caso.valor) * parseFloat(caso.quota_litis_pct) / 100, i18n.language)}
               </span>
               <button
                 style={{
@@ -880,12 +855,12 @@ export default function CaseDetail() {
                   setCaso(prev => ({ ...prev, quota_litis_received: !prev.quota_litis_received }))
                 }}
               >
-                {caso.quota_litis_received ? '✓ Recebida — desfazer' : 'Confirmar recebimento'}
+                {caso.quota_litis_received ? t('cases.detail.receivedUndo') : t('cases.detail.confirmReceipt')}
               </button>
             </span>
           </div>
         )}
-        <InfoRow label="Situação" value={
+        <InfoRow label={t('cases.detail.situationLabel')} value={
           situations.length > 0 ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
               <select
@@ -893,7 +868,7 @@ export default function CaseDetail() {
                 value={caso.situation ?? ''}
                 onChange={handleSituationChange}
               >
-                <option value="">— Não categorizado —</option>
+                <option value="">{t('cases.detail.uncategorized')}</option>
                 {situations.map(sit => (
                   <option key={sit.id} value={sit.id}>{sit.value}</option>
                 ))}
@@ -908,7 +883,7 @@ export default function CaseDetail() {
                     : { color: '#dc2626', bg: 'rgba(220,38,38,0.1)' }
                 return (
                   <span style={{ fontSize: '0.72rem', fontWeight: 600, padding: '0.2rem 0.6rem', borderRadius: 6, background: style.bg, color: style.color, whiteSpace: 'nowrap' }}>
-                    ⏳ {days}d neste status
+                    ⏳ {t('cases.detail.daysInStatus', { days })}
                   </span>
                 )
               })()}
@@ -917,7 +892,7 @@ export default function CaseDetail() {
         } />
         {caso.description && (
           <div className={`${styles.infoRow} ${styles.infoRowFull}`}>
-            <span className={styles.infoLabel}>Descrição</span>
+            <span className={styles.infoLabel}>{t('cases.detail.description')}</span>
             <span className={styles.infoValue}>{caso.description}</span>
           </div>
         )}
@@ -927,33 +902,33 @@ export default function CaseDetail() {
       <PhaseSelectorSection selectedPhase={selectedPhase} onSelect={setSelectedPhase} />
 
       {/* ── Tarefas ── */}
-      <Section title="Tarefas" count={tasks.length} onAdd={() => setNewTask(true)} addLabel="+ Tarefa">
+      <Section title={t('cases.detail.tasks')} count={tasks.length} onAdd={() => setNewTask(true)} addLabel={t('cases.detail.addTask')}>
         {tasks.length === 0
-          ? <Empty text="Nenhuma tarefa vinculada" />
+          ? <Empty text={t('cases.detail.noTasks')} />
           : <div className={tasks.length > 10 ? styles.taskScrollWrap : undefined}>
-              {tasks.map(t => {
-                const ts = STATUS_TASK[t.status] ?? { label: t.status, cls: 'st-gray' }
-                const pr = PRIORITY[t.priority]  ?? { label: t.priority, cls: 'st-gray' }
-                const overdue = !['concluida','cancelada'].includes(t.status) && t.due_date && t.due_date < new Date().toISOString()
+              {tasks.map(task => {
+                const tsCls = STATUS_TASK_CSS[task.status] ?? 'st-gray'
+                const prCls = PRIORITY_CSS[task.priority]  ?? 'st-gray'
+                const overdue = !['concluida','cancelada'].includes(task.status) && task.due_date && task.due_date < new Date().toISOString()
                 const responsaveis = lawyer?.preferences?.responsaveis ?? []
                 return (
-                  <div key={t.id} className={`${styles.listItem} ${overdue ? styles.listItemOverdue : ''}`}>
+                  <div key={task.id} className={`${styles.listItem} ${overdue ? styles.listItemOverdue : ''}`}>
                     <div className={styles.listMain}>
-                      <span className={styles.listTitle}>{t.title}</span>
-                      {t.description && <span className={styles.listSub}>{t.description}</span>}
+                      <span className={styles.listTitle}>{task.title}</span>
+                      {task.description && <span className={styles.listSub}>{task.description}</span>}
                     </div>
                     <div className={styles.listMeta}>
-                      {t.assigned_to && (
+                      {task.assigned_to && (
                         <span
                           className="badge st-teal"
                           style={{ cursor: responsaveis.length > 0 ? 'pointer' : 'default' }}
-                          title={responsaveis.length > 0 ? 'Clique para mudar responsável' : t.assigned_to}
-                          onClick={() => handleCycleAssignee(t.id, t.assigned_to)}
-                        >{t.assigned_to.split(' ')[0]}</span>
+                          title={responsaveis.length > 0 ? t('cases.detail.changeAssigneeTooltip') : task.assigned_to}
+                          onClick={() => handleCycleAssignee(task.id, task.assigned_to)}
+                        >{task.assigned_to.split(' ')[0]}</span>
                       )}
-                      <span className={`badge ${pr.cls}`}>{pr.label}</span>
-                      <span className={`badge ${ts.cls}`}>{ts.label}</span>
-                      {t.due_date && <span className={`${styles.listDate} ${overdue ? styles.dateOverdue : ''}`}>{fmt(t.due_date)}</span>}
+                      <span className={`badge ${prCls}`}>{priorityLabel(t, task.priority)}</span>
+                      <span className={`badge ${tsCls}`}>{taskStatusLabel(t, task.status)}</span>
+                      {task.due_date && <span className={`${styles.listDate} ${overdue ? styles.dateOverdue : ''}`}>{formatDate(task.due_date, i18n.language)}</span>}
                     </div>
                   </div>
                 )
@@ -964,19 +939,19 @@ export default function CaseDetail() {
 
       {/* ── Financeiro ── */}
       <Section
-        title="Financeiro"
+        title={t('cases.detail.financial')}
         count={entries.length}
         onAdd={() => setNewEntry(true)}
-        addLabel="+ Lançamento"
+        addLabel={t('cases.detail.addEntry')}
         badge={entries.length > 0
-          ? <span className={styles.saldoBadge} style={{ color: saldo >= 0 ? 'var(--green)' : 'var(--red)', marginLeft: 'auto' }}>{brl(saldo)}</span>
+          ? <span className={styles.saldoBadge} style={{ color: saldo >= 0 ? 'var(--green)' : 'var(--red)', marginLeft: 'auto' }}>{formatCurrency(saldo, i18n.language)}</span>
           : null
         }
       >
         {entries.length === 0
-          ? <Empty text="Nenhum lançamento vinculado" />
+          ? <Empty text={t('cases.detail.noEntries')} />
           : entries.map(e => {
-              const es = STATUS_FIN[e.status] ?? { label: e.status, cls: 'st-gray' }
+              const esCls = STATUS_FIN_CSS[e.status] ?? 'st-gray'
               return (
                 <div key={e.id} className={styles.listItem}>
                   <div className={styles.listMain}>
@@ -984,12 +959,12 @@ export default function CaseDetail() {
                   </div>
                   <div className={styles.listMeta}>
                     <span className={`badge ${e.type === 'receita' ? 'st-teal' : 'st-red'}`}>
-                      {e.type === 'receita' ? 'Receita' : 'Despesa'}
+                      {e.type === 'receita' ? t('cases.detail.income') : t('cases.detail.expense')}
                     </span>
-                    <span className={`badge ${es.cls}`}>{es.label}</span>
-                    {e.due_date && <span className={styles.listDate}>{fmt(e.due_date)}</span>}
+                    <span className={`badge ${esCls}`}>{finStatusLabel(t, e.status)}</span>
+                    {e.due_date && <span className={styles.listDate}>{formatDate(e.due_date, i18n.language)}</span>}
                     <span className={styles.listAmt} style={{ color: e.type === 'receita' ? 'var(--green)' : 'var(--red)' }}>
-                      {e.type === 'receita' ? '+' : '−'}{brl(e.amount)}
+                      {e.type === 'receita' ? '+' : '−'}{formatCurrency(e.amount, i18n.language)}
                     </span>
                   </div>
                 </div>
@@ -1005,7 +980,7 @@ export default function CaseDetail() {
       <CaseDespachoSection caseId={caso.id} />
 
       {finalizarOpen && (
-        <Modal title="Finalizar Processo" onClose={() => setFinalizarOpen(false)}>
+        <Modal title={t('cases.detail.finalizeModalTitle')} onClose={() => setFinalizarOpen(false)}>
           <FinalizarModal
             onClose={() => setFinalizarOpen(false)}
             onConfirm={handleFinalize}
@@ -1014,13 +989,13 @@ export default function CaseDetail() {
       )}
 
       {editing && (
-        <Modal title="Editar processo" onClose={() => setEditing(false)} size="lg">
+        <Modal title={t('cases.editCase')} onClose={() => setEditing(false)} size="lg">
           <CaseForm initial={caso} onSave={() => { setEditing(false); load() }} onClose={() => setEditing(false)} />
         </Modal>
       )}
 
       {newTask && (
-        <Modal title="Nova tarefa" onClose={() => setNewTask(false)}>
+        <Modal title={t('cases.detail.newTask')} onClose={() => setNewTask(false)}>
           <TaskForm
             initial={{ case_id: caso.id }}
             onSave={() => { setNewTask(false); load() }}
@@ -1030,7 +1005,7 @@ export default function CaseDetail() {
       )}
 
       {newEntry && (
-        <Modal title="Novo lançamento" onClose={() => setNewEntry(false)}>
+        <Modal title={t('cases.detail.newEntry')} onClose={() => setNewEntry(false)}>
           <EntryForm
             initial={{ case_id: caso.id, client_id: caso.client_id }}
             onSave={() => { setNewEntry(false); load() }}

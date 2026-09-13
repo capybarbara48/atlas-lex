@@ -27,7 +27,19 @@
   "chart": {
     "title": "Last 6 months (payments)",
     "income": "Income",
-    "expense": "Expenses"
+    "expense": "Expenses",
+    "historyTitle": "Payment history",
+    "legendIncome": "Inc.",
+    "legendExpense": "Exp.",
+    "periods": {
+      "3m": "3mo",
+      "6m": "6mo",
+      "12m": "12mo",
+      "2y": "2yr",
+      "3y": "3yr",
+      "4y": "4yr",
+      "6y": "6yr"
+    }
   },
   "table": {
     "description": "Description",
@@ -44,6 +56,8 @@
   "loading": "Loading…",
   "loadError": "Error loading entries.",
   "empty": "No entries found",
+  "emptyIncomeMonth": "No income recorded in {{month}}",
+  "emptyExpenseMonth": "No expenses recorded in {{month}}",
   "form": {
     "descriptionPlaceholder": "E.g.: Fees — Costa vs. Alfa case",
     "amountLabel": "Amount (R$)",
@@ -51,6 +65,103 @@
     "categoryPlaceholder": "E.g.: Fees, Court costs, Errands…",
     "dueDateLabel": "Due date",
     "paidAtLabel": "Payment date",
-    "createButton": "Create entry"
+    "createButton": "Create entry",
+    "amountTotalLabel": "Total amount (R$)",
+    "descriptionPlaceholderIncome": "E.g.: Fees — Maria vs. João case",
+    "descriptionPlaceholderExpense": "E.g.: Office rent",
+    "categoryOtherPlaceholder": "Describe the category…",
+    "recurringIncomeLabel": "Recurring income (fixed monthly amount)",
+    "recurringExpenseLabel": "Fixed expense (recurring monthly)",
+    "installmentToggleLabel": "Split into installments",
+    "installmentCountLabel": "Number of installments",
+    "installmentDayLabel": "Due day",
+    "installmentStartLabel": "First month",
+    "installmentPreview": "{{n}} × {{amount}} · day {{day}} · {{start}} → {{end}}",
+    "createInstallmentsButton": "Create {{count}} installments"
+  },
+  "categories": {
+    "income": {
+      "honorariosContratuais": "Contract Fees",
+      "honorariosSucumbenciais": "Success Fees",
+      "custas": "Court Costs",
+      "diligenciaJuridica": "Legal Errand"
+    },
+    "expense": {
+      "aluguel": "Rent",
+      "internetTelefone": "Internet / Phone",
+      "softwareAssinaturas": "Software / Subscriptions",
+      "oabTaxas": "Bar Association / Fees",
+      "pessoalSalarios": "Staff / Salaries",
+      "contabilidade": "Accounting",
+      "materialEscritorio": "Office Supplies",
+      "marketing": "Marketing",
+      "transporte": "Transportation",
+      "outros": "Other"
+    }
+  },
+  "tabs": {
+    "entries": "Entries",
+    "quotaLitis": "Quota Litis"
+  },
+  "actions": {
+    "pdf": "PDF",
+    "pdfTitle": "PDF for the month"
+  },
+  "aria": {
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month"
+  },
+  "stats": {
+    "received": "Received",
+    "expenses": "Expenses",
+    "receivable": "Receivable",
+    "balanceOf": "Balance for {{month}}",
+    "incomeCount_one": "{{count}} income entry",
+    "incomeCount_other": "{{count}} income entries",
+    "expenseCount_one": "{{count}} expense",
+    "expenseCount_other": "{{count}} expenses",
+    "pendingCount_one": "{{count}} pending",
+    "pendingCount_other": "{{count}} pending"
+  },
+  "sections": {
+    "incomeOf": "Income for {{month}}",
+    "expensesOf": "Expenses for {{month}}"
+  },
+  "entry": {
+    "recurringBadge": "Recurring",
+    "confirmPaid": "Confirm payment",
+    "unconfirm": "Undo confirmation",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirmLabel": "Delete?"
+  },
+  "modal": {
+    "newIncome": "New income",
+    "newExpense": "New expense"
+  },
+  "quotaLitis": {
+    "emptyTitle": "No active case with quota litis registered",
+    "chartTitle": "Projected Quota Litis",
+    "receivable": "Receivable",
+    "received": "Received",
+    "totalExpected": "Total projected",
+    "cases": "cases",
+    "receivedBadge": "Received",
+    "pendingBadge": "Receivable",
+    "confirmReceive": "Confirm receipt",
+    "undo": "Undo",
+    "table": {
+      "case": "Case",
+      "client": "Client",
+      "caseValue": "Case value",
+      "percent": "%",
+      "expectedValue": "Expected value",
+      "status": "Status"
+    }
+  },
+  "toast": {
+    "deleteError": "Error deleting entry: {{message}}",
+    "confirmError": "Error confirming payment: {{message}}",
+    "unconfirmError": "Error reverting payment: {{message}}"
   }
 }

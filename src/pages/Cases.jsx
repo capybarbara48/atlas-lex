@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { loadPreferences, savePreferences } from '@/hooks/usePreferences'
 import { useCases, useFinalisedCases, updateCaseSituation, updateDespachoAttempts, reactivateCase } from '@/hooks/useCases'
@@ -10,6 +11,7 @@ import ViewToggle from '@/components/ui/ViewToggle'
 import Modal from '@/components/ui/Modal'
 import CaseForm from '@/components/forms/CaseForm'
 import { SkeletonTable, SkeletonKanbanCard } from '@/components/ui/Skeleton'
+import { formatDate, formatCurrency } from '@/lib/formatters'
 import styles from './Cases.module.css'
 
 /* ── helpers ────────────────────────────────────────────────────────── */
@@ -43,9 +45,9 @@ function mapCase(c) {
   }
 }
 
-function brl(v) {
+function brl(v, lang) {
   if (!v) return '—'
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
+  return formatCurrency(v, lang)
 }
 
 function daysSince(d) {
@@ -62,6 +64,7 @@ function statusDaysStyle(n) {
 
 /* ── EditColumnsModal ───────────────────────────────────────────────── */
 function EditColumnsModal({ situations, onAdd, onUpdate, onDelete, onReorder, onClose }) {
+  const { t } = useTranslation()
   const toast = useToast()
   const [newName, setNewName]   = useState('')
   const [newColor, setNewColor] = useState('#4361ee')
@@ -72,11 +75,11 @@ function EditColumnsModal({ situations, onAdd, onUpdate, onDelete, onReorder, on
     const name = newName.trim()
     if (!name) return
     if (localList.some(s => s.value.toLowerCase() === name.toLowerCase())) {
-      toast.error('Já existe uma coluna com esse nome.')
+      toast.error(t('cases.editColumns.duplicateError'))
       return
     }
     const { data, error } = await onAdd(name, newColor)
-    if (error) { toast.error('Erro ao adicionar coluna.'); return }
+    if (error) { toast.error(t('cases.editColumns.addError')); return }
     if (data) {
       setLocalList(prev => [...prev, data])
       setNewName('')
@@ -88,15 +91,15 @@ function EditColumnsModal({ situations, onAdd, onUpdate, onDelete, onReorder, on
     const name = editing?.value.trim()
     if (!name) return
     const { error } = await onUpdate(editing.id, { value: name, color: editing.color })
-    if (error) { toast.error('Erro ao salvar.'); return }
+    if (error) { toast.error(t('cases.editColumns.saveError')); return }
     setLocalList(prev => prev.map(s => s.id === editing.id ? { ...s, value: name, color: editing.color } : s))
     setEditing(null)
   }
 
   async function handleDelete(id) {
-    if (localList.length <= 1) { toast.error('É necessário pelo menos uma coluna.'); return }
+    if (localList.length <= 1) { toast.error(t('cases.editColumns.minColumnsError')); return }
     const { error } = await onDelete(id)
-    if (error) { toast.error('Erro ao excluir coluna.'); return }
+    if (error) { toast.error(t('cases.editColumns.deleteError')); return }
     setLocalList(prev => prev.filter(s => s.id !== id))
   }
 
@@ -112,7 +115,7 @@ function EditColumnsModal({ situations, onAdd, onUpdate, onDelete, onReorder, on
   return (
     <div className={styles.editColsBody}>
       <p className={styles.editColsHint}>
-        As colunas representam as situações do processo. Arraste para reordenar.
+        {t('cases.editColumns.hint')}
       </p>
 
       <div className={styles.editColsList}>
@@ -134,7 +137,7 @@ function EditColumnsModal({ situations, onAdd, onUpdate, onDelete, onReorder, on
                   className={styles.colorPicker}
                   value={editing.color ?? '#4361ee'}
                   onChange={e => setEditing(p => ({ ...p, color: e.target.value }))}
-                  title="Escolher cor"
+                  title={t('cases.editColumns.chooseColor')}
                 />
                 <button className={styles.editColBtnSave}   onClick={handleSaveEdit}>✓</button>
                 <button className={styles.editColBtnCancel} onClick={() => setEditing(null)}>✕</button>
@@ -143,10 +146,10 @@ function EditColumnsModal({ situations, onAdd, onUpdate, onDelete, onReorder, on
               <>
                 <span className={styles.editColName}>{sit.value}</span>
                 <div className={styles.editColActions}>
-                  <button className={styles.editColBtn} onClick={() => move(idx, -1)} disabled={idx === 0} title="Mover para cima">↑</button>
-                  <button className={styles.editColBtn} onClick={() => move(idx, 1)} disabled={idx === localList.length - 1} title="Mover para baixo">↓</button>
-                  <button className={styles.editColBtn} onClick={() => setEditing({ id: sit.id, value: sit.value, color: sit.color ?? '#4361ee' })} title="Editar">✎</button>
-                  <button className={`${styles.editColBtn} ${styles.editColBtnDel}`} onClick={() => handleDelete(sit.id)} title="Excluir">✕</button>
+                  <button className={styles.editColBtn} onClick={() => move(idx, -1)} disabled={idx === 0} title={t('cases.editColumns.moveUp')}>↑</button>
+                  <button className={styles.editColBtn} onClick={() => move(idx, 1)} disabled={idx === localList.length - 1} title={t('cases.editColumns.moveDown')}>↓</button>
+                  <button className={styles.editColBtn} onClick={() => setEditing({ id: sit.id, value: sit.value, color: sit.color ?? '#4361ee' })} title={t('common.edit')}>✎</button>
+                  <button className={`${styles.editColBtn} ${styles.editColBtnDel}`} onClick={() => handleDelete(sit.id)} title={t('common.delete')}>✕</button>
                 </div>
               </>
             )}
@@ -158,7 +161,7 @@ function EditColumnsModal({ situations, onAdd, onUpdate, onDelete, onReorder, on
         <span className={styles.editColDot} style={{ background: newColor }} />
         <input
           className={styles.editColInput}
-          placeholder="Nome da nova coluna..."
+          placeholder={t('cases.editColumns.newColumnPlaceholder')}
           value={newName}
           onChange={e => setNewName(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleAdd()}
@@ -168,13 +171,13 @@ function EditColumnsModal({ situations, onAdd, onUpdate, onDelete, onReorder, on
           className={styles.colorPicker}
           value={newColor}
           onChange={e => setNewColor(e.target.value)}
-          title="Escolher cor"
+          title={t('cases.editColumns.chooseColor')}
         />
-        <button className={styles.editColBtnAdd} onClick={handleAdd}>+ Adicionar</button>
+        <button className={styles.editColBtnAdd} onClick={handleAdd}>{t('cases.editColumns.addButton')}</button>
       </div>
 
       <div className={styles.editColsFooter}>
-        <button className={styles.btnSalvar} onClick={onClose}>Salvar</button>
+        <button className={styles.btnSalvar} onClick={onClose}>{t('common.save')}</button>
       </div>
     </div>
   )
@@ -182,19 +185,20 @@ function EditColumnsModal({ situations, onAdd, onUpdate, onDelete, onReorder, on
 
 /* ── Despacho attempt boxes ─────────────────────────────────────────── */
 function DespachoBoxes({ attempts, onToggle }) {
+  const { t, i18n } = useTranslation()
   function fmt(ts) {
     if (!ts) return ''
-    return new Date(ts).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+    return formatDate(ts, i18n.language, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
   }
   return (
     <div className={styles.despachoRow} onClick={e => e.stopPropagation()}>
-      <span className={styles.despachoLabel}>DESP.</span>
+      <span className={styles.despachoLabel}>{t('cases.despacho.label')}</span>
       {attempts.map((ts, i) => (
         <div key={i} className={styles.despachoWrap}>
           <button
             className={`${styles.despachoBox} ${ts ? styles.despachoBoxChecked : ''}`}
             onClick={e => { e.stopPropagation(); onToggle(i) }}
-            title={ts ? `${i + 1}° despacho: ${fmt(ts)} — clique para remover` : `Registrar ${i + 1}° despacho`}
+            title={ts ? t('cases.despacho.tooltipFilled', { n: i + 1, date: fmt(ts) }) : t('cases.despacho.tooltipEmpty', { n: i + 1 })}
           >
             {ts && (
               <svg viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" width="8" height="8">
@@ -211,6 +215,7 @@ function DespachoBoxes({ attempts, onToggle }) {
 
 /* ── KanbanView ─────────────────────────────────────────────────────── */
 function KanbanView({ cases, situations, sitLoading, onMoveSituation, onEditColumns, onDespachoToggle }) {
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const [draggingId, setDraggingId] = useState(null)
   const [dragOver,   setDragOver]   = useState(null)
@@ -232,7 +237,7 @@ function KanbanView({ cases, situations, sitLoading, onMoveSituation, onEditColu
   const hasNone = (bySituation['__none__'] ?? []).length > 0
   const cols = [
     ...situations,
-    ...(hasNone ? [{ id: '__none__', value: 'Não categorizado', color: '#94a3b8' }] : []),
+    ...(hasNone ? [{ id: '__none__', value: t('cases.kanban.uncategorized'), color: '#94a3b8' }] : []),
   ]
 
   function handleDragStart(e, id) {
@@ -265,7 +270,7 @@ function KanbanView({ cases, situations, sitLoading, onMoveSituation, onEditColu
           <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12">
             <path d="M11.013 1.427a1.75 1.75 0 0 1 2.474 0l.975.98a1.75 1.75 0 0 1 0 2.474L9.168 10.17a1.75 1.75 0 0 1-.619.41l-2.972 1.09a.75.75 0 0 1-.966-.966l1.09-2.972a1.75 1.75 0 0 1 .41-.619l5.902-5.676Z"/>
           </svg>
-          Editar Colunas
+          {t('cases.kanban.editColumnsButton')}
         </button>
       </div>
 
@@ -320,7 +325,7 @@ function KanbanView({ cases, situations, sitLoading, onMoveSituation, onEditColu
                               : <div className={styles.kanbanCardClient}>{c.cliente}</div>}
                             <div className={styles.kanbanCardMeta}>
                               <span className="badge" style={{ background: col + '22', color: col, border: `1px solid ${col}44` }}>{c.tribunal}</span>
-                              {c.valor > 0 && <span className={styles.kanbanCardValor}>{brl(c.valor)}</span>}
+                              {c.valor > 0 && <span className={styles.kanbanCardValor}>{brl(c.valor, i18n.language)}</span>}
                               {(() => {
                                 const days = daysSince(c.situationChangedAt)
                                 const ds = statusDaysStyle(days)
@@ -373,6 +378,7 @@ function SkeletonKanban() {
 
 /* ── ListView ───────────────────────────────────────────────────────── */
 function SituationSelect({ caseId, currentSituation, situations, onMove }) {
+  const { t } = useTranslation()
   const [saving, setSaving] = useState(false)
   const sit = situations.find(s => s.id === currentSituation)
 
@@ -392,9 +398,9 @@ function SituationSelect({ caseId, currentSituation, situations, onMove }) {
       onChange={handleChange}
       onClick={e => e.stopPropagation()}
       disabled={saving}
-      title="Alterar situação"
+      title={t('cases.kanban.changeSituation')}
     >
-      <option value="">— Sem situação —</option>
+      <option value="">{t('cases.kanban.noSituation')}</option>
       {situations.map(s => (
         <option key={s.id} value={s.id}>{s.value}</option>
       ))}
@@ -403,11 +409,12 @@ function SituationSelect({ caseId, currentSituation, situations, onMove }) {
 }
 
 function ListView({ cases, situations, onMoveSituation, onEdit }) {
-  const sorted = [...cases].sort((a, b) => a.titulo.localeCompare(b.titulo, 'pt-BR', { sensitivity: 'base' }))
+  const { t, i18n } = useTranslation()
+  const sorted = [...cases].sort((a, b) => a.titulo.localeCompare(b.titulo, i18n.language === 'en' ? 'en-US' : 'pt-BR', { sensitivity: 'base' }))
   if (sorted.length === 0) return (
     <div className={styles.emptyState}>
       <div className={styles.emptyIcon}>⚖</div>
-      <p>Nenhum processo encontrado</p>
+      <p>{t('cases.emptyList')}</p>
     </div>
   )
   return (
@@ -415,13 +422,13 @@ function ListView({ cases, situations, onMoveSituation, onEdit }) {
       <table className={styles.table}>
         <thead>
           <tr>
-            <th>Processo</th>
-            <th>Cliente</th>
-            <th>Situação</th>
-            <th>Tipo</th>
-            <th>Tribunal</th>
-            <th>Valor</th>
-            <th>Atualizado</th>
+            <th>{t('cases.table.case')}</th>
+            <th>{t('cases.table.client')}</th>
+            <th>{t('cases.table.situation')}</th>
+            <th>{t('cases.table.type')}</th>
+            <th>{t('cases.table.court')}</th>
+            <th>{t('cases.table.value')}</th>
+            <th>{t('cases.table.updated')}</th>
           </tr>
         </thead>
         <tbody>
@@ -446,9 +453,9 @@ function ListView({ cases, situations, onMoveSituation, onEdit }) {
               </td>
               <td><span className="badge st-teal">{c.tipo}</span></td>
               <td><span className={`badge ${c.trib_color}`}>{c.tribunal}</span></td>
-              <td className={styles.valorCell}>{brl(c.valor)}</td>
+              <td className={styles.valorCell}>{brl(c.valor, i18n.language)}</td>
               <td className={styles.dateCell}>
-                {c.atualizado ? new Date(c.atualizado + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—'}
+                {c.atualizado ? formatDate(c.atualizado, i18n.language, { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—'}
               </td>
             </tr>
           ))}
@@ -460,6 +467,7 @@ function ListView({ cases, situations, onMoveSituation, onEdit }) {
 
 /* ── DonutChart ─────────────────────────────────────────────────────── */
 function DonutChart({ procedente, improcedente, outro }) {
+  const { t } = useTranslation()
   const total = procedente + improcedente + outro
   const r = 58
   const cx = 80, cy = 80
@@ -467,9 +475,9 @@ function DonutChart({ procedente, improcedente, outro }) {
   const circumference = 2 * Math.PI * r
 
   const segments = [
-    { value: procedente,   color: '#22c55e', label: 'Procedente',   pct: total > 0 ? procedente / total : 0 },
-    { value: improcedente, color: '#ef4444', label: 'Improcedente', pct: total > 0 ? improcedente / total : 0 },
-    { value: outro,        color: '#94a3b8', label: 'Outro',        pct: total > 0 ? outro / total : 0 },
+    { value: procedente,   color: '#22c55e', label: t('cases.outcome.procedente'),   pct: total > 0 ? procedente / total : 0 },
+    { value: improcedente, color: '#ef4444', label: t('cases.outcome.improcedente'), pct: total > 0 ? improcedente / total : 0 },
+    { value: outro,        color: '#94a3b8', label: t('cases.outcome.outro'),        pct: total > 0 ? outro / total : 0 },
   ]
 
   let accumulated = 0
@@ -498,7 +506,7 @@ function DonutChart({ procedente, improcedente, outro }) {
             ))
         }
         <text x={cx} y={cy - 7} textAnchor="middle" fontSize="22" fontWeight="800" fill="var(--text,#1a1a2e)">{total}</text>
-        <text x={cx} y={cy + 13} textAnchor="middle" fontSize="10" fill="var(--text-3,#94a3b8)" fontWeight="500">casos</text>
+        <text x={cx} y={cy + 13} textAnchor="middle" fontSize="10" fill="var(--text-3,#94a3b8)" fontWeight="500">{t('cases.kanban.casesUnit')}</text>
       </svg>
       <div className={styles.chartLegend}>
         {segments.map(s => (
@@ -517,20 +525,24 @@ function DonutChart({ procedente, improcedente, outro }) {
 }
 
 /* ── FinalizadosView ─────────────────────────────────────────────────── */
-const OUTCOME_META = {
-  procedente:   { label: 'Procedente',   cls: 'st-teal' },
-  improcedente: { label: 'Improcedente', cls: 'st-red'  },
-  outro:        { label: 'Outro',        cls: 'st-gray' },
+function outcomeMeta(t, outcome) {
+  const map = {
+    procedente:   { label: t('cases.outcome.procedente'),   cls: 'st-teal' },
+    improcedente: { label: t('cases.outcome.improcedente'), cls: 'st-red'  },
+    outro:        { label: t('cases.outcome.outro'),        cls: 'st-gray' },
+  }
+  return map[outcome] ?? { label: outcome ?? '—', cls: 'st-gray' }
 }
 
 function FinalizadosView({ cases, loading, onReactivate }) {
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
 
   const procedente   = cases.filter(c => c.outcome === 'procedente').length
   const improcedente = cases.filter(c => c.outcome === 'improcedente').length
   const outro        = cases.filter(c => c.outcome === 'outro' || !c.outcome).length
 
-  if (loading) return <div className={styles.emptyState}><p>Carregando…</p></div>
+  if (loading) return <div className={styles.emptyState}><p>{t('cases.loading')}</p></div>
 
   return (
     <div className={styles.finalizadosWrap}>
@@ -538,13 +550,13 @@ function FinalizadosView({ cases, loading, onReactivate }) {
         ? (
           <div className={styles.emptyState}>
             <div className={styles.emptyIcon}>⚖</div>
-            <p>Nenhum processo finalizado ainda</p>
+            <p>{t('cases.finalized.empty')}</p>
           </div>
         ) : (
           <>
             <div className={styles.finalizadosTop}>
               <div className={styles.chartCard}>
-                <div className={styles.chartTitle}>Resultado dos Processos</div>
+                <div className={styles.chartTitle}>{t('cases.finalized.chartTitle')}</div>
                 <DonutChart procedente={procedente} improcedente={improcedente} outro={outro} />
               </div>
             </div>
@@ -553,20 +565,20 @@ function FinalizadosView({ cases, loading, onReactivate }) {
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th>Processo</th>
-                    <th>Cliente</th>
-                    <th>Área</th>
-                    <th>Resultado</th>
-                    <th>Motivo</th>
-                    <th>Finalizado em</th>
+                    <th>{t('cases.table.case')}</th>
+                    <th>{t('cases.table.client')}</th>
+                    <th>{t('cases.detail.area')}</th>
+                    <th>{t('cases.table.result')}</th>
+                    <th>{t('cases.table.reason')}</th>
+                    <th>{t('cases.table.finalizedAt')}</th>
                     <th></th>
                   </tr>
                 </thead>
                 <tbody>
                   {cases.map(c => {
-                    const om = OUTCOME_META[c.outcome] ?? { label: c.outcome ?? '—', cls: 'st-gray' }
+                    const om = outcomeMeta(t, c.outcome)
                     const finDate = c.finalizado_at
-                      ? new Date(c.finalizado_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
+                      ? formatDate(c.finalizado_at, i18n.language, { day: '2-digit', month: '2-digit', year: '2-digit' })
                       : '—'
                     return (
                       <tr key={c.id} className={styles.tableRow} style={{ cursor: 'pointer' }}
@@ -588,13 +600,13 @@ function FinalizadosView({ cases, loading, onReactivate }) {
                           <button
                             className={styles.reactivateBtn}
                             onClick={() => onReactivate(c.id, c.title)}
-                            title="Reativar caso"
+                            title={t('cases.reactivate.title')}
                           >
                             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width="12" height="12">
                               <path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.89"/>
                               <path d="M13.5 2.5v3.5H10"/>
                             </svg>
-                            Reativar
+                            {t('cases.reactivate.button')}
                           </button>
                         </td>
                       </tr>
@@ -612,6 +624,7 @@ function FinalizadosView({ cases, loading, onReactivate }) {
 
 /* ── page ───────────────────────────────────────────────────────────── */
 export default function Cases() {
+  const { t, i18n } = useTranslation()
   const { lawyer } = useAuth()
   const toast      = useToast()
   const navigate   = useNavigate()
@@ -639,7 +652,7 @@ export default function Cases() {
   function handleSave() {
     refetch()
     setFormOpen(false)
-    toast.success(editing ? 'Processo atualizado.' : 'Processo criado.')
+    toast.success(editing ? t('cases.toastUpdated') : t('cases.toastCreated'))
   }
   function handleViewChange(v) {
     setView(v)
@@ -648,7 +661,7 @@ export default function Cases() {
 
   async function handleMoveSituation(caseId, situationId) {
     const { error: err } = await updateCaseSituation(caseId, situationId)
-    if (err) toast.error('Erro ao mover processo.')
+    if (err) toast.error(t('cases.moveError'))
     else refetch()
   }
 
@@ -661,12 +674,12 @@ export default function Cases() {
   }
 
   async function handleReactivate(caseId, caseTitle) {
-    if (!window.confirm(`Reativar o processo "${caseTitle}"? Ele voltará para Processos Ativos.`)) return
+    if (!window.confirm(t('cases.reactivate.confirm', { title: caseTitle }))) return
     const { error } = await reactivateCase(caseId)
-    if (error) { toast.error('Erro ao reativar processo.'); return }
+    if (error) { toast.error(t('cases.reactivate.error')); return }
     refetch()
     refetchFinalizados()
-    toast.success('Processo reativado.')
+    toast.success(t('cases.reactivate.success'))
   }
 
   const filtered = useMemo(() => {
@@ -681,15 +694,15 @@ export default function Cases() {
 
   return (
     <PageShell
-      title="Casos"
-      subtitle={loading ? 'Carregando…' : `${cases.length} ativos · ${finalizados.length} finalizados`}
+      title={t('cases.pageTitle')}
+      subtitle={loading ? t('cases.loading') : `${t('cases.activeCountLabel', { count: cases.length })} · ${t('cases.finalizedCountLabel', { count: finalizados.length })}`}
       viewToggle={tab === 'ativos' ? <ViewToggle value={view} onChange={handleViewChange} /> : null}
       fullWidth={tab === 'ativos' && view === 'kanban'}
       action={
         tab === 'ativos' ? (
           <button className={styles.btnNovo} onClick={() => { setEditing(null); setFormOpen(true) }}>
             <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a.75.75 0 0 1 .75.75v5.5h5.5a.75.75 0 0 1 0 1.5h-5.5v5.5a.75.75 0 0 1-1.5 0v-5.5H1.75a.75.75 0 0 1 0-1.5h5.5v-5.5A.75.75 0 0 1 8 1Z"/></svg>
-            Novo caso
+            {t('cases.newCase')}
           </button>
         ) : null
       }
@@ -700,14 +713,14 @@ export default function Cases() {
               className={`${styles.tabBtn} ${tab === 'ativos' ? styles.tabBtnActive : ''}`}
               onClick={() => setTab('ativos')}
             >
-              Processos Ativos
+              {t('cases.tabs.active')}
               <span className={styles.tabCount}>{cases.length}</span>
             </button>
             <button
               className={`${styles.tabBtn} ${tab === 'finalizados' ? styles.tabBtnActive : ''}`}
               onClick={() => setTab('finalizados')}
             >
-              Processos Finalizados
+              {t('cases.tabs.finalized')}
               <span className={styles.tabCount}>{finalizados.length}</span>
             </button>
           </div>
@@ -721,7 +734,7 @@ export default function Cases() {
                 <input
                   className={styles.searchInput}
                   type="text"
-                  placeholder="Buscar por título, cliente ou número..."
+                  placeholder={t('cases.searchPlaceholder')}
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                 />
@@ -734,7 +747,7 @@ export default function Cases() {
       {tab === 'finalizados'
         ? <FinalizadosView cases={finalizados} loading={finLoading} onReactivate={handleReactivate} />
         : error
-          ? <div className={styles.emptyState}><p>Erro ao carregar casos.</p></div>
+          ? <div className={styles.emptyState}><p>{t('cases.errorLoading')}</p></div>
           : loading
             ? view === 'kanban'
               ? <SkeletonKanban />
@@ -752,13 +765,13 @@ export default function Cases() {
       }
 
       {formOpen && (
-        <Modal title={editing ? 'Editar processo' : 'Novo processo'} onClose={() => setFormOpen(false)} size="lg">
+        <Modal title={editing ? t('cases.editCase') : t('cases.newCaseModal')} onClose={() => setFormOpen(false)} size="lg">
           <CaseForm initial={editing} onSave={handleSave} onClose={() => setFormOpen(false)} />
         </Modal>
       )}
 
       {editColsOpen && (
-        <Modal title="Editar Colunas do Kanban" onClose={() => setEditColsOpen(false)}>
+        <Modal title={t('cases.editColumns.modalTitle')} onClose={() => setEditColsOpen(false)}>
           <EditColumnsModal
             situations={situations}
             onAdd={addSituation}

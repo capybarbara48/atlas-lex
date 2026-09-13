@@ -1,6 +1,6 @@
 {
   "pageTitle": "Configurações",
-  "pageSubtitle": "Personalize o Atlas Adv para o seu escritório",
+  "pageSubtitle": "Personalize o Atlas Adv para a identidade visual do seu escritório em apenas 3 minutos. Configure opções, tribunais e responsáveis do seu escritório.",
   "language": {
     "label": "Idioma",
     "sub": "Escolha o idioma da interface",
@@ -22,7 +22,7 @@
   },
   "branding": {
     "title": "Identidade Visual",
-    "subtitle": "Marca, cor de destaque e tipografia do seu escritório",
+    "subtitle": "Cada advogado tem sua própria marca — logo, nome e cor de destaque",
     "previewLabel": "Pré-visualização do cabeçalho",
     "firmName": "Nome do escritório",
     "firmNameHint": "Aparece no cabeçalho de todas as páginas",
@@ -56,6 +56,22 @@
     "saveError": "Erro ao salvar tipografia: {{error}}",
     "saveSuccess": "Tipografia salva!"
   },
+  "nav": {
+    "title": "Menu de Navegação",
+    "subtitle": "Escolha como o menu principal aparece no sistema. Alterado imediatamente.",
+    "sidebar": {
+      "label": "Lateral Esquerdo",
+      "sub": "Recolhe ao afastar o mouse"
+    },
+    "top": {
+      "label": "Barra Superior",
+      "sub": "Estilo abas do Chrome"
+    },
+    "bottom": {
+      "label": "Dock Inferior",
+      "sub": "Reaparece ao aproximar o mouse"
+    }
+  },
   "display": {
     "title": "Preferências de Exibição",
     "subtitle": "Personalize como o conteúdo é apresentado. Salvo localmente neste dispositivo.",
@@ -80,17 +96,29 @@
       "financial": "Financeiro",
       "overdue": "Atrasadas"
     },
+    "dayMode": {
+      "label": "Etiqueta de modo do dia",
+      "sub": "Exibe indicador \"Virtual\" ou \"Presencial\" nos cards e mini-cards do Espaço de Trabalho",
+      "enabled": "Ativado",
+      "enabledCaption": "Com etiqueta de modo",
+      "disabled": "Desativado",
+      "disabledCaption": "Sem etiqueta de modo",
+      "virtualLabel": "Virtual"
+    },
     "resetButton": "Redefinir preferências",
     "resetNote": "Preferências salvas localmente neste dispositivo",
     "resetSuccess": "Preferências redefinidas para o padrão!"
   },
   "lists": {
     "title": "Listas Personalizáveis",
-    "subtitle": "Configure as opções disponíveis em Propostas e Honorários. Alterações salvas instantaneamente na nuvem.",
+    "subtitle": "Configure as opções disponíveis para todo o seu escritório. Essas opções aparecem nas propostas de honorários e no cadastramento de casos e clientes.",
     "loading": "Carregando listas…",
     "loadDefaults": "Carregar padrões",
     "removeTitle": "Remover",
     "addError": "Erro ao adicionar: {{error}}",
+    "saveButton": "Salvar listas",
+    "saveSuccess": "Listas atualizadas com sucesso!",
+    "saveError": "Erro ao salvar listas: {{error}}",
     "serviceTypes": {
       "title": "Tipos de serviço (Propostas)",
       "empty": "Nenhum tipo cadastrado ainda.",
@@ -103,52 +131,63 @@
       "invalidPercent": "Percentual inválido. Digite um número entre 0 e 100 (ex: 30)."
     },
     "tribunals": {
-      "title": "Tribunais e Varas (Processos)",
+      "title": "Tribunais — ative os grupos que seu escritório utiliza",
       "empty": "Nenhum tribunal cadastrado ainda.",
-      "placeholder": "Ex: Vara de Execuções Penais"
+      "placeholder": "Ex: Vara de Execuções Penais",
+      "active": "Ativo",
+      "inactive": "Inativo"
+    },
+    "areas": {
+      "title": "Áreas de Atuação (Casos)",
+      "empty": "Nenhuma área cadastrada ainda.",
+      "placeholder": "Ex: Direito Digital…",
+      "addError": "Erro ao adicionar área: {{error}}"
     },
     "responsibles": {
       "title": "Responsáveis (Advogados / Estagiários)",
       "empty": "Nenhum cadastrado ainda.",
       "placeholder": "Ex: Dr. Elcimar Reis"
+    },
+    "partners": {
+      "title": "Parceiros",
+      "empty": "Nenhum parceiro cadastrado ainda.",
+      "placeholder": "Ex: Dr. João Parceiro"
     }
   },
   "team": {
-    "title": "Equipe",
-    "subtitle": "Membros do escritório — sócios, advogados, estagiários e assistentes",
-    "empty": "Nenhum membro cadastrado ainda.",
-    "addButton": "Adicionar membro",
-    "editButton": "Editar",
-    "removeConfirm": "Remover {{name}}?",
-    "role": {
-      "parceiro": "Sócio",
-      "advogado": "Advogado(a)",
-      "estagiario": "Estagiário(a)",
-      "assistente": "Assistente"
+    "title": "Membros da Equipe",
+    "subtitle": "Convide advogados e estagiários para acessar o escritório com suas próprias credenciais. Estagiários não têm acesso ao módulo Financeiro nem a Clientes.",
+    "loading": "Carregando…",
+    "empty": "Nenhum membro convidado ainda.",
+    "removeTitle": "Remover membro",
+    "removeConfirm": "Remover este membro? O acesso será revogado imediatamente.",
+    "inviteInstructionsPre": "Instrua o membro a se cadastrar em",
+    "inviteInstructionsMid": "com o e-mail",
+    "roleLabel": {
+      "advogado": "Advogado",
+      "estagiario": "Estagiário"
     },
-    "modal": {
-      "addTitle": "Adicionar membro à equipe",
-      "editTitle": "Editar membro"
+    "status": {
+      "pendingAdmin": "Aguardando aprovação",
+      "pendingInvite": "Aprovado — aguardando cadastro",
+      "active": "Ativo",
+      "disabled": "Desativado"
     },
     "form": {
-      "fullName": "Nome completo *",
-      "fullNamePlaceholder": "Dr. João Silva",
-      "role": "Função",
-      "roles": {
-        "parceiro": "Sócio / Parceiro",
-        "advogado": "Advogado(a)",
-        "estagiario": "Estagiário(a)",
-        "assistente": "Assistente / Secretaria"
-      },
+      "fullName": "Nome completo",
+      "fullNamePlaceholder": "Ex: Ana Souza",
       "email": "E-mail",
-      "emailPlaceholder": "joao@escritorio.com",
-      "phone": "Telefone",
-      "phonePlaceholder": "(11) 91234-5678",
-      "oab": "OAB (opcional)",
-      "oabPlaceholder": "SP 123456",
-      "nameRequired": "Nome é obrigatório.",
-      "update": "Atualizar"
-    }
+      "emailPlaceholder": "ana@escritorio.com",
+      "linkedResp": "Responsável vinculado",
+      "linkedRespNone": "— Nenhum —",
+      "role": "Função",
+      "roleEstagiario": "Estagiário",
+      "roleAdvogado": "Advogado"
+    },
+    "inviteButton": "+ Convidar",
+    "limitReached": "Limite de {{cap}} {{role}} atingido.",
+    "countNote": "{{advCount}}/{{advCap}} advogados · {{estCount}}/{{estCap}} estagiários",
+    "inviteNote": "Convites ficam pendentes até aprovação pelo administrador Atlas Lex."
   },
   "account": {
     "title": "Conta",

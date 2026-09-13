@@ -1,0 +1,17 @@
+{
+  "title": "Metrics",
+  "subtitle": "Analytical overview of the firm based on registered data",
+  "loading": "Loading…",
+  "noData": "No data available",
+  "total": "total",
+  "casesTotal_one": "{{count}} case in total",
+  "casesTotal_other": "{{count}} cases in total",
+  "proposalsTotal_one": "{{count}} proposal in total",
+  "proposalsTotal_other": "{{count}} proposals in total",
+  "charts": {
+    "byPartner": { "title": "Cases by Partnership", "emptyLabel": "In-house" },
+    "byArea": { "title": "Practice Areas", "emptyLabel": "Not specified" },
+    "byCourt": { "title": "Cases by Court", "emptyLabel": "Not specified" },
+    "byService": { "title": "Service Types", "emptyLabel": "Not specified" }
+  }
+}

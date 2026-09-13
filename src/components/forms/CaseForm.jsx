@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { useKanbanSituations } from '@/hooks/useKanbanSituations'
@@ -6,15 +7,12 @@ import { useAreas } from '@/hooks/useAreas'
 import { getActiveGroups } from '@/lib/tribunais'
 import { useCaseHearings, addHearing, deleteHearing } from '@/hooks/useHearings'
 import { toTitleCase } from '@/lib/text'
+import { formatCurrency, formatDate } from '@/lib/formatters'
 import Modal from '@/components/ui/Modal'
 import ClientForm from './ClientForm'
 import s from './Form.module.css'
 
 const DEFAULT_QUOTA_LITIS = ['5%','10%','15%','20%','25%','30%','35%']
-
-function fmtBRL(v) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v) || 0)
-}
 
 const HEARING_TYPES = [
   'Audiência de Conciliação',
@@ -29,7 +27,21 @@ const HEARING_TYPES = [
   'Audiência de Regulamentação de Visitas',
 ]
 
+const HEARING_TYPE_KEYS = {
+  'Audiência de Conciliação':                  'cases.hearingTypes.conciliacao',
+  'Audiência de Instrução e Julgamento':        'cases.hearingTypes.instrucaoJulgamento',
+  'Audiência de Custódia':                      'cases.hearingTypes.custodia',
+  'Audiência Inaugural':                        'cases.hearingTypes.inaugural',
+  'Audiência de Mediação':                      'cases.hearingTypes.mediacao',
+  'Audiência Preliminar':                       'cases.hearingTypes.preliminar',
+  'Audiência de Oitiva de Testemunhas':         'cases.hearingTypes.oitivaTestemunhas',
+  'Audiência de Justificação':                  'cases.hearingTypes.justificacao',
+  'Audiência de Progressão de Regime':          'cases.hearingTypes.progressaoRegime',
+  'Audiência de Regulamentação de Visitas':     'cases.hearingTypes.regulamentacaoVisitas',
+}
+
 function HearingsSection({ caseId, lawyerId, lawyerName }) {
+  const { t, i18n } = useTranslation()
   const { data: hearings, refetch } = useCaseHearings(caseId)
   const [nh, setNh] = useState({ title: '', date: '', time: '', location: '' })
   const [titleCustom, setTitleCustom] = useState(false)
@@ -79,30 +91,30 @@ function HearingsSection({ caseId, lawyerId, lawyerName }) {
     <>
       <hr className={s.sectionDivider} />
       <div className={`${s.field} ${s.span2}`}>
-        <div className={s.sectionTitle}>Audiências</div>
+        <div className={s.sectionTitle}>{t('cases.form.hearingsSectionTitle')}</div>
         {list.length > 0 && (
           <div className={s.hearingList}>
             {list.map(h => (
               <div key={h.id} className={s.hearingItem}>
                 <span className={s.hearingItemDate}>
-                  {new Date(h.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                  {formatDate(h.date, i18n.language, { day: '2-digit', month: '2-digit', year: 'numeric' })}
                 </span>
                 {h.time && <span className={s.hearingItemMeta}>{h.time.slice(0, 5)}</span>}
                 <span className={s.hearingItemTitle}>{h.title}</span>
                 {h.location && <span className={s.hearingItemMeta}>{h.location}</span>}
-                <button type="button" className={s.hearingItemDel} onClick={() => handleDel(h.id)} title="Excluir">✕</button>
+                <button type="button" className={s.hearingItemDel} onClick={() => handleDel(h.id)} title={t('common.delete')}>✕</button>
               </div>
             ))}
           </div>
         )}
-        {list.length === 0 && <div className={s.hint}>Nenhuma audiência cadastrada.</div>}
+        {list.length === 0 && <div className={s.hint}>{t('cases.form.noHearings')}</div>}
       </div>
       <div className={`${s.field} ${s.span2}`}>
         <div className={s.inlineCard}>
-          <div className={s.inlineCardTitle}>Adicionar audiência</div>
+          <div className={s.inlineCardTitle}>{t('cases.form.addHearingTitle')}</div>
           <div className={s.inlineGrid}>
             <div className={`${s.field} ${s.span2}`}>
-              <label className={s.label}>Tipo de audiência *</label>
+              <label className={s.label}>{t('cases.form.hearingTypeLabel')} *</label>
               <select
                 className={s.select}
                 value={titleCustom ? '__outro__' : (nh.title || '')}
@@ -111,32 +123,32 @@ function HearingsSection({ caseId, lawyerId, lawyerName }) {
                   else { setTitleCustom(false); setNhF('title', e.target.value) }
                 }}
               >
-                <option value="">— Selecionar —</option>
-                {HEARING_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                <option value="__outro__">Outro (digitar manualmente)…</option>
+                <option value="">{t('common.selectPlaceholder')}</option>
+                {HEARING_TYPES.map(ht => <option key={ht} value={ht}>{t(HEARING_TYPE_KEYS[ht])}</option>)}
+                <option value="__outro__">{t('common.otherManualOption')}</option>
               </select>
               {titleCustom && (
                 <input className={s.input} style={{ marginTop: '0.45rem' }}
                   value={nh.title} onChange={e => setNhF('title', e.target.value)}
-                  placeholder="Descreva o tipo de audiência…" autoFocus />
+                  placeholder={t('cases.form.hearingTypeOtherPlaceholder')} autoFocus />
               )}
             </div>
             <div className={s.field}>
-              <label className={s.label}>Data *</label>
+              <label className={s.label}>{t('cases.form.hearingDateLabel')} *</label>
               <input className={s.input} type="date" value={nh.date} onChange={e => setNhF('date', e.target.value)} />
             </div>
             <div className={s.field}>
-              <label className={s.label}>Horário</label>
+              <label className={s.label}>{t('cases.form.hearingTimeLabel')}</label>
               <input className={s.input} type="time" value={nh.time} onChange={e => setNhF('time', e.target.value)} />
             </div>
             <div className={`${s.field} ${s.span2}`}>
-              <label className={s.label}>Local</label>
-              <input className={s.input} value={nh.location} onChange={e => setNhF('location', e.target.value)} placeholder="Ex: Vara Cível, Fórum Central" />
+              <label className={s.label}>{t('cases.form.hearingLocationLabel')}</label>
+              <input className={s.input} value={nh.location} onChange={e => setNhF('location', e.target.value)} placeholder={t('cases.form.hearingLocationPlaceholder')} />
             </div>
           </div>
           <div className={s.inlineActions}>
             <button type="button" className={s.btnSave} disabled={adding || !nh.title.trim() || !nh.date} onClick={handleAdd}>
-              {adding ? 'Adicionando…' : '+ Adicionar'}
+              {adding ? t('cases.form.addingHearing') : t('cases.form.addHearingButton')}
             </button>
           </div>
         </div>
@@ -152,18 +164,21 @@ const FEE_TYPES = [
   'Diligência Jurídica',
 ]
 
-function fmtBRLFee(v) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v) || 0)
+const FEE_TYPE_KEYS = {
+  'Honorários Contratuais':   'financials.categories.income.honorariosContratuais',
+  'Honorários Sucumbenciais': 'financials.categories.income.honorariosSucumbenciais',
+  'Custas':                   'financials.categories.income.custas',
+  'Diligência Jurídica':      'financials.categories.income.diligenciaJuridica',
 }
 
-function monthLabelFee(ym) {
+function monthLabelFee(ym, lang) {
   const [y, m] = ym.split('-').map(Number)
-  return new Date(y, m - 1, 1)
-    .toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
+  return formatDate(new Date(y, m - 1, 1), lang, { month: 'short', year: 'numeric' })
     .replace('.', '')
 }
 
 export default function CaseForm({ initial, onSave, onClose }) {
+  const { t, i18n } = useTranslation()
   const { session, lawyer } = useAuth()
   const { situations } = useKanbanSituations()
   const { areas } = useAreas()
@@ -217,7 +232,13 @@ export default function CaseForm({ initial, onSave, onClose }) {
     const [sy, sm] = feeStart.split('-').map(Number)
     const endDate  = new Date(sy, sm - 1 + feeN - 1, 1)
     const endMon   = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}`
-    feePreview = `${feeN} × ${fmtBRLFee(feePerUnit)} · dia ${feeDia} · ${monthLabelFee(feeStart)} → ${monthLabelFee(endMon)}`
+    feePreview = t('financials.form.installmentPreview', {
+      n: feeN,
+      amount: formatCurrency(feePerUnit, i18n.language),
+      day: feeDia,
+      start: monthLabelFee(feeStart, i18n.language),
+      end: monthLabelFee(endMon, i18n.language),
+    })
   }
 
   async function createFeeEntries(caseId) {
@@ -337,7 +358,7 @@ export default function CaseForm({ initial, onSave, onClose }) {
   }
 
   async function handleDelete() {
-    if (!window.confirm('Excluir este processo? Esta ação não pode ser desfeita.')) return
+    if (!window.confirm(t('common.confirmDelete'))) return
     const { error } = await supabase.from('cases').delete().eq('id', initial.id)
     if (error) { setError(error.message); return }
     onSave()
@@ -363,7 +384,7 @@ export default function CaseForm({ initial, onSave, onClose }) {
 
   async function handleCreateClient(e) {
     e.preventDefault()
-    if (!nc.full_name.trim()) { setNcError('Nome é obrigatório.'); return }
+    if (!nc.full_name.trim()) { setNcError(t('common.nameRequired')); return }
     setNcSaving(true); setNcError('')
     const { data, error } = await supabase
       .from('clients')
@@ -383,21 +404,21 @@ export default function CaseForm({ initial, onSave, onClose }) {
       <div className={s.grid}>
 
         <div className={`${s.field} ${s.span2}`}>
-          <label className={`${s.label} ${s.req}`}>Título do processo</label>
+          <label className={`${s.label} ${s.req}`}>{t('cases.form.titleLabel')}</label>
           <input className={s.input} value={f.title} onChange={e => set('title', e.target.value)}
-            required placeholder="Ex: Costa vs. Seguradora Alfa" />
+            required placeholder={t('cases.form.titlePlaceholder')} />
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Número do processo</label>
+          <label className={s.label}>{t('cases.form.caseNumberLabel')}</label>
           <input className={s.input} value={f.case_number} onChange={e => set('case_number', e.target.value)}
-            placeholder="0012345-78.2024.8.26.0100" />
+            placeholder={t('cases.form.caseNumberPlaceholder')} />
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Cliente</label>
+          <label className={s.label}>{t('cases.form.clientLabel')}</label>
           <select className={s.select} value={f.client_id} onChange={e => set('client_id', e.target.value)}>
-            <option value="">— Selecionar —</option>
+            <option value="">{t('common.selectPlaceholder')}</option>
             {clients.map(c => <option key={c.id} value={c.id}>{c.full_name}</option>)}
           </select>
           <button
@@ -405,46 +426,46 @@ export default function CaseForm({ initial, onSave, onClose }) {
             className={s.inlineLink}
             onClick={() => { setNewClientOpen(v => !v); setNcError('') }}
           >
-            {newClientOpen ? '✕ Cancelar novo cliente' : '+ Criar novo cliente'}
+            {newClientOpen ? t('cases.form.cancelNewClient') : t('cases.form.createNewClient')}
           </button>
 
           {newClientOpen && (
             <div className={s.inlineCard}>
-              <div className={s.inlineCardTitle}>Novo cliente</div>
+              <div className={s.inlineCardTitle}>{t('cases.form.newClientCardTitle')}</div>
               <div className={s.inlineGrid}>
                 <div className={`${s.field} ${s.span2}`}>
-                  <label className={s.label}>Nome completo *</label>
+                  <label className={s.label}>{t('cases.form.fullNameLabel')} *</label>
                   <input className={s.input} value={nc.full_name}
                     onChange={e => setNcF('full_name', e.target.value)}
-                    placeholder="Ex: Maria Silva" autoFocus />
+                    placeholder={t('cases.form.fullNamePlaceholder')} autoFocus />
                 </div>
                 <div className={s.field}>
-                  <label className={s.label}>Tipo</label>
+                  <label className={s.label}>{t('cases.form.typeLabel')}</label>
                   <select className={s.select} value={nc.tipo} onChange={e => setNcF('tipo', e.target.value)}>
-                    <option value="PF">Pessoa Física</option>
-                    <option value="PJ">Pessoa Jurídica</option>
+                    <option value="PF">{t('clients.typePF')}</option>
+                    <option value="PJ">{t('clients.typePJ')}</option>
                   </select>
                 </div>
                 <div className={s.field}>
-                  <label className={s.label}>Telefone</label>
+                  <label className={s.label}>{t('cases.form.phoneLabel')}</label>
                   <input className={s.input} value={nc.phone}
                     onChange={e => setNcF('phone', e.target.value)}
-                    placeholder="(11) 99999-0000" />
+                    placeholder={t('cases.form.phonePlaceholder')} />
                 </div>
                 <div className={`${s.field} ${s.span2}`}>
-                  <label className={s.label}>E-mail</label>
+                  <label className={s.label}>{t('cases.form.emailLabel')}</label>
                   <input className={s.input} type="email" value={nc.email}
                     onChange={e => setNcF('email', e.target.value)}
-                    placeholder="cliente@email.com" />
+                    placeholder={t('cases.form.emailPlaceholder')} />
                 </div>
               </div>
               {ncError && <div className={s.error}>{ncError}</div>}
               <div className={s.inlineActions}>
                 <button type="button" className={s.btnCancel} onClick={() => setClientFormOpen(true)}>
-                  Cadastro completo →
+                  {t('cases.form.fullRegistrationLink')}
                 </button>
                 <button type="button" className={s.btnSave} disabled={ncSaving} onClick={handleCreateClient}>
-                  {ncSaving ? 'Criando…' : 'Criar e selecionar'}
+                  {ncSaving ? t('cases.form.creating') : t('cases.form.createAndSelect')}
                 </button>
               </div>
             </div>
@@ -452,7 +473,7 @@ export default function CaseForm({ initial, onSave, onClose }) {
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Tribunal</label>
+          <label className={s.label}>{t('cases.form.courtLabel')}</label>
           {activeGroups.length > 0 ? (
             <>
               <select
@@ -463,38 +484,38 @@ export default function CaseForm({ initial, onSave, onClose }) {
                   else { setCourtCustom(false); set('court', e.target.value) }
                 }}
               >
-                <option value="">— Selecionar —</option>
+                <option value="">{t('common.selectPlaceholder')}</option>
                 {activeGroups.map(group => (
                   <optgroup key={group.key} label={group.label}>
-                    {group.items.map(t => <option key={t} value={t}>{t}</option>)}
+                    {group.items.map(item => <option key={item} value={item}>{item}</option>)}
                   </optgroup>
                 ))}
-                <option value="__outro__">Outro (digitar manualmente)…</option>
+                <option value="__outro__">{t('common.otherManualOption')}</option>
               </select>
               {courtCustom && (
                 <input className={s.input} style={{ marginTop: '0.45rem' }}
                   value={f.court} onChange={e => set('court', e.target.value)}
-                  placeholder="Ex: TJSP, TRT-2, Vara Cível…" autoFocus />
+                  placeholder={t('cases.form.courtCustomPlaceholder')} autoFocus />
               )}
             </>
           ) : (
             <input className={s.input} value={f.court} onChange={e => set('court', e.target.value)}
-              placeholder="Ex: TJSP, TRT-2, STJ…" />
+              placeholder={t('cases.form.courtPlaceholder')} />
           )}
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Área</label>
+          <label className={s.label}>{t('cases.form.areaLabel')}</label>
           <select className={s.select} value={f.area} onChange={e => set('area', e.target.value)}>
-            <option value="">— Selecionar —</option>
+            <option value="">{t('common.selectPlaceholder')}</option>
             {areas.map(a => <option key={a.id} value={a.value}>{a.value}</option>)}
           </select>
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Situação no Kanban</label>
+          <label className={s.label}>{t('cases.form.situationLabel')}</label>
           <select className={s.select} value={f.situation} onChange={e => set('situation', e.target.value)}>
-            <option value="">— Não categorizado —</option>
+            <option value="">{t('cases.form.uncategorizedOption')}</option>
             {situations.map(sit => (
               <option key={sit.id} value={sit.id}>{sit.value}</option>
             ))}
@@ -502,15 +523,15 @@ export default function CaseForm({ initial, onSave, onClose }) {
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Valor da causa (R$)</label>
+          <label className={s.label}>{t('cases.form.caseValueLabel')}</label>
           <input className={s.input} type="number" min="0" step="0.01"
-            value={f.valor} onChange={e => set('valor', e.target.value)} placeholder="0,00" />
+            value={f.valor} onChange={e => set('valor', e.target.value)} placeholder={t('common.currencyPlaceholder')} />
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Quota-Litis</label>
+          <label className={s.label}>{t('cases.form.quotaLitisLabel')}</label>
           <select className={s.select} value={f.quota_litis_pct} onChange={e => set('quota_litis_pct', e.target.value)}>
-            <option value="">— Sem quota-litis —</option>
+            <option value="">{t('cases.form.noQuotaLitisOption')}</option>
             {(lawyer?.preferences?.quota_litis_options?.length
               ? lawyer.preferences.quota_litis_options
               : DEFAULT_QUOTA_LITIS
@@ -518,15 +539,15 @@ export default function CaseForm({ initial, onSave, onClose }) {
           </select>
           {f.quota_litis_pct && f.valor && (
             <span className={s.hint}>
-              Valor esperado: {fmtBRL(parseFloat(f.valor) * parseFloat(f.quota_litis_pct) / 100)}
+              {t('cases.form.expectedValueHint', { value: formatCurrency(parseFloat(f.valor) * parseFloat(f.quota_litis_pct) / 100, i18n.language) })}
             </span>
           )}
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Parceria</label>
+          <label className={s.label}>{t('cases.form.partnerLabel')}</label>
           <select className={s.select} value={f.partner} onChange={e => set('partner', e.target.value)}>
-            <option value="">— Sem parceria —</option>
+            <option value="">{t('cases.form.noPartnerOption')}</option>
             {parceiros.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
         </div>
@@ -534,18 +555,18 @@ export default function CaseForm({ initial, onSave, onClose }) {
         {/* ── Honorários section ── */}
         <hr className={s.sectionDivider} />
         <div className={`${s.field} ${s.span2}`}>
-          <div className={s.sectionTitle}>Honorários do Processo</div>
+          <div className={s.sectionTitle}>{t('cases.form.feeSectionTitle')}</div>
         </div>
 
         <div className={`${s.field} ${s.span2}`}>
           <div className={s.inlineCard}>
             <div className={s.inlineCardTitle}>
-              {initial ? 'Gerar lançamento financeiro vinculado' : 'Configurar honorários (opcional)'}
+              {initial ? t('cases.form.generateLinkedEntry') : t('cases.form.configureFeesOptional')}
             </div>
 
             <div className={s.inlineGrid}>
               <div className={`${s.field} ${s.span2}`}>
-                <label className={s.label}>Tipo de honorário</label>
+                <label className={s.label}>{t('proposals.form.feeTypeLabel')}</label>
                 <select
                   className={s.select}
                   value={feeTypeOther ? '__outro__' : (feeType || '')}
@@ -554,37 +575,37 @@ export default function CaseForm({ initial, onSave, onClose }) {
                     else { setFeeTypeOther(false); setFeeNote(''); setFeeType(e.target.value) }
                   }}
                 >
-                  <option value="">— Não configurar —</option>
-                  {FEE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                  <option value="__outro__">Outro (digitar manualmente)…</option>
+                  <option value="">{t('cases.form.noFeeConfigOption')}</option>
+                  {FEE_TYPES.map(ft => <option key={ft} value={ft}>{t(FEE_TYPE_KEYS[ft])}</option>)}
+                  <option value="__outro__">{t('common.otherManualOption')}</option>
                 </select>
                 {feeTypeOther && (
                   <input className={s.input} style={{ marginTop: '0.4rem' }}
                     value={feeNote} onChange={e => setFeeNote(e.target.value)}
-                    placeholder="Descreva o honorário…" autoFocus />
+                    placeholder={t('cases.form.feeOtherPlaceholder')} autoFocus />
                 )}
               </div>
 
               {feeType && (
                 <>
                   <div className={s.field}>
-                    <label className={s.label}>Valor total (R$)</label>
+                    <label className={s.label}>{t('financials.form.amountTotalLabel')}</label>
                     <input className={s.input} type="number" min="0" step="0.01"
                       value={feeAmount} onChange={e => setFeeAmount(e.target.value)}
-                      placeholder="0,00" />
+                      placeholder={t('common.currencyPlaceholder')} />
                   </div>
 
                   <div className={s.field}>
-                    <label className={s.label}>Forma de pagamento</label>
+                    <label className={s.label}>{t('cases.form.paymentMethodLabel')}</label>
                     <select className={s.select} value={feeMode} onChange={e => setFeeMode(e.target.value)}>
-                      <option value="avista">À vista</option>
-                      <option value="parcelado">Parcelado</option>
+                      <option value="avista">{t('cases.form.paymentAvista')}</option>
+                      <option value="parcelado">{t('cases.form.paymentParcelado')}</option>
                     </select>
                   </div>
 
                   {feeMode === 'avista' && (
                     <div className={s.field}>
-                      <label className={s.label}>Vencimento</label>
+                      <label className={s.label}>{t('financials.form.dueDateLabel')}</label>
                       <input className={s.input} type="date"
                         value={feeDueDate} onChange={e => setFeeDueDate(e.target.value)} />
                     </div>
@@ -593,21 +614,21 @@ export default function CaseForm({ initial, onSave, onClose }) {
                   {feeMode === 'parcelado' && (
                     <>
                       <div className={s.field}>
-                        <label className={s.label}>Nº de parcelas</label>
+                        <label className={s.label}>{t('financials.form.installmentCountLabel')}</label>
                         <input className={s.input} type="number" min="2" max="36"
                           value={feeParcelas}
                           onChange={e => setFeeParcelas(Math.max(2, parseInt(e.target.value) || 2))}
                         />
                       </div>
                       <div className={s.field}>
-                        <label className={s.label}>Dia do vencimento</label>
+                        <label className={s.label}>{t('financials.form.installmentDayLabel')}</label>
                         <input className={s.input} type="number" min="1" max="28"
                           value={feeDia}
                           onChange={e => setFeeDia(Math.max(1, Math.min(28, parseInt(e.target.value) || 5)))}
                         />
                       </div>
                       <div className={`${s.field} ${s.span2}`}>
-                        <label className={s.label}>Primeiro mês</label>
+                        <label className={s.label}>{t('financials.form.installmentStartLabel')}</label>
                         <input className={s.input} type="month"
                           value={feeStart} onChange={e => setFeeStart(e.target.value)} />
                       </div>
@@ -625,9 +646,7 @@ export default function CaseForm({ initial, onSave, onClose }) {
             {/* Auto-note for new cases */}
             {!initial && feeType && feeTotal > 0 && (
               <div className={s.hint} style={{ marginTop: '0.25rem' }}>
-                {feeMode === 'parcelado'
-                  ? `${feeN} lançamentos serão criados automaticamente ao criar o processo.`
-                  : '1 lançamento será criado automaticamente ao criar o processo.'}
+                {t('cases.form.feeAutoNote', { count: feeMode === 'parcelado' ? feeN : 1 })}
               </div>
             )}
 
@@ -636,11 +655,11 @@ export default function CaseForm({ initial, onSave, onClose }) {
               <div className={s.inlineActions} style={{ marginTop: '0.25rem' }}>
                 {feeCreated > 0
                   ? <div className={s.successMsg}>
-                      ✓ {feeCreated} lançamento{feeCreated > 1 ? 's' : ''} criado{feeCreated > 1 ? 's' : ''} com sucesso
+                      {t('cases.form.feeCreatedSuccess', { count: feeCreated })}
                     </div>
                   : <button type="button" className={s.btnSecondary}
                       disabled={feeCreating} onClick={handleCreateFeeEntries}>
-                      {feeCreating ? 'Criando…' : 'Criar lançamentos no Financeiro'}
+                      {feeCreating ? t('cases.form.creating') : t('cases.form.createFeeEntriesButton')}
                     </button>
                 }
               </div>
@@ -649,10 +668,10 @@ export default function CaseForm({ initial, onSave, onClose }) {
         </div>
 
         <div className={`${s.field} ${s.span2}`}>
-          <label className={s.label}>Observações</label>
+          <label className={s.label}>{t('cases.form.notesLabel')}</label>
           <textarea className={s.textarea} value={f.description}
             onChange={e => set('description', e.target.value)}
-            placeholder="Detalhes adicionais sobre o processo…" />
+            placeholder={t('cases.form.notesPlaceholder')} />
         </div>
 
         {initial?.id && (
@@ -664,7 +683,7 @@ export default function CaseForm({ initial, onSave, onClose }) {
       {error && <div className={s.error}>{error}</div>}
 
       {clientFormOpen && (
-        <Modal title="Novo Cliente" onClose={() => setClientFormOpen(false)} size="md">
+        <Modal title={t('cases.form.newClientModalTitle')} onClose={() => setClientFormOpen(false)} size="md">
           <ClientForm
             onClose={() => setClientFormOpen(false)}
             onSave={handleFullClientSave}
@@ -673,11 +692,11 @@ export default function CaseForm({ initial, onSave, onClose }) {
       )}
 
       <div className={s.footer}>
-        {initial && <button type="button" className={s.btnDelete} onClick={handleDelete}>Excluir</button>}
+        {initial && <button type="button" className={s.btnDelete} onClick={handleDelete}>{t('common.delete')}</button>}
         <div className={s.spacer} />
-        <button type="button" className={s.btnCancel} onClick={onClose}>Cancelar</button>
+        <button type="button" className={s.btnCancel} onClick={onClose}>{t('common.cancel')}</button>
         <button type="submit" className={s.btnSave} disabled={saving}>
-          {saving ? 'Salvando…' : initial ? 'Salvar alterações' : 'Criar processo'}
+          {saving ? t('common.saving') : initial ? t('common.saveChanges') : t('cases.form.createButton')}
         </button>
       </div>
     </form>

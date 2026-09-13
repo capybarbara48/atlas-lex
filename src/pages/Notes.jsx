@@ -1,28 +1,26 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { useNotes } from '@/hooks/useNotes'
+import { formatDate } from '@/lib/formatters'
 import PageShell from '@/components/ui/PageShell'
 import s from './Notes.module.css'
 
 /* ── Color palette ─────────────────────────────────────────────── */
 const CORES = [
-  { key: 'amarelo', bg: '#fef9c3', border: '#f59e0b', label: 'Amarelo' },
-  { key: 'azul',    bg: '#dbeafe', border: '#3b82f6', label: 'Azul'    },
-  { key: 'verde',   bg: '#dcfce7', border: '#22c55e', label: 'Verde'   },
-  { key: 'vermelho',bg: '#fee2e2', border: '#ef4444', label: 'Vermelho'},
-  { key: 'roxo',    bg: '#ede9fe', border: '#a855f7', label: 'Roxo'    },
-  { key: 'laranja', bg: '#ffedd5', border: '#f97316', label: 'Laranja' },
+  { key: 'amarelo', bg: '#fef9c3', border: '#f59e0b' },
+  { key: 'azul',    bg: '#dbeafe', border: '#3b82f6' },
+  { key: 'verde',   bg: '#dcfce7', border: '#22c55e' },
+  { key: 'vermelho',bg: '#fee2e2', border: '#ef4444' },
+  { key: 'roxo',    bg: '#ede9fe', border: '#a855f7' },
+  { key: 'laranja', bg: '#ffedd5', border: '#f97316' },
 ]
 const COR_MAP = Object.fromEntries(CORES.map(c => [c.key, c]))
 
-function fmtDate(iso) {
-  if (!iso) return ''
-  return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
-}
-
 /* ── Note card ─────────────────────────────────────────────────── */
 function NoteCard({ nota, onExpand, onPin, onDelete }) {
+  const { t, i18n } = useTranslation()
   const cor = nota.cor ? COR_MAP[nota.cor] : null
 
   return (
@@ -32,11 +30,11 @@ function NoteCard({ nota, onExpand, onPin, onDelete }) {
       onClick={() => onExpand(nota)}
     >
       <div className={s.cardHeader}>
-        <span className={s.cardDate}>{fmtDate(nota.updated_at)}</span>
+        <span className={s.cardDate}>{formatDate(nota.updated_at, i18n.language, { day: '2-digit', month: 'short' })}</span>
         <div className={s.cardActions} onClick={e => e.stopPropagation()}>
           <button
             className={`${s.iconBtn} ${nota.fixada ? s.pinActive : ''}`}
-            title={nota.fixada ? 'Desafixar' : 'Fixar'}
+            title={nota.fixada ? t('notes.unpin') : t('notes.pin')}
             onClick={() => onPin(nota)}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -46,7 +44,7 @@ function NoteCard({ nota, onExpand, onPin, onDelete }) {
           </button>
           <button
             className={`${s.iconBtn} ${s.delBtn}`}
-            title="Excluir"
+            title={t('notes.delete')}
             onClick={() => onDelete(nota)}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -61,7 +59,7 @@ function NoteCard({ nota, onExpand, onPin, onDelete }) {
       </div>
       {nota.titulo
         ? <div className={s.cardTitle}>{nota.titulo}</div>
-        : <div className={`${s.cardTitle} ${s.noTitle}`}>Sem título</div>
+        : <div className={`${s.cardTitle} ${s.noTitle}`}>{t('notes.noTitle')}</div>
       }
       {nota.corpo && <div className={s.cardBody}>{nota.corpo}</div>}
     </div>
@@ -70,13 +68,14 @@ function NoteCard({ nota, onExpand, onPin, onDelete }) {
 
 /* ── Color picker row ──────────────────────────────────────────── */
 function ColorPicker({ value, onChange }) {
+  const { t } = useTranslation()
   return (
     <div className={s.colorPicker}>
       {CORES.map(c => (
         <button
           key={c.key}
           type="button"
-          title={c.label}
+          title={t(`notes.colors.${c.key}`)}
           className={`${s.colorDot} ${value === c.key ? s.colorDotActive : ''}`}
           style={{ background: c.bg, borderColor: c.border }}
           onClick={() => onChange(value === c.key ? null : c.key)}
@@ -88,6 +87,7 @@ function ColorPicker({ value, onChange }) {
 
 /* ── Note expand overlay ───────────────────────────────────────── */
 function NoteExpand({ nota, onClose, onSaved }) {
+  const { t } = useTranslation()
   const [titulo,  setTitulo]  = useState(nota.titulo  ?? '')
   const [corpo,   setCorpo]   = useState(nota.corpo   ?? '')
   const [cor,     setCor]     = useState(nota.cor     ?? null)
@@ -123,12 +123,12 @@ function NoteExpand({ nota, onClose, onSaved }) {
             className={s.expandTitle}
             value={titulo}
             onChange={e => setTitulo(e.target.value)}
-            placeholder="Título da nota"
+            placeholder={t('notes.titlePlaceholder')}
           />
           <div className={s.expandActions}>
             <button
               className={`${s.expandBtn} ${fixada ? s.pinActive : ''}`}
-              title={fixada ? 'Desafixar' : 'Fixar'}
+              title={fixada ? t('notes.unpin') : t('notes.pin')}
               onClick={() => setFixada(v => !v)}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -136,13 +136,13 @@ function NoteExpand({ nota, onClose, onSaved }) {
                 <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17z"/>
               </svg>
             </button>
-            <button className={s.expandBtn} title={maximized ? 'Restaurar' : 'Maximizar'} onClick={() => setMaximized(v => !v)}>
+            <button className={s.expandBtn} title={maximized ? t('notes.restore') : t('notes.maximize')} onClick={() => setMaximized(v => !v)}>
               {maximized
                 ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="10" y1="14" x2="21" y2="3"/><line x1="3" y1="21" x2="14" y2="10"/></svg>
                 : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
               }
             </button>
-            <button className={`${s.expandBtn} ${s.closeBtn}`} title="Fechar" onClick={save}>
+            <button className={`${s.expandBtn} ${s.closeBtn}`} title={t('notes.close')} onClick={save}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
               </svg>
@@ -156,14 +156,14 @@ function NoteExpand({ nota, onClose, onSaved }) {
             <button
               key={c.key}
               type="button"
-              title={c.label}
+              title={t(`notes.colors.${c.key}`)}
               className={`${s.expandColorDot} ${cor === c.key ? s.colorDotActive : ''}`}
               style={{ background: c.bg, borderColor: c.border }}
               onClick={() => setCor(cor === c.key ? null : c.key)}
             />
           ))}
           {cor && (
-            <button className={s.clearColor} onClick={() => setCor(null)}>Sem cor</button>
+            <button className={s.clearColor} onClick={() => setCor(null)}>{t('notes.noColor')}</button>
           )}
         </div>
 
@@ -173,14 +173,14 @@ function NoteExpand({ nota, onClose, onSaved }) {
           className={s.expandBody}
           value={corpo}
           onChange={e => setCorpo(e.target.value)}
-          placeholder="Escreva sua nota…"
+          placeholder={t('notes.bodyPlaceholder')}
         />
 
         {/* Footer */}
         <div className={s.expandFooter}>
-          <span className={s.charCount}>{corpo.length} caracteres</span>
+          <span className={s.charCount}>{t('notes.charCount', { count: corpo.length })}</span>
           <button className={s.expandSave} onClick={save} disabled={saving}>
-            {saving ? 'Salvando…' : 'Salvar'}
+            {saving ? t('notes.saving') : t('common.save')}
           </button>
         </div>
       </div>
@@ -190,6 +190,7 @@ function NoteExpand({ nota, onClose, onSaved }) {
 
 /* ── Page ──────────────────────────────────────────────────────── */
 export default function Notes() {
+  const { t } = useTranslation()
   const { session, lawyer } = useAuth()
   const { data: rawNotes, loading, error, refetch } = useNotes()
 
@@ -237,33 +238,33 @@ export default function Notes() {
   }
 
   async function handleDelete(nota) {
-    if (!window.confirm('Excluir esta anotação?')) return
+    if (!window.confirm(t('notes.confirmDelete'))) return
     await supabase.from('notas').delete().eq('id', nota.id)
     refetch()
   }
 
-  const totalLabel = `${rawNotes?.length ?? 0} anotaç${rawNotes?.length === 1 ? 'ão' : 'ões'}`
+  const totalLabel = t('notes.count', { count: rawNotes?.length ?? 0 })
 
   return (
     <PageShell
-      title="Notas"
+      title={t('notes.title')}
       subtitle={loading ? '—' : totalLabel}
       action={
         <button className={s.btnNew} onClick={() => { setAddOpen(v => !v); setNewTitulo(''); setNewCorpo(''); setNewCor(null) }}>
-          {addOpen ? '✕ Cancelar' : '+ Nova nota'}
+          {addOpen ? `✕ ${t('common.cancel')}` : `+ ${t('notes.newNote')}`}
         </button>
       }
     >
       {/* Controls */}
       <div className={s.controls}>
         <div className={s.tabs}>
-          <button className={`${s.tab} ${tab === 'todas'   ? s.tabActive : ''}`} onClick={() => setTab('todas')}>Todas</button>
+          <button className={`${s.tab} ${tab === 'todas'   ? s.tabActive : ''}`} onClick={() => setTab('todas')}>{t('notes.tabs.all')}</button>
           <button className={`${s.tab} ${tab === 'fixadas' ? s.tabActive : ''}`} onClick={() => setTab('fixadas')}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0,verticalAlign:'-1px'}}>
               <line x1="12" y1="17" x2="12" y2="22"/>
               <path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/>
             </svg>
-            Fixadas
+            {t('notes.tabs.pinned')}
           </button>
         </div>
         <div className={s.searchWrap}>
@@ -274,7 +275,7 @@ export default function Notes() {
             className={s.searchInput}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar nas notas…"
+            placeholder={t('notes.searchPlaceholder')}
           />
         </div>
       </div>
@@ -287,7 +288,7 @@ export default function Notes() {
               className={s.addTitle}
               value={newTitulo}
               onChange={e => setNewTitulo(e.target.value)}
-              placeholder="Título da nota"
+              placeholder={t('notes.titlePlaceholder')}
               autoFocus
             />
             <ColorPicker value={newCor} onChange={setNewCor} />
@@ -296,16 +297,16 @@ export default function Notes() {
             className={s.addBody}
             value={newCorpo}
             onChange={e => setNewCorpo(e.target.value)}
-            placeholder="Escreva sua nota… (Ctrl+Enter para salvar)"
+            placeholder={t('notes.bodyPlaceholderWithShortcut')}
             rows={4}
             onKeyDown={e => { if (e.ctrlKey && e.key === 'Enter') { e.preventDefault(); handleAdd(e) } }}
           />
           <div className={s.addFooter}>
-            <span className={s.charCount}>{newCorpo.length} caracteres</span>
+            <span className={s.charCount}>{t('notes.charCount', { count: newCorpo.length })}</span>
             <div className={s.addActions}>
-              <button type="button" className={s.btnCancel} onClick={() => setAddOpen(false)}>Cancelar</button>
+              <button type="button" className={s.btnCancel} onClick={() => setAddOpen(false)}>{t('common.cancel')}</button>
               <button type="submit" className={s.btnSave} disabled={saving || (!newTitulo.trim() && !newCorpo.trim())}>
-                {saving ? 'Salvando…' : 'Salvar nota'}
+                {saving ? t('notes.saving') : t('notes.saveNote')}
               </button>
             </div>
           </div>
@@ -313,15 +314,15 @@ export default function Notes() {
       )}
 
       {/* Notes grid */}
-      {loading && <div className={s.empty}>Carregando…</div>}
+      {loading && <div className={s.empty}>{t('notes.loading')}</div>}
       {error   && <div className={s.errorMsg}>{error}</div>}
       {!loading && !error && notes.length === 0 && (
         <div className={s.empty}>
           {tab === 'fixadas'
-            ? 'Nenhuma nota fixada.'
+            ? t('notes.emptyPinned')
             : search
-              ? 'Nenhuma nota encontrada.'
-              : 'Nenhuma anotação ainda. Clique em + Nova nota para começar.'}
+              ? t('notes.emptyFiltered')
+              : t('notes.emptyAll')}
         </div>
       )}
       {!loading && notes.length > 0 && (

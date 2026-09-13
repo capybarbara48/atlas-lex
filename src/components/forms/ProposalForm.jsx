@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { toTitleCase } from '@/lib/text'
 import s from './Form.module.css'
 
 export default function ProposalForm({ initial, onSave, onClose }) {
+  const { t } = useTranslation()
   const { session, lawyer } = useAuth()
   const quotaLitisList = lawyer?.preferences?.quota_litis_options ?? []
 
@@ -64,7 +66,7 @@ export default function ProposalForm({ initial, onSave, onClose }) {
   }
 
   async function handleDelete() {
-    if (!window.confirm('Excluir esta proposta? Esta ação não pode ser desfeita.')) return
+    if (!window.confirm(t('common.confirmDelete'))) return
     const { error } = await supabase.from('proposals').delete().eq('id', initial.id)
     if (error) { setError(error.message); return }
     onSave()
@@ -75,68 +77,68 @@ export default function ProposalForm({ initial, onSave, onClose }) {
       <div className={s.grid}>
 
         <div className={`${s.field} ${s.span2}`}>
-          <label className={`${s.label} ${s.req}`}>Título da proposta</label>
+          <label className={`${s.label} ${s.req}`}>{t('proposals.form.titleLabel')}</label>
           <input className={s.input} value={f.title} onChange={e => set('title', e.target.value)}
-            required placeholder="Ex: Proposta de honorários — Ação Trabalhista" />
+            required placeholder={t('proposals.form.titlePlaceholder')} />
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Cliente</label>
+          <label className={s.label}>{t('cases.form.clientLabel')}</label>
           <select className={s.select} value={f.client_id} onChange={e => set('client_id', e.target.value)}>
-            <option value="">— Selecionar —</option>
+            <option value="">{t('common.selectPlaceholder')}</option>
             {clients.map(c => <option key={c.id} value={c.id}>{c.full_name}</option>)}
           </select>
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Caso vinculado</label>
+          <label className={s.label}>{t('cases.linkedCaseLabel')}</label>
           <select className={s.select} value={f.case_id} onChange={e => set('case_id', e.target.value)}>
-            <option value="">— Sem caso —</option>
+            <option value="">{t('cases.noCaseOption')}</option>
             {cases.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
           </select>
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Status</label>
+          <label className={s.label}>{t('proposals.table.status')}</label>
           <select className={s.select} value={f.status} onChange={e => set('status', e.target.value)}>
-            <option value="rascunho">Rascunho</option>
-            <option value="enviada">Enviada</option>
-            <option value="aceita">Aceita</option>
-            <option value="recusada">Recusada</option>
-            <option value="expirada">Expirada</option>
+            <option value="rascunho">{t('proposals.status.rascunho')}</option>
+            <option value="enviada">{t('proposals.status.enviada')}</option>
+            <option value="aceita">{t('proposals.status.aceita')}</option>
+            <option value="recusada">{t('proposals.status.recusada')}</option>
+            <option value="expirada">{t('proposals.status.expirada')}</option>
           </select>
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Validade</label>
+          <label className={s.label}>{t('proposals.table.validUntil')}</label>
           <input className={s.input} type="date" value={f.valid_until}
             onChange={e => set('valid_until', e.target.value)} />
         </div>
 
         <div className={`${s.field} ${s.span2}`}>
-          <label className={s.label}>Tipo de honorário</label>
+          <label className={s.label}>{t('proposals.form.feeTypeLabel')}</label>
           <select className={s.select} value={f.fee_type} onChange={e => set('fee_type', e.target.value)}>
-            <option value="fixo">Fixo</option>
-            <option value="por_hora">Por hora</option>
-            <option value="percentual_exito">Percentual de êxito</option>
-            <option value="misto">Misto</option>
+            <option value="fixo">{t('proposals.feeType.fixo')}</option>
+            <option value="por_hora">{t('proposals.feeType.por_hora')}</option>
+            <option value="percentual_exito">{t('proposals.feeType.percentual_exito')}</option>
+            <option value="misto">{t('proposals.feeType.misto')}</option>
           </select>
         </div>
 
         {showAmount && (
           <div className={s.field}>
             <label className={s.label}>
-              {f.fee_type === 'por_hora' ? 'Valor por hora (R$)' : 'Valor (R$)'}
+              {f.fee_type === 'por_hora' ? t('proposals.form.hourlyAmountLabel') : t('proposals.form.amountLabel')}
             </label>
             <input className={s.input} type="number" min="0" step="0.01"
               value={f.fee_amount} onChange={e => set('fee_amount', e.target.value)}
-              placeholder="0,00" />
+              placeholder={t('common.currencyPlaceholder')} />
           </div>
         )}
 
         {showPercentage && (
           <div className={s.field}>
-            <label className={s.label}>Percentual de êxito (%)</label>
+            <label className={s.label}>{t('proposals.form.percentageLabel')}</label>
             {quotaLitisList.length > 0 ? (
               <>
                 <select
@@ -147,18 +149,18 @@ export default function ProposalForm({ initial, onSave, onClose }) {
                     else { setFeePercentCustom(false); set('fee_percentage', e.target.value) }
                   }}
                 >
-                  <option value="">— Selecionar —</option>
+                  <option value="">{t('common.selectPlaceholder')}</option>
                   {quotaLitisList.map(q => {
                     const num = String(parseFloat(q))
                     return <option key={q} value={num}>{q}</option>
                   })}
-                  <option value="__custom__">Personalizado…</option>
+                  <option value="__custom__">{t('proposals.form.customOption')}</option>
                 </select>
                 {feePercentCustom && (
                   <input className={s.input} type="number" min="0" max="100" step="0.01"
                     style={{ marginTop: '0.45rem' }}
                     value={f.fee_percentage} onChange={e => set('fee_percentage', e.target.value)}
-                    placeholder="Ex: 25" autoFocus />
+                    placeholder={t('proposals.form.percentageCustomPlaceholder')} autoFocus />
                 )}
               </>
             ) : (
@@ -174,11 +176,11 @@ export default function ProposalForm({ initial, onSave, onClose }) {
       {error && <div className={s.error}>{error}</div>}
 
       <div className={s.footer}>
-        {initial && <button type="button" className={s.btnDelete} onClick={handleDelete}>Excluir</button>}
+        {initial && <button type="button" className={s.btnDelete} onClick={handleDelete}>{t('common.delete')}</button>}
         <div className={s.spacer} />
-        <button type="button" className={s.btnCancel} onClick={onClose}>Cancelar</button>
+        <button type="button" className={s.btnCancel} onClick={onClose}>{t('common.cancel')}</button>
         <button type="submit" className={s.btnSave} disabled={saving}>
-          {saving ? 'Salvando…' : initial ? 'Salvar alterações' : 'Criar proposta'}
+          {saving ? t('common.saving') : initial ? t('common.saveChanges') : t('proposals.form.createButton')}
         </button>
       </div>
     </form>

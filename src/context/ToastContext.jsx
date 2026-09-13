@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import styles from './Toast.module.css'
 
 const ToastCtx = createContext(null)
@@ -25,11 +26,12 @@ const ICONS = {
 }
 
 function ToastItem({ toast, onDismiss }) {
+  const { t } = useTranslation()
   return (
     <div className={`${styles.toast} ${styles[toast.type]} ${toast.leaving ? styles.leaving : ''}`}>
       <span className={styles.icon}>{ICONS[toast.type]}</span>
       <span className={styles.message}>{toast.message}</span>
-      <button className={styles.close} onClick={() => onDismiss(toast.id)} aria-label="Fechar">
+      <button className={styles.close} onClick={() => onDismiss(toast.id)} aria-label={t('common.close')}>
         <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12">
           <path d="M5.28 4.22a.75.75 0 0 0-1.06 1.06L6.94 8l-2.72 2.72a.75.75 0 1 0 1.06 1.06L8 9.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L9.06 8l2.72-2.72a.75.75 0 0 0-1.06-1.06L8 6.94 5.28 4.22Z"/>
         </svg>

@@ -3,7 +3,8 @@
     "ativo": "Active",
     "encerrado": "Closed",
     "arquivado": "Archived",
-    "suspenso": "Suspended"
+    "suspenso": "Suspended",
+    "finalizado": "Finished"
   },
   "task": {
     "pendente": "Pending",

@@ -31,6 +31,8 @@
   "selectPlaceholder": "— Select —",
   "nameRequired": "Name is required.",
   "currencyPlaceholder": "0.00",
+  "otherManualOption": "Other (enter manually)…",
+  "unexpectedError": "Unexpected error while saving.",
   "errorBoundary": {
     "page": {
       "title": "Something went wrong",

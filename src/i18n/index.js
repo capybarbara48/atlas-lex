@@ -11,6 +11,7 @@ import ptProposals from './locales/pt/proposals.json'
 import ptTasks from './locales/pt/tasks.json'
 import ptFinancials from './locales/pt/financials.json'
 import ptNotes from './locales/pt/notes.json'
+import ptMetrics from './locales/pt/metrics.json'
 import ptSettings from './locales/pt/settings.json'
 import ptOnboarding from './locales/pt/onboarding.json'
 import ptInterns from './locales/pt/interns.json'
@@ -32,6 +33,7 @@ import enProposals from './locales/en/proposals.json'
 import enTasks from './locales/en/tasks.json'
 import enFinancials from './locales/en/financials.json'
 import enNotes from './locales/en/notes.json'
+import enMetrics from './locales/en/metrics.json'
 import enSettings from './locales/en/settings.json'
 import enOnboarding from './locales/en/onboarding.json'
 import enInterns from './locales/en/interns.json'
@@ -61,6 +63,7 @@ i18next.use(initReactI18next).init({
         tasks: ptTasks,
         financials: ptFinancials,
         notes: ptNotes,
+        metrics: ptMetrics,
         settings: ptSettings,
         onboarding: ptOnboarding,
         interns: ptInterns,
@@ -85,6 +88,7 @@ i18next.use(initReactI18next).init({
         tasks: enTasks,
         financials: enFinancials,
         notes: enNotes,
+        metrics: enMetrics,
         settings: enSettings,
         onboarding: enOnboarding,
         interns: enInterns,

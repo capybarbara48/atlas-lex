@@ -1,17 +1,20 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/context/ToastContext'
 import styles from './AdminUsers.module.css'
 
 const ROLES = ['member', 'beta', 'admin']
 
-function roleLabel(role) {
-  if (role === 'admin') return 'Admin'
-  if (role === 'beta')  return 'Beta'
-  return 'Membro'
+function roleLabel(t, role) {
+  if (role === 'admin') return t('admin.role.admin')
+  if (role === 'beta')  return t('admin.role.beta')
+  return t('admin.role.member')
 }
 
 export default function AdminUsers() {
+  const { t, i18n } = useTranslation()
+  const locale = i18n.language === 'en' ? 'en-US' : 'pt-BR'
   const toast = useToast()
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
@@ -26,7 +29,7 @@ export default function AdminUsers() {
       .select('id, full_name, email, firm_name, role, onboarding_completed, created_at, oab_number')
       .order('created_at', { ascending: false })
     if (error) {
-      toast.error('Erro ao carregar usuários.')
+      toast.error(t('admin.users.loadError'))
     } else {
       setUsers(data ?? [])
     }
@@ -40,10 +43,12 @@ export default function AdminUsers() {
     const { error } = await supabase
       .rpc('admin_set_role', { target_id: userId, new_role: newRole })
     if (error) {
-      toast.error(error.message || 'Erro ao atualizar perfil.')
+      const isLastAdminError = error.message?.toLowerCase().includes('último administrador')
+        || error.message?.toLowerCase().includes('last remaining administrator')
+      toast.error(isLastAdminError ? t('admin.users.lastAdminError') : (error.message || t('admin.users.updateError')))
     } else {
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u))
-      toast.success(`Perfil atualizado para ${roleLabel(newRole)}.`)
+      toast.success(t('admin.users.roleUpdated', { role: roleLabel(t, newRole) }))
     }
     setUpdating(null)
   }
@@ -62,15 +67,15 @@ export default function AdminUsers() {
     <>
       <div className={styles.pageHeader}>
         <div>
-          <h1 className={styles.title}>Usuários</h1>
-          <p className={styles.sub}>{users.length} usuário{users.length !== 1 ? 's' : ''} cadastrado{users.length !== 1 ? 's' : ''}</p>
+          <h1 className={styles.title}>{t('admin.users.title')}</h1>
+          <p className={styles.sub}>{t('admin.users.subtitle', { count: users.length })}</p>
         </div>
       </div>
 
       <div className={styles.toolbar}>
         <input
           className={styles.search}
-          placeholder="Buscar por nome, e-mail ou escritório…"
+          placeholder={t('admin.users.searchPlaceholder')}
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
@@ -79,10 +84,10 @@ export default function AdminUsers() {
           value={filterRole}
           onChange={e => setFilterRole(e.target.value)}
         >
-          <option value="all">Todos os perfis</option>
-          <option value="admin">Admin</option>
-          <option value="beta">Beta</option>
-          <option value="member">Membro</option>
+          <option value="all">{t('admin.users.allRoles')}</option>
+          <option value="admin">{t('admin.role.admin')}</option>
+          <option value="beta">{t('admin.role.beta')}</option>
+          <option value="member">{t('admin.role.member')}</option>
         </select>
       </div>
 
@@ -94,20 +99,20 @@ export default function AdminUsers() {
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th>Usuário</th>
-                  <th>Escritório</th>
-                  <th>OAB</th>
-                  <th>Perfil</th>
-                  <th>Status</th>
-                  <th>Cadastro</th>
-                  <th>Ações</th>
+                  <th>{t('admin.users.table.user')}</th>
+                  <th>{t('admin.users.table.firm')}</th>
+                  <th>{t('admin.users.table.oab')}</th>
+                  <th>{t('admin.users.table.role')}</th>
+                  <th>{t('admin.users.table.status')}</th>
+                  <th>{t('admin.users.table.signupDate')}</th>
+                  <th>{t('admin.users.table.actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 && (
                   <tr>
                     <td colSpan={7} className={styles.empty}>
-                      {search || filterRole !== 'all' ? 'Nenhum resultado encontrado.' : 'Nenhum usuário.'}
+                      {search || filterRole !== 'all' ? t('admin.users.noResults') : t('admin.users.noUsers')}
                     </td>
                   </tr>
                 )}
@@ -128,17 +133,17 @@ export default function AdminUsers() {
                     <td className={styles.oabCell}>{u.oab_number || '—'}</td>
                     <td>
                       <span className={u.role === 'admin' ? styles.badgeAdmin : u.role === 'beta' ? styles.badgeBeta : styles.badgeMember}>
-                        {roleLabel(u.role)}
+                        {roleLabel(t, u.role)}
                       </span>
                     </td>
                     <td>
                       <span className={u.onboarding_completed ? styles.badgeActive : styles.badgePending}>
-                        {u.onboarding_completed ? 'Ativo' : 'Pendente'}
+                        {u.onboarding_completed ? t('admin.status.active') : t('admin.status.pending')}
                       </span>
                     </td>
                     <td className={styles.dateCell}>
                       {u.created_at
-                        ? new Date(u.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+                        ? new Date(u.created_at).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' })
                         : '—'}
                     </td>
                     <td>
@@ -149,7 +154,7 @@ export default function AdminUsers() {
                         onChange={e => changeRole(u.id, e.target.value)}
                       >
                         {ROLES.map(r => (
-                          <option key={r} value={r}>{roleLabel(r)}</option>
+                          <option key={r} value={r}>{roleLabel(t, r)}</option>
                         ))}
                       </select>
                     </td>

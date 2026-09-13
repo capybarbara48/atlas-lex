@@ -1,20 +1,18 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/context/ToastContext'
+import { formatDate } from '@/lib/formatters'
 import styles from './SuporteSection.module.css'
 
-const STATUS_LABELS = { aberto: 'Aberto', em_andamento: 'Em andamento', resolvido: 'Resolvido' }
 const STATUS_CLASS  = { aberto: styles.statusAberto, em_andamento: styles.statusAndamento, resolvido: styles.statusResolvido }
 
 const EMPTY_FORM = { subject: '', body: '' }
 
-function fmtDate(d) {
-  return new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-}
-
 /* ── Reply thread ───────────────────────────────────────────────────── */
 function ReplyThread({ ticketId, lawyerName }) {
+  const { t, i18n } = useTranslation()
   const { lawyer } = useAuth()
   const toast = useToast()
   const [replies, setReplies] = useState([])
@@ -40,7 +38,7 @@ function ReplyThread({ ticketId, lawyerName }) {
       .select()
       .single()
     setSaving(false)
-    if (error) { toast.error('Erro ao enviar resposta.'); return }
+    if (error) { toast.error(t('support.errorSendReply')); return }
     setReplies(r => [...r, data])
     setBody('')
   }
@@ -50,13 +48,13 @@ function ReplyThread({ ticketId, lawyerName }) {
   return (
     <div className={styles.thread}>
       {replies.length === 0 && (
-        <p className={styles.noReplies}>Nenhuma resposta ainda. Responderemos em breve.</p>
+        <p className={styles.noReplies}>{t('support.noReplies')}</p>
       )}
       {replies.map(r => (
         <div key={r.id} className={`${styles.bubble} ${r.is_admin ? styles.bubbleAdmin : styles.bubbleUser}`}>
           <div className={styles.bubbleMeta}>
-            <span className={styles.bubbleAuthor}>{r.is_admin ? 'Suporte Atlas Adv' : (lawyerName ?? 'Você')}</span>
-            <span className={styles.bubbleDate}>{fmtDate(r.created_at)}</span>
+            <span className={styles.bubbleAuthor}>{r.is_admin ? t('support.supportTeamName') : (lawyerName ?? t('support.you'))}</span>
+            <span className={styles.bubbleDate}>{formatDate(r.created_at, i18n.language, { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
           </div>
           <p className={styles.bubbleBody}>{r.body}</p>
         </div>
@@ -65,7 +63,7 @@ function ReplyThread({ ticketId, lawyerName }) {
       <div className={styles.replyForm}>
         <textarea
           className={styles.replyInput}
-          placeholder="Adicionar uma resposta…"
+          placeholder={t('support.replyPlaceholder')}
           value={body}
           onChange={e => setBody(e.target.value)}
           rows={2}
@@ -75,7 +73,7 @@ function ReplyThread({ ticketId, lawyerName }) {
           disabled={saving || !body.trim()}
           onClick={send}
         >
-          {saving ? 'Enviando…' : 'Responder'}
+          {saving ? t('support.sending') : t('support.reply')}
         </button>
       </div>
     </div>
@@ -84,6 +82,7 @@ function ReplyThread({ ticketId, lawyerName }) {
 
 /* ── Main section ────────────────────────────────────────────────────── */
 export default function SuporteSection() {
+  const { t, i18n } = useTranslation()
   const { lawyer, session } = useAuth()
   const toast = useToast()
   const [tickets, setTickets] = useState([])
@@ -115,24 +114,23 @@ export default function SuporteSection() {
       .select()
       .single()
     setSaving(false)
-    if (error) { toast.error('Erro ao criar chamado.'); return }
-    setTickets(t => [data, ...t])
+    if (error) { toast.error(t('support.errorCreateTicket')); return }
+    setTickets(list => [data, ...list])
     setForm(EMPTY_FORM)
     setShowForm(false)
     setExpanded(data.id)
-    toast.success('Chamado aberto.')
+    toast.success(t('support.ticketOpened'))
   }
 
   return (
     <div className={styles.wrap}>
       <div className={styles.topRow}>
         <p className={styles.hint}>
-          Abra um chamado para dúvidas, problemas técnicos ou sugestões de suporte.
-          Nossa equipe responde em até 48 h úteis.
+          {t('support.hint')}
         </p>
         {!showForm && (
           <button className={styles.btnNew} onClick={() => setShowForm(true)}>
-            + Novo chamado
+            {t('support.newTicket')}
           </button>
         )}
       </div>
@@ -141,10 +139,10 @@ export default function SuporteSection() {
       {showForm && (
         <form className={styles.newForm} onSubmit={createTicket}>
           <div className={styles.formField}>
-            <label className={styles.formLabel}>Assunto</label>
+            <label className={styles.formLabel}>{t('support.form.subjectLabel')}</label>
             <input
               className={styles.formInput}
-              placeholder="Descreva o problema brevemente…"
+              placeholder={t('support.form.subjectPlaceholder')}
               value={form.subject}
               onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
               required
@@ -152,10 +150,10 @@ export default function SuporteSection() {
             />
           </div>
           <div className={styles.formField}>
-            <label className={styles.formLabel}>Detalhes</label>
+            <label className={styles.formLabel}>{t('support.form.detailsLabel')}</label>
             <textarea
               className={styles.formTextarea}
-              placeholder="Descreva com mais detalhes o que está acontecendo…"
+              placeholder={t('support.form.detailsPlaceholder')}
               value={form.body}
               onChange={e => setForm(f => ({ ...f, body: e.target.value }))}
               required
@@ -164,10 +162,10 @@ export default function SuporteSection() {
           </div>
           <div className={styles.formActions}>
             <button type="button" className={styles.btnCancel} onClick={() => { setShowForm(false); setForm(EMPTY_FORM) }}>
-              Cancelar
+              {t('common.cancel')}
             </button>
             <button type="submit" className={styles.btnSubmit} disabled={saving}>
-              {saving ? 'Abrindo…' : 'Abrir chamado'}
+              {saving ? t('support.opening') : t('support.openTicket')}
             </button>
           </div>
         </form>
@@ -177,34 +175,34 @@ export default function SuporteSection() {
       {loading ? (
         <div className={styles.loadWrap}><div className={styles.spinner} /></div>
       ) : tickets.length === 0 ? (
-        <div className={styles.empty}>Nenhum chamado aberto ainda.</div>
+        <div className={styles.empty}>{t('support.emptyTickets')}</div>
       ) : (
         <div className={styles.ticketList}>
-          {tickets.map(t => (
-            <div key={t.id} className={`${styles.ticket} ${expanded === t.id ? styles.ticketOpen : ''}`}>
+          {tickets.map(ticket => (
+            <div key={ticket.id} className={`${styles.ticket} ${expanded === ticket.id ? styles.ticketOpen : ''}`}>
               <button
                 className={styles.ticketHeader}
-                onClick={() => setExpanded(expanded === t.id ? null : t.id)}
+                onClick={() => setExpanded(expanded === ticket.id ? null : ticket.id)}
               >
                 <div className={styles.ticketLeft}>
-                  <span className={`${styles.statusBadge} ${STATUS_CLASS[t.status]}`}>
-                    {STATUS_LABELS[t.status]}
+                  <span className={`${styles.statusBadge} ${STATUS_CLASS[ticket.status]}`}>
+                    {t(`support.status.${ticket.status}`)}
                   </span>
-                  <span className={styles.ticketSubject}>{t.subject}</span>
+                  <span className={styles.ticketSubject}>{ticket.subject}</span>
                 </div>
                 <div className={styles.ticketRight}>
-                  <span className={styles.ticketDate}>{new Date(t.created_at).toLocaleDateString('pt-BR')}</span>
-                  <span className={styles.chevron}>{expanded === t.id ? '▲' : '▼'}</span>
+                  <span className={styles.ticketDate}>{formatDate(ticket.created_at, i18n.language)}</span>
+                  <span className={styles.chevron}>{expanded === ticket.id ? '▲' : '▼'}</span>
                 </div>
               </button>
 
-              {expanded === t.id && (
+              {expanded === ticket.id && (
                 <div className={styles.ticketBody}>
                   <div className={styles.originalBody}>
-                    <span className={styles.originalLabel}>Mensagem original</span>
-                    <p>{t.body}</p>
+                    <span className={styles.originalLabel}>{t('support.originalMessage')}</span>
+                    <p>{ticket.body}</p>
                   </div>
-                  <ReplyThread ticketId={t.id} lawyerName={lawyer?.full_name?.split(' ')[0]} />
+                  <ReplyThread ticketId={ticket.id} lawyerName={lawyer?.full_name?.split(' ')[0]} />
                 </div>
               )}
             </div>

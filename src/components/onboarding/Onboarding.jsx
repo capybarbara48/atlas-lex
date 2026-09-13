@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { loadGoogleFont, applyFonts } from '@/lib/fonts'
@@ -7,8 +8,11 @@ import FontUpload from '@/components/ui/FontUpload'
 import styles from './Onboarding.module.css'
 
 /* ── Font options ─────────────────────────────────────────────────── */
+/* Real font family names (Playfair Display, Inter, …) are proper nouns and
+   are never translated — only the "default" entries (family: null) get a
+   translation key, resolved at render time via labelKey. */
 const HEADING_FONTS = [
-  { family: null,                label: 'Padrão Atlas',      sample: 'Aa' },
+  { family: null,                labelKey: 'onboarding.fonts.headingDefault', sample: 'Aa' },
   { family: 'Playfair Display',  label: 'Playfair Display',  sample: 'Aa' },
   { family: 'Merriweather',      label: 'Merriweather',      sample: 'Aa' },
   { family: 'EB Garamond',       label: 'EB Garamond',       sample: 'Aa' },
@@ -17,7 +21,7 @@ const HEADING_FONTS = [
 ]
 
 const BODY_FONTS = [
-  { family: null,            label: 'Padrão (sistema)', sample: 'Aa' },
+  { family: null,            labelKey: 'onboarding.fonts.bodyDefault', sample: 'Aa' },
   { family: 'Inter',         label: 'Inter',            sample: 'Aa' },
   { family: 'Poppins',       label: 'Poppins',          sample: 'Aa' },
   { family: 'Lato',          label: 'Lato',             sample: 'Aa' },
@@ -25,7 +29,7 @@ const BODY_FONTS = [
 ]
 
 const MONO_FONTS = [
-  { family: null,             label: 'Padrão (mono)'  },
+  { family: null,             labelKey: 'onboarding.fonts.monoDefault' },
   { family: 'IBM Plex Mono',  label: 'IBM Plex Mono'  },
   { family: 'JetBrains Mono', label: 'JetBrains Mono' },
 ]
@@ -36,14 +40,14 @@ const ALL_FONT_FAMILIES = [
 
 /* ── Preset brand colors ─────────────────────────────────────────── */
 const PRESETS = [
-  { hex: '#043b61', name: 'Navy Clássico' },
-  { hex: '#1a1a2e', name: 'Azul Noturno' },
-  { hex: '#0f3460', name: 'Azul Profundo' },
-  { hex: '#1b4332', name: 'Verde Floresta' },
-  { hex: '#370617', name: 'Bordô' },
-  { hex: '#212529', name: 'Grafite' },
-  { hex: '#5c4033', name: 'Marrom Executivo' },
-  { hex: '#4a0e8f', name: 'Roxo Real' },
+  { hex: '#043b61', nameKey: 'onboarding.presets.navyClassic' },
+  { hex: '#1a1a2e', nameKey: 'onboarding.presets.midnightBlue' },
+  { hex: '#0f3460', nameKey: 'onboarding.presets.deepBlue' },
+  { hex: '#1b4332', nameKey: 'onboarding.presets.forestGreen' },
+  { hex: '#370617', nameKey: 'onboarding.presets.burgundy' },
+  { hex: '#212529', nameKey: 'onboarding.presets.graphite' },
+  { hex: '#5c4033', nameKey: 'onboarding.presets.executiveBrown' },
+  { hex: '#4a0e8f', nameKey: 'onboarding.presets.royalPurple' },
 ]
 
 function darken(hex, amount = 0.18) {
@@ -70,13 +74,14 @@ function StepDots({ current, total }) {
 
 /* ── Mini header preview (Step 3) ───────────────────────────────── */
 function HeaderPreview({ firmName, accent, initials }) {
+  const { t } = useTranslation()
   return (
     <div className={styles.headerPreview} style={{ background: accent }}>
       <div className={styles.hpLeft}>
         <div className={styles.hpLogoMark}>
           {(firmName || 'AL').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()}
         </div>
-        <span className={styles.hpFirmName}>{firmName || 'Seu Escritório'}</span>
+        <span className={styles.hpFirmName}>{firmName || t('onboarding.headerPreview.defaultFirmName')}</span>
       </div>
       <div className={styles.hpClock}>14:35:00</div>
       <div className={styles.hpRight}>
@@ -91,6 +96,7 @@ const TOTAL_STEPS = 5
 const FONT_STEP   = 3
 
 export default function Onboarding() {
+  const { t } = useTranslation()
   const { lawyer, session, refreshLawyer } = useAuth()
 
   const [step, setStep]         = useState(0)
@@ -178,7 +184,7 @@ export default function Onboarding() {
 
     setSaving(false)
     if (error) {
-      setError('Erro ao salvar: ' + error.message)
+      setError(t('onboarding.step4.saveError', { message: error.message }))
       return
     }
     await refreshLawyer()
@@ -191,38 +197,38 @@ export default function Onboarding() {
     /* Step 0 — Boas-vindas */
     <div key="step0" className={styles.stepContent}>
       <div className={styles.stepIcon}>⚖</div>
-      <h2 className={styles.stepTitle}>Bem-vindo ao Atlas Adv!</h2>
+      <h2 className={styles.stepTitle}>{t('onboarding.step0.title')}</h2>
       <p className={styles.stepDesc}>
-        Vamos configurar seu espaço em <strong>3 passos rápidos</strong>.
-        Cada advogado tem o seu próprio ambiente — com sua marca, sua cor e seus dados.
+        {t('onboarding.step0.descPre')} <strong>{t('onboarding.step0.descBold')}</strong>
+        {t('onboarding.step0.descPost')}
       </p>
 
       <div className={styles.fields}>
         <div className={styles.field}>
-          <label className={styles.label}>Seu nome completo</label>
+          <label className={styles.label}>{t('onboarding.step0.fullNameLabel')}</label>
           <input
             className={styles.input}
             type="text"
             value={fullName}
             onChange={e => setFullName(e.target.value)}
-            placeholder="Dr. Elcimar Reis"
+            placeholder={t('onboarding.step0.fullNamePlaceholder')}
             autoFocus
           />
         </div>
         <div className={styles.field}>
-          <label className={styles.label}>Número da OAB <span className={styles.optional}>(opcional)</span></label>
+          <label className={styles.label}>{t('onboarding.step0.oabLabel')} <span className={styles.optional}>({t('common.optional')})</span></label>
           <input
             className={styles.input}
             type="text"
             value={oabNumber}
             onChange={e => setOabNumber(e.target.value)}
-            placeholder="123456/SP"
+            placeholder={t('onboarding.step0.oabPlaceholder')}
           />
         </div>
         <div className={styles.emailRow}>
           <span className={styles.emailIcon}>✓</span>
           <span className={styles.emailText}>
-            Conta Google verificada: <strong>{session?.user?.email}</strong>
+            {t('onboarding.step0.verifiedAccount')} <strong>{session?.user?.email}</strong>
           </span>
         </div>
       </div>
@@ -231,21 +237,20 @@ export default function Onboarding() {
     /* Step 1 — Escritório */
     <div key="step1" className={styles.stepContent}>
       <div className={styles.stepIcon}>🏛</div>
-      <h2 className={styles.stepTitle}>Seu Escritório</h2>
+      <h2 className={styles.stepTitle}>{t('onboarding.step1.title')}</h2>
       <p className={styles.stepDesc}>
-        Este nome aparecerá no cabeçalho de todas as páginas e será visível
-        apenas para você.
+        {t('onboarding.step1.desc')}
       </p>
 
       <div className={styles.fields}>
         <div className={styles.field}>
-          <label className={styles.label}>Nome do escritório</label>
+          <label className={styles.label}>{t('onboarding.step1.firmNameLabel')}</label>
           <input
             className={`${styles.input} ${styles.inputLarge}`}
             type="text"
             value={firmName}
             onChange={e => setFirmName(e.target.value)}
-            placeholder="Reis Advocacia"
+            placeholder={t('onboarding.step1.firmNamePlaceholder')}
             autoFocus
           />
           {firmName && (
@@ -254,7 +259,7 @@ export default function Onboarding() {
         </div>
         <div className={styles.field}>
           <label className={styles.label}>
-            Logo <span className={styles.optional}>(opcional)</span>
+            {t('onboarding.step1.logoLabel')} <span className={styles.optional}>({t('common.optional')})</span>
           </label>
           <LogoUpload value={logoUrl} onChange={setLogoUrl} />
         </div>
@@ -264,10 +269,9 @@ export default function Onboarding() {
     /* Step 2 — Cor */
     <div key="step2" className={styles.stepContent}>
       <div className={styles.stepIcon} style={{ background: accent + '20', color: accent }}>🎨</div>
-      <h2 className={styles.stepTitle}>Identidade Visual</h2>
+      <h2 className={styles.stepTitle}>{t('onboarding.step2.title')}</h2>
       <p className={styles.stepDesc}>
-        Escolha a cor que representa seu escritório. Ela aparece no cabeçalho,
-        botões e elementos de destaque.
+        {t('onboarding.step2.desc')}
       </p>
 
       <HeaderPreview firmName={firmName} accent={accent} initials={initials} />
@@ -280,7 +284,7 @@ export default function Onboarding() {
               type="button"
               className={`${styles.swatch} ${accent === c.hex ? styles.swatchActive : ''}`}
               style={{ background: c.hex }}
-              title={c.name}
+              title={t(c.nameKey)}
               onClick={() => setAccent(c.hex)}
             />
           ))}
@@ -291,10 +295,10 @@ export default function Onboarding() {
             className={styles.colorInput}
             value={accent}
             onChange={e => setAccent(e.target.value)}
-            title="Cor personalizada"
+            title={t('onboarding.step2.customColorTitle')}
           />
           <span className={styles.colorHex}>{accent}</span>
-          <span className={styles.colorCustomLabel}>ou escolha uma cor personalizada</span>
+          <span className={styles.colorCustomLabel}>{t('onboarding.step2.customColorLabel')}</span>
         </div>
       </div>
     </div>,
@@ -302,18 +306,18 @@ export default function Onboarding() {
     /* Step 3 — Fontes */
     <div key="step3" className={styles.stepContent}>
       <div className={styles.stepIcon}>🔤</div>
-      <h2 className={styles.stepTitle}>Tipografia</h2>
+      <h2 className={styles.stepTitle}>{t('onboarding.step3.title')}</h2>
       <p className={styles.stepDesc}>
-        Escolha as fontes que representam seu escritório. Você pode alterá-las a qualquer momento em Configurações.
+        {t('onboarding.step3.desc')}
       </p>
 
       {/* Scope toggle */}
       <div className={styles.fontScopeRow}>
-        <span className={styles.fontScopeLabel}>Aplicar em:</span>
+        <span className={styles.fontScopeLabel}>{t('onboarding.step3.scopeLabel')}</span>
         <div className={styles.fontScopeBtns}>
           {[
-            { v: 'all',      l: 'Todo o sistema' },
-            { v: 'pdf_only', l: 'Só em PDF / documentos' },
+            { v: 'all',      l: t('onboarding.step3.scopeAll') },
+            { v: 'pdf_only', l: t('onboarding.step3.scopePdfOnly') },
           ].map(({ v, l }) => (
             <button key={v} type="button"
               className={`${styles.fontScopeBtn} ${fontScope === v ? styles.fontScopeBtnActive : ''}`}
@@ -325,7 +329,7 @@ export default function Onboarding() {
 
       {/* Custom font upload — appears first so the option shows up in grids below */}
       <div className={styles.fontSection}>
-        <span className={styles.fontSectionLabel}>Sua fonte personalizada</span>
+        <span className={styles.fontSectionLabel}>{t('onboarding.step3.customFontLabel')}</span>
         <FontUpload
           customFont={customFont}
           onFont={f => setCustomFont(f)}
@@ -340,16 +344,16 @@ export default function Onboarding() {
 
       {/* Heading font */}
       <div className={styles.fontSection}>
-        <span className={styles.fontSectionLabel}>Fonte principal (títulos)</span>
+        <span className={styles.fontSectionLabel}>{t('onboarding.step3.headingFontLabel')}</span>
         <div className={styles.fontGrid}>
           {HEADING_FONTS.map(f => (
-            <button key={f.label} type="button"
+            <button key={f.label ?? f.labelKey} type="button"
               className={`${styles.fontOption} ${fontHeading === f.family ? styles.fontOptionActive : ''}`}
               style={{ fontFamily: f.family ? `'${f.family}', serif` : 'inherit' }}
               onClick={() => setFontHeading(f.family)}
             >
               <span className={styles.fontSample}>Aa</span>
-              <span className={styles.fontOptionLabel}>{f.label}</span>
+              <span className={styles.fontOptionLabel}>{f.label ?? t(f.labelKey)}</span>
             </button>
           ))}
           {customFont && (
@@ -367,16 +371,16 @@ export default function Onboarding() {
 
       {/* Body font */}
       <div className={styles.fontSection}>
-        <span className={styles.fontSectionLabel}>Fonte secundária (texto)</span>
+        <span className={styles.fontSectionLabel}>{t('onboarding.step3.bodyFontLabel')}</span>
         <div className={styles.fontGrid}>
           {BODY_FONTS.map(f => (
-            <button key={f.label} type="button"
+            <button key={f.label ?? f.labelKey} type="button"
               className={`${styles.fontOption} ${fontBody === f.family ? styles.fontOptionActive : ''}`}
               style={{ fontFamily: f.family ? `'${f.family}', sans-serif` : 'inherit' }}
               onClick={() => setFontBody(f.family)}
             >
               <span className={styles.fontSample}>Aa</span>
-              <span className={styles.fontOptionLabel}>{f.label}</span>
+              <span className={styles.fontOptionLabel}>{f.label ?? t(f.labelKey)}</span>
             </button>
           ))}
           {customFont && (
@@ -394,16 +398,16 @@ export default function Onboarding() {
 
       {/* Mono font */}
       <div className={styles.fontSection}>
-        <span className={styles.fontSectionLabel}>Fonte terciária (números, processos)</span>
+        <span className={styles.fontSectionLabel}>{t('onboarding.step3.monoFontLabel')}</span>
         <div className={styles.fontGrid}>
           {MONO_FONTS.map(f => (
-            <button key={f.label} type="button"
+            <button key={f.label ?? f.labelKey} type="button"
               className={`${styles.fontOption} ${fontMono === f.family ? styles.fontOptionActive : ''}`}
               style={{ fontFamily: f.family ? `'${f.family}', monospace` : 'monospace' }}
               onClick={() => setFontMono(f.family)}
             >
               <span className={styles.fontSample}>01</span>
-              <span className={styles.fontOptionLabel}>{f.label}</span>
+              <span className={styles.fontOptionLabel}>{f.label ?? t(f.labelKey)}</span>
             </button>
           ))}
           {customFont && (
@@ -423,15 +427,15 @@ export default function Onboarding() {
       <div className={styles.fontPreview}>
         <div className={styles.fontPreviewHeading}
           style={{ fontFamily: fontHeading ? `'${fontHeading}', serif` : 'inherit' }}>
-          Assessoria Jurídica Especializada
+          {t('onboarding.step3.previewHeading')}
         </div>
         <div className={styles.fontPreviewBody}
           style={{ fontFamily: fontBody ? `'${fontBody}', sans-serif` : 'inherit' }}>
-          Atendemos famílias e empresas com comprometimento, ética e excelência. Cada caso é tratado com dedicação e rigor técnico.
+          {t('onboarding.step3.previewBody')}
         </div>
         <div className={styles.fontPreviewMono}
           style={{ fontFamily: fontMono ? `'${fontMono}', monospace` : 'monospace' }}>
-          Proc. nº 1234.567.2024.8.00
+          {t('onboarding.step3.previewMono')}
         </div>
       </div>
     </div>,
@@ -439,46 +443,48 @@ export default function Onboarding() {
     /* Step 4 — Pronto */
     <div key="step4" className={styles.stepContent}>
       <div className={styles.checkmark}>✓</div>
-      <h2 className={styles.stepTitle}>Tudo pronto, {fullName.split(' ')[0] || 'Advogado'}!</h2>
+      <h2 className={styles.stepTitle}>
+        {t('onboarding.step4.title', { name: fullName.split(' ')[0] || t('onboarding.step4.defaultName') })}
+      </h2>
       <p className={styles.stepDesc}>
-        Seu ambiente está configurado. Aqui está um resumo:
+        {t('onboarding.step4.desc')}
       </p>
 
       <div className={styles.summary}>
         <div className={styles.summaryRow}>
-          <span className={styles.summaryKey}>Advogado</span>
+          <span className={styles.summaryKey}>{t('onboarding.step4.lawyer')}</span>
           <span className={styles.summaryVal}>{fullName}{oabNumber ? ` · OAB ${oabNumber}` : ''}</span>
         </div>
         <div className={styles.summaryRow}>
-          <span className={styles.summaryKey}>Escritório</span>
+          <span className={styles.summaryKey}>{t('onboarding.step4.firm')}</span>
           <span className={styles.summaryVal}>{firmName}</span>
         </div>
         <div className={styles.summaryRow}>
-          <span className={styles.summaryKey}>Cor da marca</span>
+          <span className={styles.summaryKey}>{t('onboarding.step4.brandColor')}</span>
           <span className={styles.summaryVal} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span className={styles.colorDot} style={{ background: accent }} />
             {accent}
           </span>
         </div>
         <div className={styles.summaryRow}>
-          <span className={styles.summaryKey}>Logo</span>
-          <span className={styles.summaryVal}>{logoUrl ? 'Configurado ✓' : 'Não configurado (usaremos as iniciais)'}</span>
+          <span className={styles.summaryKey}>{t('onboarding.step4.logo')}</span>
+          <span className={styles.summaryVal}>{logoUrl ? t('onboarding.step4.logoConfigured') : t('onboarding.step4.logoNotConfigured')}</span>
         </div>
         <div className={styles.summaryRow}>
-          <span className={styles.summaryKey}>Fontes</span>
+          <span className={styles.summaryKey}>{t('onboarding.step4.fonts')}</span>
           <span className={styles.summaryVal}>
-            {fontHeading || 'Padrão'} · {fontBody || 'Padrão'} · {fontMono || 'Mono padrão'}
-            {fontScope === 'pdf_only' && <span style={{ color: 'var(--text-3)', fontSize: '0.75em' }}> (só PDF)</span>}
+            {fontHeading || t('onboarding.step4.fontsDefault')} · {fontBody || t('onboarding.step4.fontsDefault')} · {fontMono || t('onboarding.step4.monoDefault')}
+            {fontScope === 'pdf_only' && <span style={{ color: 'var(--text-3)', fontSize: '0.75em' }}> {t('onboarding.step4.pdfOnlySuffix')}</span>}
           </span>
         </div>
         <div className={styles.summaryRow}>
-          <span className={styles.summaryKey}>Conta</span>
+          <span className={styles.summaryKey}>{t('onboarding.step4.account')}</span>
           <span className={styles.summaryVal}>{session?.user?.email}</span>
         </div>
       </div>
 
       <p className={styles.editNote}>
-        Você pode alterar qualquer configuração a qualquer momento em <strong>Configurações</strong>.
+        {t('onboarding.step4.editNotePre')} <strong>{t('onboarding.step4.editNoteBold')}</strong>.
       </p>
 
       {error && <div className={styles.errorMsg}>{error}</div>}
@@ -501,7 +507,7 @@ export default function Onboarding() {
 
         {/* Step label */}
         <div className={styles.stepLabel}>
-          Passo {step + 1} de {TOTAL_STEPS}
+          {t('onboarding.stepLabel', { current: step + 1, total: TOTAL_STEPS })}
         </div>
 
         {/* Content */}
@@ -514,12 +520,12 @@ export default function Onboarding() {
         <div className={styles.nav}>
           {step > 0 && step < TOTAL_STEPS - 1 && (
             <button className={styles.btnBack} onClick={goBack}>
-              ← Voltar
+              {t('onboarding.nav.back')}
             </button>
           )}
           {step === TOTAL_STEPS - 1 && (
             <button className={styles.btnBack} onClick={goBack}>
-              ← Voltar
+              {t('onboarding.nav.back')}
             </button>
           )}
 
@@ -532,7 +538,7 @@ export default function Onboarding() {
               onClick={goNext}
               disabled={!canAdvance()}
             >
-              {step === 0 ? 'Começar →' : 'Próximo →'}
+              {step === 0 ? t('onboarding.nav.start') : t('onboarding.nav.next')}
             </button>
           )}
 
@@ -543,7 +549,7 @@ export default function Onboarding() {
               onClick={handleFinish}
               disabled={saving}
             >
-              {saving ? 'Salvando…' : '🚀 Entrar no Atlas Adv'}
+              {saving ? t('onboarding.nav.finishing') : t('onboarding.nav.finish')}
             </button>
           )}
         </div>

@@ -19,5 +19,11 @@
   "online": "Online",
   "openMenu": "Abrir menu",
   "closeMenu": "Fechar menu",
-  "beta": "Beta"
+  "beta": "Beta",
+  "workspace": "Espaço de Trabalho",
+  "metricas": "Métricas",
+  "greetingMorning": "Bom dia",
+  "greetingAfternoon": "Boa tarde",
+  "greetingEvening": "Boa noite",
+  "internBadge": "Estag."
 }

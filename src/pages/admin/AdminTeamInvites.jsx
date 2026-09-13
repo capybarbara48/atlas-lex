@@ -1,28 +1,32 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/context/ToastContext'
 import styles from './AdminUsers.module.css'
 
-const STATUS_LABELS = {
-  pending_admin:  'Aguardando aprovação',
-  pending_invite: 'Aprovado — aguardando cadastro',
-  active:         'Ativo',
-  disabled:       'Desativado',
-}
 const STATUS_CLASS = {
   pending_admin:  'badge-pendente',
   pending_invite: 'st-teal',
   active:         'st-green',
   disabled:       'st-gray',
 }
-const ROLE_LABELS = { advogado: 'Advogado', estagiario: 'Estagiário' }
 
-function fmtDate(iso) {
+function statusLabel(t, status) {
+  return t(`admin.teamInvites.status.${status}`, { defaultValue: status })
+}
+
+function roleLabel(t, role) {
+  return t(`admin.teamInvites.role.${role}`, { defaultValue: role })
+}
+
+function fmtDate(iso, locale) {
   if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })
+  return new Date(iso).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 export default function AdminTeamInvites() {
+  const { t, i18n } = useTranslation()
+  const locale = i18n.language === 'en' ? 'en-US' : 'pt-BR'
   const toast = useToast()
   const [invites,  setInvites]  = useState([])
   const [loading,  setLoading]  = useState(true)
@@ -36,7 +40,7 @@ export default function AdminTeamInvites() {
       .select('*, lawyers!team_members_lawyer_id_fkey(full_name, firm_name, email)')
       .order('invited_at', { ascending: false })
     if (error) {
-      toast.error('Erro ao carregar convites.')
+      toast.error(t('admin.teamInvites.loadError'))
     } else {
       setInvites(data ?? [])
     }
@@ -52,23 +56,23 @@ export default function AdminTeamInvites() {
       .update({ status: 'pending_invite', approved_at: new Date().toISOString() })
       .eq('id', id)
     if (error) {
-      toast.error('Erro ao aprovar convite.')
+      toast.error(t('admin.teamInvites.approveError'))
     } else {
       setInvites(prev => prev.map(i => i.id === id ? { ...i, status: 'pending_invite' } : i))
-      toast.success('Convite aprovado. O responsável pode agora orientar o membro a se cadastrar.')
+      toast.success(t('admin.teamInvites.approveSuccess'))
     }
     setUpdating(null)
   }
 
   async function reject(id) {
-    if (!window.confirm('Rejeitar e excluir este convite?')) return
+    if (!window.confirm(t('admin.teamInvites.rejectConfirm'))) return
     setUpdating(id)
     const { error } = await supabase.from('team_members').delete().eq('id', id)
     if (error) {
-      toast.error('Erro ao rejeitar convite.')
+      toast.error(t('admin.teamInvites.rejectError'))
     } else {
       setInvites(prev => prev.filter(i => i.id !== id))
-      toast.success('Convite rejeitado e removido.')
+      toast.success(t('admin.teamInvites.rejectSuccess'))
     }
     setUpdating(null)
   }
@@ -84,12 +88,12 @@ export default function AdminTeamInvites() {
       <div className={styles.pageHeader}>
         <div>
           <h1 className={styles.title}>
-            Convites de Equipe
+            {t('admin.teamInvites.title')}
             {pendingCount > 0 && (
-              <span className="badge badge-alta" style={{ marginLeft: '0.5rem' }}>{pendingCount} pendente{pendingCount > 1 ? 's' : ''}</span>
+              <span className="badge badge-alta" style={{ marginLeft: '0.5rem' }}>{t('admin.teamInvites.pendingBadge', { count: pendingCount })}</span>
             )}
           </h1>
-          <p className={styles.sub}>{invites.length} convite{invites.length !== 1 ? 's' : ''} no total</p>
+          <p className={styles.sub}>{t('admin.teamInvites.subtitle', { count: invites.length })}</p>
         </div>
       </div>
 
@@ -99,26 +103,26 @@ export default function AdminTeamInvites() {
           value={filter}
           onChange={e => setFilter(e.target.value)}
         >
-          <option value="pending_admin">Aguardando aprovação</option>
-          <option value="pending_invite">Aprovados</option>
-          <option value="active">Ativos</option>
-          <option value="disabled">Desativados</option>
-          <option value="todos">Todos</option>
+          <option value="pending_admin">{t('admin.teamInvites.filter.pendingAdmin')}</option>
+          <option value="pending_invite">{t('admin.teamInvites.filter.pendingInvite')}</option>
+          <option value="active">{t('admin.teamInvites.filter.active')}</option>
+          <option value="disabled">{t('admin.teamInvites.filter.disabled')}</option>
+          <option value="todos">{t('admin.teamInvites.filter.all')}</option>
         </select>
       </div>
 
       {loading ? (
-        <div className={styles.loading}>Carregando…</div>
+        <div className={styles.loading}>{t('common.loading')}</div>
       ) : filtered.length === 0 ? (
-        <div className={styles.empty}>Nenhum convite encontrado.</div>
+        <div className={styles.empty}>{t('admin.teamInvites.empty')}</div>
       ) : (
         <div className={styles.table}>
           <div className={styles.tableHeader}>
-            <span>Membro</span>
-            <span>Escritório</span>
-            <span>Função</span>
-            <span>Status</span>
-            <span>Data</span>
+            <span>{t('admin.teamInvites.table.member')}</span>
+            <span>{t('admin.teamInvites.table.firm')}</span>
+            <span>{t('admin.teamInvites.table.role')}</span>
+            <span>{t('admin.teamInvites.table.status')}</span>
+            <span>{t('admin.teamInvites.table.date')}</span>
             <span></span>
           </div>
           {filtered.map(inv => (
@@ -133,15 +137,15 @@ export default function AdminTeamInvites() {
               </div>
               <div>
                 <span className={`badge ${inv.role === 'advogado' ? 'st-blue' : 'st-teal'}`}>
-                  {ROLE_LABELS[inv.role] ?? inv.role}
+                  {roleLabel(t, inv.role)}
                 </span>
               </div>
               <div>
                 <span className={`badge ${STATUS_CLASS[inv.status] ?? 'st-gray'}`}>
-                  {STATUS_LABELS[inv.status] ?? inv.status}
+                  {statusLabel(t, inv.status)}
                 </span>
               </div>
-              <div className={styles.userEmail}>{fmtDate(inv.invited_at)}</div>
+              <div className={styles.userEmail}>{fmtDate(inv.invited_at, locale)}</div>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 {inv.status === 'pending_admin' && (
                   <>
@@ -151,7 +155,7 @@ export default function AdminTeamInvites() {
                       disabled={updating === inv.id}
                       onClick={() => approve(inv.id)}
                     >
-                      {updating === inv.id ? '…' : 'Aprovar'}
+                      {updating === inv.id ? '…' : t('admin.teamInvites.approve')}
                     </button>
                     <button
                       className={styles.roleBtn}
@@ -159,7 +163,7 @@ export default function AdminTeamInvites() {
                       disabled={updating === inv.id}
                       onClick={() => reject(inv.id)}
                     >
-                      Rejeitar
+                      {t('admin.teamInvites.reject')}
                     </button>
                   </>
                 )}
@@ -170,7 +174,7 @@ export default function AdminTeamInvites() {
                     disabled={updating === inv.id}
                     onClick={() => reject(inv.id)}
                   >
-                    {updating === inv.id ? '…' : 'Remover'}
+                    {updating === inv.id ? '…' : t('admin.teamInvites.remove')}
                   </button>
                 )}
               </div>

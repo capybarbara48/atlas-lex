@@ -38,17 +38,24 @@
   "page": {
     "title": "Showcase",
     "subtitle": "A shareable card — your real data, with no private names",
-    "fullscreen": "Full screen ↗"
+    "fullscreen": "↗ Full screen"
   },
   "mix": {
     "firmSub": "Law Firm",
     "focusActive": "focus active",
+    "breakActive": "☕ break",
     "pomodoro": "pomodoro",
     "cycle_one": "{{count}} cycle",
     "cycle_other": "{{count}} cycles",
     "reset": "Reset",
     "pause": "⏸ Pause",
     "start": "▶ Start focus",
+    "resume": "▶ Resume",
+    "timeLabel": "Time",
+    "dateLabel": "Date",
+    "tasksLabel": "Tasks",
+    "pendingTodayLabel": "due today",
+    "pendingWeekLabel": "due this week",
     "taskPending_one": "task due today",
     "taskPending_other": "tasks due today",
     "taskDone_one": "task completed this week",

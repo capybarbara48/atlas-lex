@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
+import { formatCurrency, formatDate } from '@/lib/formatters'
 import s from './Form.module.css'
 
 const REC_CATEGORIES_FIXED = [
@@ -9,6 +11,13 @@ const REC_CATEGORIES_FIXED = [
   'Custas',
   'Diligência Jurídica',
 ]
+
+const REC_CATEGORY_KEYS = {
+  'Honorários Contratuais':   'financials.categories.income.honorariosContratuais',
+  'Honorários Sucumbenciais': 'financials.categories.income.honorariosSucumbenciais',
+  'Custas':                   'financials.categories.income.custas',
+  'Diligência Jurídica':      'financials.categories.income.diligenciaJuridica',
+}
 
 const DESP_CATEGORIES = [
   'Aluguel',
@@ -23,18 +32,27 @@ const DESP_CATEGORIES = [
   'Outros',
 ]
 
-function fmtBRL(v) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v) || 0)
+const DESP_CATEGORY_KEYS = {
+  'Aluguel':                  'financials.categories.expense.aluguel',
+  'Internet / Telefone':      'financials.categories.expense.internetTelefone',
+  'Software / Assinaturas':   'financials.categories.expense.softwareAssinaturas',
+  'OAB / Taxas':              'financials.categories.expense.oabTaxas',
+  'Pessoal / Salários':       'financials.categories.expense.pessoalSalarios',
+  'Contabilidade':            'financials.categories.expense.contabilidade',
+  'Material de Escritório':   'financials.categories.expense.materialEscritorio',
+  'Marketing':                'financials.categories.expense.marketing',
+  'Transporte':               'financials.categories.expense.transporte',
+  'Outros':                   'financials.categories.expense.outros',
 }
 
-function monthLabel(ym) {
+function monthLabel(ym, lang) {
   const [y, m] = ym.split('-').map(Number)
-  return new Date(y, m - 1, 1)
-    .toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
+  return formatDate(new Date(y, m - 1, 1), lang, { month: 'short', year: 'numeric' })
     .replace('.', '')
 }
 
 export default function EntryForm({ initial, defaultType = 'receita', onSave, onClose }) {
+  const { t, i18n } = useTranslation()
   const { session, lawyer } = useAuth()
   const now = new Date()
   const curMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
@@ -89,7 +107,10 @@ export default function EntryForm({ initial, defaultType = 'receita', onSave, on
     const [sy, sm] = installStart.split('-').map(Number)
     const endDate  = new Date(sy, sm - 1 + nParcelas - 1, 1)
     const endMon   = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}`
-    previewText = `${nParcelas} × ${fmtBRL(perParcela)} · dia ${installDay} · ${monthLabel(installStart)} → ${monthLabel(endMon)}`
+    previewText = t('financials.form.installmentPreview', {
+      n: nParcelas, amount: formatCurrency(perParcela, i18n.language), day: installDay,
+      start: monthLabel(installStart, i18n.language), end: monthLabel(endMon, i18n.language),
+    })
   }
 
   function getCategory() {
@@ -158,14 +179,14 @@ export default function EntryForm({ initial, defaultType = 'receita', onSave, on
     if (error) { setError(error.message); return }
     onSave()
     } catch (err) {
-      setError(err?.message ?? 'Erro inesperado ao salvar.')
+      setError(err?.message ?? t('common.unexpectedError'))
     } finally {
       setSaving(false)
     }
   }
 
   async function handleDelete() {
-    if (!window.confirm('Excluir este lançamento? Esta ação não pode ser desfeita.')) return
+    if (!window.confirm(t('common.confirmDelete'))) return
     const { error } = await supabase.from('financial_entries').delete().eq('id', initial.id)
     if (error) { setError(error.message); return }
     onSave()
@@ -176,13 +197,13 @@ export default function EntryForm({ initial, defaultType = 'receita', onSave, on
       <div className={s.grid}>
 
         <div className={`${s.field} ${s.span2}`}>
-          <label className={`${s.label} ${s.req}`}>Descrição</label>
+          <label className={`${s.label} ${s.req}`}>{t('tasks.form.descriptionLabel')}</label>
           <input className={s.input} value={f.description} onChange={e => set('description', e.target.value)}
-            required placeholder={isReceita ? 'Ex: Honorários — Maria vs. João' : 'Ex: Aluguel do escritório'} />
+            required placeholder={isReceita ? t('financials.form.descriptionPlaceholderIncome') : t('financials.form.descriptionPlaceholderExpense')} />
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Tipo</label>
+          <label className={s.label}>{t('financials.table.type')}</label>
           <select className={s.select} value={f.type} onChange={e => {
             set('type', e.target.value)
             setParcelado(false)
@@ -190,23 +211,23 @@ export default function EntryForm({ initial, defaultType = 'receita', onSave, on
             setCategoryOtherText('')
             set('category', '')
           }}>
-            <option value="receita">Receita</option>
-            <option value="despesa">Despesa</option>
+            <option value="receita">{t('financials.type.income')}</option>
+            <option value="despesa">{t('financials.type.expense')}</option>
           </select>
         </div>
 
         <div className={s.field}>
           <label className={`${s.label} ${s.req}`}>
-            Valor{parcelado ? ' total' : ''} (R$)
+            {parcelado ? t('financials.form.amountTotalLabel') : t('financials.form.amountLabel')}
           </label>
           <input className={s.input} type="number" min="0" step="0.01"
             value={f.amount} onChange={e => set('amount', e.target.value)}
-            required placeholder="0,00" />
+            required placeholder={t('common.currencyPlaceholder')} />
         </div>
 
         {/* Category */}
         <div className={s.field}>
-          <label className={s.label}>Categoria</label>
+          <label className={s.label}>{t('financials.form.categoryLabel')}</label>
           {isReceita ? (
             <>
               <select
@@ -223,31 +244,31 @@ export default function EntryForm({ initial, defaultType = 'receita', onSave, on
                   }
                 }}
               >
-                <option value="">— Selecione —</option>
-                {REC_CATEGORIES_FIXED.map(c => <option key={c} value={c}>{c}</option>)}
-                <option value="__outro__">Outro (digitar manualmente)…</option>
+                <option value="">{t('common.selectPlaceholder')}</option>
+                {REC_CATEGORIES_FIXED.map(c => <option key={c} value={c}>{t(REC_CATEGORY_KEYS[c])}</option>)}
+                <option value="__outro__">{t('common.otherManualOption')}</option>
               </select>
               {categoryOther && (
                 <input className={s.input} style={{ marginTop: '0.4rem' }}
                   value={categoryOtherText}
                   onChange={e => setCategoryOtherText(e.target.value)}
-                  placeholder="Descreva a categoria…"
+                  placeholder={t('financials.form.categoryOtherPlaceholder')}
                   autoFocus
                 />
               )}
             </>
           ) : (
             <select className={s.select} value={f.category} onChange={e => set('category', e.target.value)}>
-              <option value="">— Selecione —</option>
-              {DESP_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              <option value="">{t('common.selectPlaceholder')}</option>
+              {DESP_CATEGORIES.map(c => <option key={c} value={c}>{t(DESP_CATEGORY_KEYS[c])}</option>)}
             </select>
           )}
         </div>
 
         <div className={s.field}>
-          <label className={s.label}>Caso vinculado</label>
+          <label className={s.label}>{t('cases.linkedCaseLabel')}</label>
           <select className={s.select} value={f.case_id} onChange={e => set('case_id', e.target.value)}>
-            <option value="">— Sem caso —</option>
+            <option value="">{t('cases.noCaseOption')}</option>
             {cases.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
           </select>
         </div>
@@ -259,7 +280,7 @@ export default function EntryForm({ initial, defaultType = 'receita', onSave, on
               set('recurring', e.target.checked)
               if (e.target.checked) setParcelado(false)
             }} />
-            {isReceita ? 'Receita recorrente (valor fixo mensal)' : 'Despesa fixa (recorrente mensal)'}
+            {isReceita ? t('financials.form.recurringIncomeLabel') : t('financials.form.recurringExpenseLabel')}
           </label>
         </div>
 
@@ -268,28 +289,28 @@ export default function EntryForm({ initial, defaultType = 'receita', onSave, on
           <div className={`${s.field} ${s.span2}`}>
             <label className={s.checkLabel}>
               <input type="checkbox" checked={parcelado} onChange={e => setParcelado(e.target.checked)} />
-              Parcelar em X vezes
+              {t('financials.form.installmentToggleLabel')}
             </label>
 
             {parcelado && (
               <div className={s.installmentPanel}>
                 <div className={s.inlineGrid}>
                   <div className={s.field}>
-                    <label className={s.label}>Nº de parcelas</label>
+                    <label className={s.label}>{t('financials.form.installmentCountLabel')}</label>
                     <input className={s.input} type="number" min="2" max="36"
                       value={installCount}
                       onChange={e => setInstallCount(Math.max(2, parseInt(e.target.value) || 2))}
                     />
                   </div>
                   <div className={s.field}>
-                    <label className={s.label}>Dia do vencimento</label>
+                    <label className={s.label}>{t('financials.form.installmentDayLabel')}</label>
                     <input className={s.input} type="number" min="1" max="28"
                       value={installDay}
                       onChange={e => setInstallDay(Math.max(1, Math.min(28, parseInt(e.target.value) || 5)))}
                     />
                   </div>
                   <div className={`${s.field} ${s.span2}`}>
-                    <label className={s.label}>Primeiro mês</label>
+                    <label className={s.label}>{t('financials.form.installmentStartLabel')}</label>
                     <input className={s.input} type="month"
                       value={installStart}
                       onChange={e => setInstallStart(e.target.value)}
@@ -307,11 +328,11 @@ export default function EntryForm({ initial, defaultType = 'receita', onSave, on
         {/* Status: hidden for installment batches */}
         {!parcelado && (
           <div className={s.field}>
-            <label className={s.label}>Status</label>
+            <label className={s.label}>{t('financials.table.status')}</label>
             <select className={s.select} value={f.status} onChange={e => set('status', e.target.value)}>
-              <option value="pendente">Pendente</option>
-              <option value="pago">Pago</option>
-              <option value="cancelado">Cancelado</option>
+              <option value="pendente">{t('status.financial.pendente')}</option>
+              <option value="pago">{t('status.financial.pago')}</option>
+              <option value="cancelado">{t('status.financial.cancelado')}</option>
             </select>
           </div>
         )}
@@ -319,7 +340,7 @@ export default function EntryForm({ initial, defaultType = 'receita', onSave, on
         {/* Due date: hidden when recurring or installment batch */}
         {!isRecurr && !parcelado && (
           <div className={s.field}>
-            <label className={s.label}>Vencimento</label>
+            <label className={s.label}>{t('financials.form.dueDateLabel')}</label>
             <input className={s.input} type="date" value={f.due_date}
               onChange={e => set('due_date', e.target.value)} />
           </div>
@@ -327,7 +348,7 @@ export default function EntryForm({ initial, defaultType = 'receita', onSave, on
 
         {!parcelado && f.status === 'pago' && (
           <div className={s.field}>
-            <label className={s.label}>Data de pagamento</label>
+            <label className={s.label}>{t('financials.form.paidAtLabel')}</label>
             <input className={s.input} type="date" value={f.paid_at}
               onChange={e => set('paid_at', e.target.value)} />
           </div>
@@ -338,17 +359,17 @@ export default function EntryForm({ initial, defaultType = 'receita', onSave, on
       {error && <div className={s.error}>{error}</div>}
 
       <div className={s.footer}>
-        {initial?.id && <button type="button" className={s.btnDelete} onClick={handleDelete}>Excluir</button>}
+        {initial?.id && <button type="button" className={s.btnDelete} onClick={handleDelete}>{t('common.delete')}</button>}
         <div className={s.spacer} />
-        <button type="button" className={s.btnCancel} onClick={onClose}>Cancelar</button>
+        <button type="button" className={s.btnCancel} onClick={onClose}>{t('common.cancel')}</button>
         <button type="submit" className={s.btnSave} disabled={saving}>
           {saving
-            ? 'Salvando…'
+            ? t('common.saving')
             : parcelado
-              ? `Criar ${nParcelas} parcelas`
+              ? t('financials.form.createInstallmentsButton', { count: nParcelas })
               : initial
-                ? 'Salvar alterações'
-                : 'Criar lançamento'}
+                ? t('common.saveChanges')
+                : t('financials.form.createButton')}
         </button>
       </div>
     </form>

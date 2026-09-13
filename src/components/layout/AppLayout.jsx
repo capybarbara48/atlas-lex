@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useLocation, Link } from 'react-router-dom'
 import { useState, useEffect, useRef, Suspense } from 'react'
+import { useTranslation } from 'react-i18next'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import FeedbackButton from '@/components/ui/FeedbackButton'
 import SearchPalette from '@/components/ui/SearchPalette'
@@ -118,36 +119,38 @@ const ICONS = {
 }
 
 /* ── Nav config ────────────────────────────────────────────────────── */
+/* labelKey/labelFallback are resolved via t() inside the component ─── */
 const ALL_NAV_ITEMS = [
-  { to: '/painel',               label: 'Painel',        end: true,  icon: ICONS.painel,     roles: ['advogado','estagiario'] },
-  { to: '/painel/casos',         label: 'Casos',         end: false, icon: ICONS.casos,      roles: ['advogado','estagiario'] },
-  { to: '/painel/clientes',      label: 'Clientes',      end: false, icon: ICONS.clientes,   roles: ['advogado','estagiario'] },
-  { to: '/painel/propostas',     label: 'Propostas',     end: false, icon: ICONS.propostas,  roles: ['advogado','estagiario'] },
-  { to: '/painel/tarefas',       label: 'Espaço de Trabalho', end: false, icon: ICONS.tarefas,    roles: ['advogado','estagiario'] },
-  { to: '/painel/notas',         label: 'Notas',         end: false, icon: ICONS.notas,      roles: ['advogado','estagiario'] },
-  { to: '/painel/financeiro',    label: 'Financeiro',    end: false, icon: ICONS.financeiro, roles: ['advogado'] },
-  { to: '/painel/estagiarios',   label: 'Equipe',        end: false, icon: ICONS.equipe,     roles: ['advogado','estagiario'] },
-  { to: '/painel/vitrine',       label: 'Vitrine',       end: false, icon: ICONS.vitrine,    roles: ['advogado','estagiario'] },
-  { to: '/painel/metricas',      label: 'Métricas',      end: false, icon: ICONS.metricas,   roles: ['advogado'] },
-  { to: '/painel/configuracoes', label: 'Configurações', end: false, icon: ICONS.configs,    roles: ['advogado'] },
+  { to: '/painel',               labelKey: 'nav.painel',       labelFallback: 'Painel',              end: true,  icon: ICONS.painel,     roles: ['advogado','estagiario'] },
+  { to: '/painel/casos',         labelKey: 'nav.casos',        labelFallback: 'Casos',               end: false, icon: ICONS.casos,      roles: ['advogado','estagiario'] },
+  { to: '/painel/clientes',      labelKey: 'nav.clientes',     labelFallback: 'Clientes',            end: false, icon: ICONS.clientes,   roles: ['advogado','estagiario'] },
+  { to: '/painel/propostas',     labelKey: 'nav.propostas',    labelFallback: 'Propostas',           end: false, icon: ICONS.propostas,  roles: ['advogado','estagiario'] },
+  { to: '/painel/tarefas',       labelKey: 'nav.workspace',    labelFallback: 'Espaço de Trabalho',  end: false, icon: ICONS.tarefas,    roles: ['advogado','estagiario'] },
+  { to: '/painel/notas',         labelKey: 'nav.notas',        labelFallback: 'Notas',               end: false, icon: ICONS.notas,      roles: ['advogado','estagiario'] },
+  { to: '/painel/financeiro',    labelKey: 'nav.financeiro',   labelFallback: 'Financeiro',          end: false, icon: ICONS.financeiro, roles: ['advogado'] },
+  { to: '/painel/estagiarios',   labelKey: 'nav.estagiarios',  labelFallback: 'Equipe',              end: false, icon: ICONS.equipe,     roles: ['advogado','estagiario'] },
+  { to: '/painel/vitrine',       labelKey: 'nav.vitrine',      labelFallback: 'Vitrine',             end: false, icon: ICONS.vitrine,    roles: ['advogado','estagiario'] },
+  { to: '/painel/metricas',      labelKey: 'nav.metricas',     labelFallback: 'Métricas',            end: false, icon: ICONS.metricas,   roles: ['advogado'] },
+  { to: '/painel/configuracoes', labelKey: 'nav.configuracoes',labelFallback: 'Configurações',       end: false, icon: ICONS.configs,    roles: ['advogado'] },
 ]
 
-const PAGE_TITLES = {
-  '/painel':               'Painel',
-  '/painel/casos':         'Casos',
-  '/painel/clientes':      'Clientes',
-  '/painel/propostas':     'Propostas',
-  '/painel/tarefas':       'Espaço de Trabalho',
-  '/painel/notas':         'Notas',
-  '/painel/financeiro':    'Financeiro',
-  '/painel/configuracoes': 'Configurações',
-  '/painel/estagiarios':   'Equipe',
-  '/painel/vitrine':       'Vitrine',
-  '/painel/metricas':      'Métricas',
+const PAGE_TITLE_ENTRIES = {
+  '/painel':               ['nav.painel',        'Painel'],
+  '/painel/casos':         ['nav.casos',         'Casos'],
+  '/painel/clientes':      ['nav.clientes',      'Clientes'],
+  '/painel/propostas':     ['nav.propostas',     'Propostas'],
+  '/painel/tarefas':       ['nav.workspace',     'Espaço de Trabalho'],
+  '/painel/notas':         ['nav.notas',         'Notas'],
+  '/painel/financeiro':    ['nav.financeiro',    'Financeiro'],
+  '/painel/configuracoes': ['nav.configuracoes', 'Configurações'],
+  '/painel/estagiarios':   ['nav.estagiarios',   'Equipe'],
+  '/painel/vitrine':       ['nav.vitrine',       'Vitrine'],
+  '/painel/metricas':      ['nav.metricas',      'Métricas'],
 }
 
 /* ── Brand Header ───────────────────────────────────────────────────── */
 function BrandHeader() {
+  const { t, i18n } = useTranslation()
   const { lawyer, session, isAdmin, isBeta, memberName, teamRole } = useAuth()
   const [now, setNow] = useState(new Date())
 
@@ -156,10 +159,11 @@ function BrandHeader() {
     return () => clearInterval(id)
   }, [])
 
+  const locale = i18n.language === 'en' ? 'en-US' : 'pt-BR'
   const h = now.getHours()
-  const greeting = h >= 5 && h < 12 ? 'Bom dia' : h >= 12 && h < 18 ? 'Boa tarde' : 'Boa noite'
-  const timeStr  = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-  const dateStr  = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  const greeting = h >= 5 && h < 12 ? t('nav.greetingMorning', 'Bom dia') : h >= 12 && h < 18 ? t('nav.greetingAfternoon', 'Boa tarde') : t('nav.greetingEvening', 'Boa noite')
+  const timeStr  = now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  const dateStr  = now.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
   const displayName = memberName ?? lawyer?.full_name
   const initials   = displayName
@@ -206,21 +210,21 @@ function BrandHeader() {
       <div className={styles.brandRight}>
         <div className={styles.brandLivePill}>
           <span className={styles.liveDot} />
-          <span className={styles.brandLiveLabel}>Online</span>
+          <span className={styles.brandLiveLabel}>{t('nav.online', 'Online')}</span>
         </div>
         <div className={styles.brandAvatar}>{initials}</div>
         <span className={styles.brandUserName}>
           {firstName}
-          {isBeta && <span className={styles.betaPill}>Beta</span>}
+          {isBeta && <span className={styles.betaPill}>{t('nav.beta', 'Beta')}</span>}
         </span>
         {isAdmin && (
-          <Link to="/admin" className={styles.brandAdminBtn} title="Painel Admin">
+          <Link to="/admin" className={styles.brandAdminBtn} title={t('nav.adminPanel', 'Painel Admin')}>
             <span className={styles.brandBtnIcon}>{ICONS.admin}</span>
           </Link>
         )}
         <button className={styles.brandSignOutBtn} onClick={() => supabase.auth.signOut()}>
           <span className={styles.brandBtnIcon}>{ICONS.signout}</span>
-          <span className={styles.brandSignOutLabel}>Sair</span>
+          <span className={styles.brandSignOutLabel}>{t('common.signOut', 'Sair')}</span>
         </button>
       </div>
     </header>
@@ -237,8 +241,11 @@ function PageLoader() {
 
 /* ── Layout ─────────────────────────────────────────────────────────── */
 export default function AppLayout() {
+  const { t } = useTranslation()
   const { lawyer, session, isAdmin, isBeta, teamRole, memberName } = useAuth()
-  const NAV_ITEMS = ALL_NAV_ITEMS.filter(item => item.roles.includes(teamRole))
+  const NAV_ITEMS = ALL_NAV_ITEMS
+    .filter(item => item.roles.includes(teamRole))
+    .map(item => ({ ...item, label: t(item.labelKey, item.labelFallback) }))
   const location = useLocation()
   const [sidebarOpen,  setSidebarOpen]  = useState(false)
   const [overdueCount, setOverdueCount] = useState(0)
@@ -287,9 +294,11 @@ export default function AppLayout() {
     : 'AL'
   const firmName  = lawyer?.firm_name ?? 'Atlas Adv'
   const firmShort = firmName.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
-  const pageTitle = PAGE_TITLES[location.pathname]
-    ?? (location.pathname.startsWith('/painel/clientes/') ? 'Cliente'
-      : location.pathname.startsWith('/painel/casos/') ? 'Processo'
+  const pageTitleEntry = PAGE_TITLE_ENTRIES[location.pathname]
+  const pageTitle = pageTitleEntry
+    ? t(pageTitleEntry[0], pageTitleEntry[1])
+    : (location.pathname.startsWith('/painel/clientes/') ? t('nav.cliente', 'Cliente')
+      : location.pathname.startsWith('/painel/casos/') ? t('nav.processo', 'Processo')
       : 'Atlas Adv')
 
   function showDock() {
@@ -318,7 +327,7 @@ export default function AppLayout() {
         </div>
 
         <nav className={styles.sidebarNav}>
-          {!compact && <span className={styles.navSection}>Menu</span>}
+          {!compact && <span className={styles.navSection}>{t('nav.menu', 'Menu')}</span>}
           {NAV_ITEMS.map(({ to, label, icon, end }) => (
             <NavLink
               key={to}
@@ -342,7 +351,7 @@ export default function AppLayout() {
           {isAdmin && (
             <Link to="/admin" className={`${styles.adminLink} ${compact ? styles.adminLinkCompact : ''}`}>
               <span className={styles.navIcon}>{ICONS.admin}</span>
-              {!compact && <span className={styles.adminLinkLabel}>Painel Admin</span>}
+              {!compact && <span className={styles.adminLinkLabel}>{t('nav.adminPanel', 'Painel Admin')}</span>}
             </Link>
           )}
           <div className={`${styles.userRow} ${compact ? styles.userRowCompact : ''}`}>
@@ -351,8 +360,8 @@ export default function AppLayout() {
               <div className={styles.userInfo}>
                 <span className={styles.userName}>
                   {sidebarDisplayName?.split(' ')[0] ?? session?.user?.email?.split('@')[0] ?? '—'}
-                  {isBeta && <span className={styles.betaPill}>Beta</span>}
-                  {teamRole === 'estagiario' && <span className={styles.betaPill} style={{ background: '#2a9d8f' }}>Estag.</span>}
+                  {isBeta && <span className={styles.betaPill}>{t('nav.beta', 'Beta')}</span>}
+                  {teamRole === 'estagiario' && <span className={styles.betaPill} style={{ background: '#2a9d8f' }}>{t('nav.internBadge', 'Estag.')}</span>}
                 </span>
                 <span className={styles.userEmail}>{session?.user?.email}</span>
               </div>
@@ -363,7 +372,7 @@ export default function AppLayout() {
             onClick={() => supabase.auth.signOut()}
           >
             <span className={styles.navIcon}>{ICONS.signout}</span>
-            {!compact && <span className={styles.signOutLabel}>Sair</span>}
+            {!compact && <span className={styles.signOutLabel}>{t('common.signOut', 'Sair')}</span>}
           </button>
         </div>
       </>
@@ -376,10 +385,10 @@ export default function AppLayout() {
       <button
         className={`${styles.searchTrigger} ${dark ? styles.searchTriggerDark : ''}`}
         onClick={() => setSearchOpen(true)}
-        title="Busca global (⌘K)"
+        title={t('nav.searchGlobal', 'Busca global (⌘K)')}
       >
         <span className={styles.navIcon} style={{ width:15, height:15 }}>{ICONS.search}</span>
-        <span className={styles.searchTriggerLabel}>Buscar</span>
+        <span className={styles.searchTriggerLabel}>{t('nav.search', 'Buscar')}</span>
         <kbd className={styles.searchKbd}>⌘K</kbd>
       </button>
     )
@@ -402,7 +411,7 @@ export default function AppLayout() {
               <button
                 className={styles.hamburger}
                 onClick={() => setSidebarOpen(v => !v)}
-                aria-label="Abrir menu"
+                aria-label={sidebarOpen ? t('nav.closeMenu', 'Fechar menu') : t('nav.openMenu', 'Abrir menu')}
               >
                 <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" width="20" height="20">
                   <path d="M3 5h14M3 10h14M3 15h14"/>
@@ -516,8 +525,8 @@ export default function AppLayout() {
             </NavLink>
           ))}
           <div className={styles.dockSep} />
-          <button className={styles.dockItem} onClick={() => supabase.auth.signOut()} title="Sair">
-            <span className={styles.dockTooltip}>Sair</span>
+          <button className={styles.dockItem} onClick={() => supabase.auth.signOut()} title={t('common.signOut', 'Sair')}>
+            <span className={styles.dockTooltip}>{t('common.signOut', 'Sair')}</span>
             <span className={styles.dockIcon}>{ICONS.signout}</span>
           </button>
         </nav>

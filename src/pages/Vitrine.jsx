@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/context/AuthContext'
 import PageShell from '@/components/ui/PageShell'
+import { formatDate } from '@/lib/formatters'
 import s from './Vitrine.module.css'
 
 /* ─── Pomodoro constants ─────────────────────────────────────────── */
@@ -67,9 +69,11 @@ const DOTS = Array.from({ length: 40 }, (_, i) => ({
    VitrineCard — renders the display card (normal or fullscreen)
 ═══════════════════════════════════════════════════════════════════ */
 function VitrineCard({ lawyer, now, stats, pomMode, pomSecs, pomCycles, onToggle, onReset, fullscreen, onClose }) {
+  const { t, i18n } = useTranslation()
   const accent   = lawyer?.theme_accent ?? '#043b61'
   const firmName = lawyer?.firm_name    ?? 'Atlas Adv'
   const logoUrl  = lawyer?.logo_url     || null
+  const locale   = i18n.language === 'en' ? 'en-US' : 'pt-BR'
 
   /* Pomodoro ring */
   const total    = pomMode === 'break' ? BREAK_SECS : FOCUS_SECS
@@ -80,17 +84,17 @@ function VitrineCard({ lawyer, now, stats, pomMode, pomSecs, pomCycles, onToggle
   const ringStroke = pomMode === 'break' ? 'rgba(255,255,255,.55)' : 'rgba(255,255,255,.92)'
 
   /* Date/time */
-  const timeStr  = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-  const dateDay  = now.toLocaleDateString('pt-BR', { day: '2-digit' })
-  const dateMon  = now.toLocaleDateString('pt-BR', { month: 'long' }).replace(/^\w/, c => c.toUpperCase())
-  const dateWday = now.toLocaleDateString('pt-BR', { weekday: 'long' }).toUpperCase()
+  const timeStr  = now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  const dateDay  = formatDate(now, i18n.language, { day: '2-digit' })
+  const dateMon  = formatDate(now, i18n.language, { month: 'long' }).replace(/^\w/, c => c.toUpperCase())
+  const dateWday = formatDate(now, i18n.language, { weekday: 'long' }).toUpperCase()
   const dateYear = now.getFullYear()
 
   /* Pomodoro state label */
-  const pomLabel = pomMode === 'focus' ? 'foco ativo'
-    : pomMode === 'break' ? '☕ pausa'
-    : pomCycles > 0 ? `${pomCycles} ciclo${pomCycles !== 1 ? 's' : ''}`
-    : 'pomodoro'
+  const pomLabel = pomMode === 'focus' ? t('vitrine.mix.focusActive')
+    : pomMode === 'break' ? t('vitrine.mix.breakActive')
+    : pomCycles > 0 ? t('vitrine.mix.cycle', { count: pomCycles })
+    : t('vitrine.mix.pomodoro')
 
   return (
     <div className={s.card} style={{ '--vmix-accent': accent }}>
@@ -114,7 +118,7 @@ function VitrineCard({ lawyer, now, stats, pomMode, pomSecs, pomCycles, onToggle
           ) : (
             <div className={s.logoText}>
               <div className={s.logoName}>{firmName.toUpperCase()}</div>
-              <div className={s.logoSub}>Advocacia</div>
+              <div className={s.logoSub}>{t('vitrine.mix.firmSub')}</div>
             </div>
           )}
         </div>
@@ -146,9 +150,9 @@ function VitrineCard({ lawyer, now, stats, pomMode, pomSecs, pomCycles, onToggle
           </div>
 
           <div className={s.controls}>
-            <button className={s.btnGhost} onClick={onReset} title="Reiniciar">↺</button>
+            <button className={s.btnGhost} onClick={onReset} title={t('vitrine.mix.reset')}>↺</button>
             <button className={s.btnPrimary} onClick={onToggle}>
-              {isRunning ? '⏸ Pausar' : (pomSecs < (pomMode === 'idle' ? FOCUS_SECS : total) ? '▶ Retomar' : '▶ Iniciar foco')}
+              {isRunning ? t('vitrine.mix.pause') : (pomSecs < (pomMode === 'idle' ? FOCUS_SECS : total) ? t('vitrine.mix.resume') : t('vitrine.mix.start'))}
             </button>
             <span className={s.cycles}>{pomCycles > 0 ? `×${pomCycles}` : ''}</span>
           </div>
@@ -160,13 +164,13 @@ function VitrineCard({ lawyer, now, stats, pomMode, pomSecs, pomCycles, onToggle
         <div className={`${s.col} ${s.colStats}`}>
           {/* Relógio */}
           <div className={s.glass}>
-            <div className={s.glassLabel}>Horário</div>
+            <div className={s.glassLabel}>{t('vitrine.mix.timeLabel')}</div>
             <div className={s.clock}>{timeStr}</div>
           </div>
 
           {/* Data */}
           <div className={s.glass}>
-            <div className={s.glassLabel}>Data</div>
+            <div className={s.glassLabel}>{t('vitrine.mix.dateLabel')}</div>
             <div className={s.dateRow}>
               <span className={s.dateDay}>{dateDay}</span>
               <div className={s.dateMeta}>
@@ -179,16 +183,16 @@ function VitrineCard({ lawyer, now, stats, pomMode, pomSecs, pomCycles, onToggle
 
           {/* Tarefas */}
           <div className={s.glass}>
-            <div className={s.glassLabel}>Tarefas</div>
+            <div className={s.glassLabel}>{t('vitrine.mix.tasksLabel')}</div>
             <div className={s.tasksRow}>
               <div className={s.taskBlock}>
                 <div className={s.taskNum}>{stats.today}</div>
-                <div className={s.taskLabel}>pendentes hoje</div>
+                <div className={s.taskLabel}>{t('vitrine.mix.pendingTodayLabel')}</div>
               </div>
               <div className={s.tasksDivider} />
               <div className={s.taskBlock}>
                 <div className={s.taskNum}>{stats.week}</div>
-                <div className={s.taskLabel}>pendentes na semana</div>
+                <div className={s.taskLabel}>{t('vitrine.mix.pendingWeekLabel')}</div>
               </div>
             </div>
           </div>
@@ -198,7 +202,7 @@ function VitrineCard({ lawyer, now, stats, pomMode, pomSecs, pomCycles, onToggle
       {/* ── Rodapé ── */}
       <div className={s.footer}>
         <div className={s.footerLine} />
-        <span className={s.footerBrand}>Atlas Adv</span>
+        <span className={s.footerBrand}>{t('vitrine.watermark.name')}</span>
         <div className={s.footerLine} />
       </div>
     </div>
@@ -209,6 +213,7 @@ function VitrineCard({ lawyer, now, stats, pomMode, pomSecs, pomCycles, onToggle
    Page
 ═══════════════════════════════════════════════════════════════════ */
 export default function Vitrine() {
+  const { t } = useTranslation()
   const { lawyer } = useAuth()
 
   /* ── Pomodoro ── */
@@ -293,7 +298,7 @@ export default function Vitrine() {
     <PageShell
       action={
         <button className={s.btnExpand} onClick={() => setFullscreen(true)}>
-          ↗ Tela cheia
+          {t('vitrine.page.fullscreen')}
         </button>
       }
     >

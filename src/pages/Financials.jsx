@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAllEntries, deleteEntry, confirmEntry, unconfirmEntry } from '@/hooks/useFinancials'
 import { useQuotaLitisCases, toggleQuotaLitisReceived } from '@/hooks/useCases'
 import { useAuth } from '@/context/AuthContext'
@@ -7,6 +8,8 @@ import PageShell from '@/components/ui/PageShell'
 import Modal from '@/components/ui/Modal'
 import EntryForm from '@/components/forms/EntryForm'
 import { useToast } from '@/context/ToastContext'
+import { formatDate, formatCurrency } from '@/lib/formatters'
+import { finStatusLabel } from '@/lib/statusLabels'
 import styles from './Financials.module.css'
 
 /* ── data mapper ──────────────────────────────────────────────────────── */
@@ -29,41 +32,26 @@ function mapEntry(e) {
 }
 
 /* ── helpers ──────────────────────────────────────────────────────────── */
-function brl(v) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v ?? 0)
-}
-
+/* NOTE: fmtBRLPlain stays pt-BR — used only by generateFinanceiroPDF's printed report, which is left untranslated by design. */
 function fmtBRLPlain(v) {
   return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-function fmtDate(iso) {
+function fmtDate(iso, lang) {
   if (!iso) return ''
-  const dt = iso.length <= 10 ? new Date(iso + 'T12:00:00') : new Date(iso)
-  return dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
-}
-
-function fmtDateTime(iso) {
-  if (!iso) return ''
-  try {
-    const dt = new Date(iso)
-    return dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })
-      + ' ' + dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-  } catch { return '' }
+  return formatDate(iso, lang, { day: '2-digit', month: '2-digit', year: '2-digit' })
 }
 
 function prevM(y, m) { return m === 0 ? [y - 1, 11] : [y, m - 1] }
 function nextM(y, m) { return m === 11 ? [y + 1, 0] : [y, m + 1] }
 
-function monthLong(y, m) {
-  return new Date(y, m, 1)
-    .toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+function monthLong(y, m, lang) {
+  return formatDate(new Date(y, m, 1), lang, { month: 'long', year: 'numeric' })
     .replace(/^\w/, c => c.toUpperCase())
 }
 
-function monthShort(m) {
-  return new Date(2000, m, 1)
-    .toLocaleDateString('pt-BR', { month: 'short' })
+function monthShort(m, lang) {
+  return formatDate(new Date(2000, m, 1), lang, { month: 'short' })
     .replace('.', '')
 }
 
@@ -138,39 +126,40 @@ function StatBox({ label, value, sub, variant, wide }) {
 
 /* ── MonthlyChart ─────────────────────────────────────────────────────── */
 const CHART_PERIODS = [
-  { label: '3m',  months: 3  },
-  { label: '6m',  months: 6  },
-  { label: '12m', months: 12 },
-  { label: '2a',  months: 24 },
-  { label: '3a',  months: 36 },
-  { label: '4a',  months: 48 },
-  { label: '6a',  months: 72 },
+  { key: '3m',  months: 3  },
+  { key: '6m',  months: 6  },
+  { key: '12m', months: 12 },
+  { key: '2y',  months: 24 },
+  { key: '3y',  months: 36 },
+  { key: '4y',  months: 48 },
+  { key: '6y',  months: 72 },
 ]
 
-function barLabel(date, periodMonths) {
+function barLabel(date, periodMonths, lang) {
   const m = date.getMonth()
   const y = date.getFullYear()
 
   if (periodMonths <= 12) {
     // Every month; highlight January
-    return { text: monthShort(m), bold: m === 0 }
+    return { text: monthShort(m, lang), bold: m === 0 }
   }
   if (periodMonths <= 24) {
     // Every quarter: Jan, Apr, Jul, Oct (m % 3 === 0)
     if (m % 3 !== 0) return null
-    return { text: m === 0 ? String(y).slice(2) : monthShort(m), bold: m === 0 }
+    return { text: m === 0 ? String(y).slice(2) : monthShort(m, lang), bold: m === 0 }
   }
   if (periodMonths <= 36) {
     // Jan and Jul of each year
     if (m !== 0 && m !== 6) return null
-    return { text: m === 0 ? String(y).slice(2) : monthShort(m), bold: m === 0 }
+    return { text: m === 0 ? String(y).slice(2) : monthShort(m, lang), bold: m === 0 }
   }
-  // 4a, 6a: January only — one label per year
+  // 4y, 6y: January only — one label per year
   if (m !== 0) return null
   return { text: String(y).slice(2), bold: true }
 }
 
 function MonthlyChart({ entries, selYear, selMonth }) {
+  const { t, i18n } = useTranslation()
   const [period, setPeriod] = useState(12)
 
   const months = useMemo(() => {
@@ -209,7 +198,7 @@ function MonthlyChart({ entries, selYear, selMonth }) {
   return (
     <div className={styles.chartCard}>
       <div className={styles.chartHeader}>
-        <span className={styles.chartTitle}>Histórico de pagamentos</span>
+        <span className={styles.chartTitle}>{t('financials.chart.historyTitle')}</span>
         <div className={styles.chartControls}>
           <div className={styles.periodSelector}>
             {CHART_PERIODS.map(p => (
@@ -218,15 +207,15 @@ function MonthlyChart({ entries, selYear, selMonth }) {
                 className={`${styles.periodBtn} ${period === p.months ? styles.periodBtnActive : ''}`}
                 onClick={() => setPeriod(p.months)}
               >
-                {p.label}
+                {t(`financials.chart.periods.${p.key}`)}
               </button>
             ))}
           </div>
           <div className={styles.chartLegend}>
             <span className={styles.legendDot} style={{ background: 'var(--green)' }} />
-            <span>Rec.</span>
+            <span>{t('financials.chart.legendIncome')}</span>
             <span className={styles.legendDot} style={{ background: 'var(--red)', marginLeft: '0.6rem' }} />
-            <span>Desp.</span>
+            <span>{t('financials.chart.legendExpense')}</span>
           </div>
         </div>
       </div>
@@ -260,7 +249,7 @@ function MonthlyChart({ entries, selYear, selMonth }) {
           )
         })}
         {months.map((m, i) => {
-          const lbl = barLabel(m.date, period)
+          const lbl = barLabel(m.date, period, i18n.language)
           if (!lbl) return null
           return (
             <text key={i}
@@ -279,6 +268,7 @@ function MonthlyChart({ entries, selYear, selMonth }) {
 
 /* ── EntryItem ────────────────────────────────────────────────────────── */
 function EntryItem({ e, confirmDeleteId, setConfirmDeleteId, onEdit, onDelete, onConfirm, onUnconfirm }) {
+  const { t, i18n } = useTranslation()
   const isReceita  = e.tipo === 'receita'
   const isPaid     = e.status === 'pago'
   const confirming = confirmDeleteId === e.id
@@ -289,7 +279,7 @@ function EntryItem({ e, confirmDeleteId, setConfirmDeleteId, onEdit, onDelete, o
       <div className={styles.entryBody}>
         <div className={styles.entryName}>
           {e.caso ?? e.category ?? e.desc}
-          {e.recurring && <span className={styles.recurringBadge}>Fixa</span>}
+          {e.recurring && <span className={styles.recurringBadge}>{t('financials.entry.recurringBadge')}</span>}
           {e.installmentOf && (
             <span className={styles.installmentBadge}>{e.installmentOf}/{e.installmentTotal}</span>
           )}
@@ -297,40 +287,40 @@ function EntryItem({ e, confirmDeleteId, setConfirmDeleteId, onEdit, onDelete, o
         <div className={styles.entryMeta}>
           {(e.caso || e.category) && <span className={styles.entryCase}>{e.desc}</span>}
           <span className={isPaid ? styles.statusPaid : styles.statusPending}>
-            {isPaid ? '✓ Pago' : '⏳ Pendente'}
+            {isPaid ? `✓ ${finStatusLabel(t, 'pago')}` : `⏳ ${finStatusLabel(t, 'pendente')}`}
           </span>
           {isPaid && e.paidAt
-            ? <span className={styles.entryDate}>{fmtDate(e.paidAt)}</span>
-            : !isPaid && e.data && <span className={styles.entryDate}>{fmtDate(e.data)}</span>
+            ? <span className={styles.entryDate}>{fmtDate(e.paidAt, i18n.language)}</span>
+            : !isPaid && e.data && <span className={styles.entryDate}>{fmtDate(e.data, i18n.language)}</span>
           }
         </div>
       </div>
       <div className={styles.entryRight}>
         <div className={`${styles.entryAmount} ${isReceita ? styles.amountGreen : styles.amountRed}`}>
-          {isReceita ? '+' : '−'}{brl(e.valor)}
+          {isReceita ? '+' : '−'}{formatCurrency(e.valor, i18n.language)}
         </div>
         {confirming ? (
           <div className={styles.confirmDeleteInline}>
-            <span className={styles.confirmDeleteLabel}>Excluir?</span>
-            <button className={styles.confirmYes} onClick={() => onDelete(e.id)}>Sim</button>
-            <button className={styles.confirmNo} onClick={() => setConfirmDeleteId(null)}>Não</button>
+            <span className={styles.confirmDeleteLabel}>{t('financials.entry.deleteConfirmLabel')}</span>
+            <button className={styles.confirmYes} onClick={() => onDelete(e.id)}>{t('common.yes')}</button>
+            <button className={styles.confirmNo} onClick={() => setConfirmDeleteId(null)}>{t('common.no')}</button>
           </div>
         ) : (
           <div className={styles.entryActions}>
             {!isPaid && (
-              <button className={styles.confirmPaidBtn} onClick={() => onConfirm(e.id)} title="Confirmar pagamento">
+              <button className={styles.confirmPaidBtn} onClick={() => onConfirm(e.id)} title={t('financials.entry.confirmPaid')}>
                 <IconCheck />
               </button>
             )}
             {isPaid && (
-              <button className={`${styles.entryActionBtn} ${styles.unconfirmBtn}`} onClick={() => onUnconfirm(e.id)} title="Desfazer confirmação">
+              <button className={`${styles.entryActionBtn} ${styles.unconfirmBtn}`} onClick={() => onUnconfirm(e.id)} title={t('financials.entry.unconfirm')}>
                 <IconUndo />
               </button>
             )}
-            <button className={styles.entryActionBtn} onClick={() => onEdit(e.id)} title="Editar">
+            <button className={styles.entryActionBtn} onClick={() => onEdit(e.id)} title={t('financials.entry.edit')}>
               <IconEdit />
             </button>
-            <button className={`${styles.entryActionBtn} ${styles.entryDeleteBtn}`} onClick={() => setConfirmDeleteId(e.id)} title="Excluir">
+            <button className={`${styles.entryActionBtn} ${styles.entryDeleteBtn}`} onClick={() => setConfirmDeleteId(e.id)} title={t('financials.entry.delete')}>
               <IconTrash />
             </button>
           </div>
@@ -346,6 +336,7 @@ function calcQL(c) {
 }
 
 function QLDonut({ pending, received }) {
+  const { t } = useTranslation()
   const total = pending + received
   const r = 52, cx = 68, cy = 68, sw = 22
   const circ = 2 * Math.PI * r
@@ -374,18 +365,20 @@ function QLDonut({ pending, received }) {
           </>
       }
       <text x={cx} y={cy - 6}  textAnchor="middle" fontSize="18" fontWeight="800" fill="var(--text)">{total}</text>
-      <text x={cx} y={cy + 12} textAnchor="middle" fontSize="9"  fill="var(--text-3)" fontWeight="500">casos</text>
+      <text x={cx} y={cy + 12} textAnchor="middle" fontSize="9"  fill="var(--text-3)" fontWeight="500">{t('financials.quotaLitis.cases')}</text>
     </svg>
   )
 }
 
 function QuotaLitisView({ cases, loading, onToggle }) {
-  if (loading) return <div className={styles.qlEmpty}><p>Carregando…</p></div>
+  const { t, i18n } = useTranslation()
+
+  if (loading) return <div className={styles.qlEmpty}><p>{t('financials.loading')}</p></div>
 
   if (cases.length === 0) return (
     <div className={styles.qlEmpty}>
       <div className={styles.qlEmptyIcon}>%</div>
-      <p>Nenhum processo ativo com quota-litis cadastrada</p>
+      <p>{t('financials.quotaLitis.emptyTitle')}</p>
     </div>
   )
 
@@ -399,25 +392,25 @@ function QuotaLitisView({ cases, loading, onToggle }) {
     <div className={styles.qlWrap}>
       <div className={styles.qlTop}>
         <div className={styles.qlChartCard}>
-          <div className={styles.qlChartTitle}>Quota-Litis Previstas</div>
+          <div className={styles.qlChartTitle}>{t('financials.quotaLitis.chartTitle')}</div>
           <div className={styles.qlChartInner}>
             <QLDonut pending={pending.length} received={received.length} />
             <div className={styles.qlLegend}>
               <div className={styles.qlLegendRow}>
                 <span className={styles.qlLegendDot} style={{ background: '#f59e0b' }} />
-                <span className={styles.qlLegendLabel}>A receber</span>
+                <span className={styles.qlLegendLabel}>{t('financials.quotaLitis.receivable')}</span>
                 <span className={styles.qlLegendCount}>{pending.length}</span>
-                <span className={styles.qlLegendVal}>{brl(totalPending)}</span>
+                <span className={styles.qlLegendVal}>{formatCurrency(totalPending, i18n.language)}</span>
               </div>
               <div className={styles.qlLegendRow}>
                 <span className={styles.qlLegendDot} style={{ background: '#22c55e' }} />
-                <span className={styles.qlLegendLabel}>Recebido</span>
+                <span className={styles.qlLegendLabel}>{t('financials.quotaLitis.received')}</span>
                 <span className={styles.qlLegendCount}>{received.length}</span>
-                <span className={styles.qlLegendVal}>{brl(totalReceived)}</span>
+                <span className={styles.qlLegendVal}>{formatCurrency(totalReceived, i18n.language)}</span>
               </div>
               <div className={styles.qlLegendTotal}>
-                <span>Total previsto</span>
-                <strong>{brl(totalAll)}</strong>
+                <span>{t('financials.quotaLitis.totalExpected')}</span>
+                <strong>{formatCurrency(totalAll, i18n.language)}</strong>
               </div>
             </div>
           </div>
@@ -428,12 +421,12 @@ function QuotaLitisView({ cases, loading, onToggle }) {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Processo</th>
-              <th>Cliente</th>
-              <th>Valor da causa</th>
-              <th>%</th>
-              <th>Valor esperado</th>
-              <th>Situação</th>
+              <th>{t('financials.quotaLitis.table.case')}</th>
+              <th>{t('financials.quotaLitis.table.client')}</th>
+              <th>{t('financials.quotaLitis.table.caseValue')}</th>
+              <th>{t('financials.quotaLitis.table.percent')}</th>
+              <th>{t('financials.quotaLitis.table.expectedValue')}</th>
+              <th>{t('financials.quotaLitis.table.status')}</th>
               <th></th>
             </tr>
           </thead>
@@ -448,13 +441,13 @@ function QuotaLitisView({ cases, loading, onToggle }) {
                     {c.case_number && <div className={styles.qlCaseNumber}>{c.case_number}</div>}
                   </td>
                   <td className={styles.caseCell}>{c.clients?.full_name ?? '—'}</td>
-                  <td className={styles.valorCell}>{brl(c.valor)}</td>
+                  <td className={styles.valorCell}>{formatCurrency(c.valor, i18n.language)}</td>
                   <td><span className="badge st-blue">{c.quota_litis_pct}</span></td>
-                  <td className={`${styles.valorCell} ${recv ? styles.positive : styles.qlPending}`}>{brl(qlVal)}</td>
+                  <td className={`${styles.valorCell} ${recv ? styles.positive : styles.qlPending}`}>{formatCurrency(qlVal, i18n.language)}</td>
                   <td>
                     {recv
-                      ? <span className={styles.qlReceivedBadge}>✓ Recebida</span>
-                      : <span className={styles.qlPendingBadge}>A receber</span>
+                      ? <span className={styles.qlReceivedBadge}>✓ {t('financials.quotaLitis.receivedBadge')}</span>
+                      : <span className={styles.qlPendingBadge}>{t('financials.quotaLitis.pendingBadge')}</span>
                     }
                   </td>
                   <td>
@@ -462,7 +455,7 @@ function QuotaLitisView({ cases, loading, onToggle }) {
                       className={recv ? styles.qlUndoBtn : styles.qlConfirmBtn}
                       onClick={() => onToggle(c.id, !recv)}
                     >
-                      {recv ? 'Desfazer' : 'Confirmar recebimento'}
+                      {recv ? t('financials.quotaLitis.undo') : t('financials.quotaLitis.confirmReceive')}
                     </button>
                   </td>
                 </tr>
@@ -477,6 +470,8 @@ function QuotaLitisView({ cases, loading, onToggle }) {
 
 /* ── Page ─────────────────────────────────────────────────────────────── */
 export default function Financials() {
+  const { t, i18n } = useTranslation()
+  const lang = i18n.language
   const now = new Date()
   const { lawyer } = useAuth()
   const { addToast } = useToast()
@@ -510,20 +505,20 @@ export default function Financials() {
 
   async function handleDelete(id) {
     const { error } = await deleteEntry(id)
-    if (error) { addToast('Erro ao excluir lançamento: ' + error.message, 'error'); return }
+    if (error) { addToast(t('financials.toast.deleteError', { message: error.message }), 'error'); return }
     setConfirmDeleteId(null)
     refetch()
   }
 
   async function handleConfirm(id) {
     const { error } = await confirmEntry(id)
-    if (error) { addToast('Erro ao confirmar pagamento: ' + error.message, 'error'); return }
+    if (error) { addToast(t('financials.toast.confirmError', { message: error.message }), 'error'); return }
     refetch()
   }
 
   async function handleUnconfirm(id) {
     const { error } = await unconfirmEntry(id)
-    if (error) { addToast('Erro ao reverter pagamento: ' + error.message, 'error'); return }
+    if (error) { addToast(t('financials.toast.unconfirmError', { message: error.message }), 'error'); return }
     refetch()
   }
 
@@ -531,8 +526,8 @@ export default function Financials() {
   function handleNext() { const [y, m] = nextM(viewYear, viewMonth); setViewYear(y); setViewMonth(m) }
 
   const monthStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}`
-  const mLabel   = monthLong(viewYear, viewMonth)
-  const mShort   = monthShort(viewMonth)
+  const mLabel   = monthLong(viewYear, viewMonth, lang)
+  const mShort   = monthShort(viewMonth, lang)
 
   const monthEntries = useMemo(() => {
     // recurring despesas appear in every month; others filtered by date
@@ -568,7 +563,8 @@ export default function Financials() {
     const accent    = lawyer?.theme_accent ?? '#043b61'
     const firmName  = lawyer?.firm_name    ?? 'Atlas Lex'
     const oabLabel  = lawyer?.oab_number   ? `OAB ${lawyer.oab_number}` : 'Advocacia'
-    const mesNome   = mLabel
+    // Printed report stays in Portuguese regardless of UI language (legal-document convention) — kept decoupled from mLabel.
+    const mesNome   = monthLong(viewYear, viewMonth, 'pt')
     const dateStr   = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
     const fB        = v => fmtBRLPlain(v)
 
@@ -746,22 +742,22 @@ export default function Financials() {
 
   return (
     <PageShell
-      title="Financeiro"
-      subtitle={tab === 'lancamentos' ? mLabel : 'Quota-Litis'}
+      title={t('financials.title')}
+      subtitle={tab === 'lancamentos' ? mLabel : t('financials.tabs.quotaLitis')}
       action={
         tab === 'lancamentos' && (
           <div className={styles.actionBtns}>
-            <button className={styles.btnPDF} onClick={generateFinanceiroPDF} title="PDF do mês">
+            <button className={styles.btnPDF} onClick={generateFinanceiroPDF} title={t('financials.actions.pdfTitle')}>
               <IconPDF />
-              PDF
+              {t('financials.actions.pdf')}
             </button>
             <button className={styles.btnReceita} onClick={openNewReceita}>
               <IconPlus />
-              Receita
+              {t('financials.type.income')}
             </button>
             <button className={styles.btnDespesa} onClick={openNewDespesa}>
               <IconPlus />
-              Despesa
+              {t('financials.type.expense')}
             </button>
           </div>
         )
@@ -774,13 +770,13 @@ export default function Financials() {
               className={`${styles.tabBtn} ${tab === 'lancamentos' ? styles.tabBtnActive : ''}`}
               onClick={() => setTab('lancamentos')}
             >
-              Lançamentos
+              {t('financials.tabs.entries')}
             </button>
             <button
               className={`${styles.tabBtn} ${tab === 'quota' ? styles.tabBtnActive : ''}`}
               onClick={() => setTab('quota')}
             >
-              Quota-Litis
+              {t('financials.tabs.quotaLitis')}
               {qlPendingCount > 0 && (
                 <span className={styles.tabCount}>{qlPendingCount}</span>
               )}
@@ -791,9 +787,9 @@ export default function Financials() {
             <>
               {/* Month navigation */}
               <div className={styles.monthNavWrap}>
-                <button className={styles.navBtn} onClick={handlePrev} aria-label="Mês anterior">&#8249;</button>
+                <button className={styles.navBtn} onClick={handlePrev} aria-label={t('financials.aria.prevMonth')}>&#8249;</button>
                 <span className={styles.navLabel}>{mLabel}</span>
-                <button className={styles.navBtn} onClick={handleNext} aria-label="Próximo mês">&#8250;</button>
+                <button className={styles.navBtn} onClick={handleNext} aria-label={t('financials.aria.nextMonth')}>&#8250;</button>
               </div>
 
               {/* Search */}
@@ -804,7 +800,7 @@ export default function Financials() {
                 <input
                   className={styles.searchInput}
                   type="text"
-                  placeholder="Buscar lançamento ou caso…"
+                  placeholder={t('financials.searchPlaceholder')}
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                 />
@@ -821,26 +817,26 @@ export default function Financials() {
           {/* ── Stat grid ── */}
           <div className={styles.statGrid}>
             <StatBox
-              label="Recebido"
-              value={brl(totalRecebido)}
-              sub={`${nRecPagas} receita${nRecPagas !== 1 ? 's' : ''}`}
+              label={t('financials.stats.received')}
+              value={formatCurrency(totalRecebido, lang)}
+              sub={t('financials.stats.incomeCount', { count: nRecPagas })}
               variant="statGreen"
             />
             <StatBox
-              label="Despesas"
-              value={brl(totalDespesas)}
-              sub={`${nDespPagas} despesa${nDespPagas !== 1 ? 's' : ''}`}
+              label={t('financials.stats.expenses')}
+              value={formatCurrency(totalDespesas, lang)}
+              sub={t('financials.stats.expenseCount', { count: nDespPagas })}
               variant="statRed"
             />
             <StatBox
-              label="A receber"
-              value={brl(totalAReceber)}
-              sub={`${nPendentes} pendente${nPendentes !== 1 ? 's' : ''}`}
+              label={t('financials.stats.receivable')}
+              value={formatCurrency(totalAReceber, lang)}
+              sub={t('financials.stats.pendingCount', { count: nPendentes })}
               variant="statBlue"
             />
             <StatBox
-              label={`Saldo de ${mShort}`}
-              value={brl(saldo)}
+              label={t('financials.stats.balanceOf', { month: mShort })}
+              value={formatCurrency(saldo, lang)}
               variant={saldo >= 0 ? 'statSaldoPos' : 'statSaldoNeg'}
               wide
             />
@@ -853,16 +849,16 @@ export default function Financials() {
 
           {/* ── Receitas section ── */}
           <div className={styles.sectionHdr}>
-            <span>Receitas de {mLabel}</span>
+            <span>{t('financials.sections.incomeOf', { month: mLabel })}</span>
             <span className={styles.sectionCount}>{receitasMes.length}</span>
           </div>
           <div className={styles.entryList}>
             {loading ? (
-              <div className={styles.emptySection}>Carregando…</div>
+              <div className={styles.emptySection}>{t('financials.loading')}</div>
             ) : error ? (
-              <div className={styles.emptySection}>Erro ao carregar lançamentos.</div>
+              <div className={styles.emptySection}>{t('financials.loadError')}</div>
             ) : receitasMes.length === 0 ? (
-              <div className={styles.emptySection}>Nenhuma receita registrada em {mLabel.toLowerCase()}</div>
+              <div className={styles.emptySection}>{t('financials.emptyIncomeMonth', { month: mLabel.toLowerCase() })}</div>
             ) : (
               receitasMes.map(e => (
                 <EntryItem
@@ -881,14 +877,14 @@ export default function Financials() {
 
           {/* ── Despesas section ── */}
           <div className={styles.sectionHdr} style={{ marginTop: '0.75rem' }}>
-            <span>Despesas de {mLabel}</span>
+            <span>{t('financials.sections.expensesOf', { month: mLabel })}</span>
             <span className={styles.sectionCount}>{despesasMes.length}</span>
           </div>
           <div className={styles.entryList}>
             {loading ? (
-              <div className={styles.emptySection}>Carregando…</div>
+              <div className={styles.emptySection}>{t('financials.loading')}</div>
             ) : despesasMes.length === 0 ? (
-              <div className={styles.emptySection}>Nenhuma despesa registrada em {mLabel.toLowerCase()}</div>
+              <div className={styles.emptySection}>{t('financials.emptyExpenseMonth', { month: mLabel.toLowerCase() })}</div>
             ) : (
               despesasMes.map(e => (
                 <EntryItem
@@ -909,7 +905,7 @@ export default function Financials() {
 
       {formOpen && (
         <Modal
-          title={editing ? 'Editar lançamento' : defaultType === 'despesa' ? 'Nova despesa' : 'Nova receita'}
+          title={editing ? t('financials.editEntry') : defaultType === 'despesa' ? t('financials.modal.newExpense') : t('financials.modal.newIncome')}
           onClose={() => setFormOpen(false)}
         >
           <EntryForm
