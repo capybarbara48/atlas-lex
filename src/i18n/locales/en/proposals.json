@@ -27,9 +27,9 @@
   "validUntil": "Valid until {{date}}",
   "confirmDeleteLabel": "Delete?",
   "linkedToRecord": "linked to client record",
-  "autoPurgeNote": "Auto-purge after 6 months",
-  "autoPurgeToast_one": "{{count}} rejected proposal older than 6 months was automatically removed.",
-  "autoPurgeToast_other": "{{count}} rejected proposals older than 6 months were automatically removed.",
+  "autoPurgeNote": "Auto-archived after 6 months",
+  "autoPurgeToast_one": "{{count}} rejected proposal older than 6 months was automatically archived.",
+  "autoPurgeToast_other": "{{count}} rejected proposals older than 6 months were automatically archived.",
   "view": {
     "pipeline": "Pipeline",
     "list": "List"

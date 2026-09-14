@@ -27,9 +27,9 @@
   "validUntil": "Válida até {{date}}",
   "confirmDeleteLabel": "Excluir?",
   "linkedToRecord": "vinculado ao cadastro",
-  "autoPurgeNote": "Purge automático após 6 meses",
-  "autoPurgeToast_one": "{{count}} proposta recusada com mais de 6 meses foi removida automaticamente.",
-  "autoPurgeToast_other": "{{count}} propostas recusadas com mais de 6 meses foram removidas automaticamente.",
+  "autoPurgeNote": "Arquivamento automático após 6 meses",
+  "autoPurgeToast_one": "{{count}} proposta recusada com mais de 6 meses foi arquivada automaticamente.",
+  "autoPurgeToast_other": "{{count}} propostas recusadas com mais de 6 meses foram arquivadas automaticamente.",
   "view": {
     "pipeline": "Pipeline",
     "list": "Lista"

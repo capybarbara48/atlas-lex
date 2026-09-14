@@ -28,8 +28,8 @@ const ICONS = {
   ),
   clientes: (
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="7.5" cy="6" r="2.5"/>
-      <path d="M2 17c0-3.038 2.462-5.5 5.5-5.5S13 13.962 13 17"/>
+      <circle cx="9" cy="6" r="2.5"/>
+      <path d="M3 17c0-3.314 2.686-6 6-6s6 2.686 6 6"/>
       <path d="M14.5 5a2 2 0 1 1 0 4"/>
       <path d="M18 17c0-2.21-1.79-4-4-4"/>
     </svg>

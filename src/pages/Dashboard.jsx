@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/context/AuthContext'
@@ -436,6 +436,25 @@ export default function Dashboard() {
   const { data: rawTasks,   refetch: refetchTasks } = useTodayTasks()
   const { data: rawHearings }                       = useUpcomingHearings()
   const { data: rawProposals, refetch: refetchProposals } = useProposals({ limit: 20 })
+
+  /* refresh dashboard data when the tab regains focus — a value can
+     change in another tab (or on another page left open) while this
+     one keeps its stale fetch */
+  useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState === 'visible') {
+        refetchProposals()
+        refetchCases()
+        refetchTasks()
+      }
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('focus', onVisible)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('focus', onVisible)
+    }
+  }, [refetchProposals, refetchCases, refetchTasks])
 
   /* derived data */
   const cases   = useMemo(() => (rawCases ?? []).filter(c => c.status !== 'finalizado').map(mapDashCase), [rawCases])
